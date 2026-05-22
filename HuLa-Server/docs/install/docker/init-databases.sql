@@ -1,0 +1,6 @@
+CREATE DATABASE IF NOT EXISTS luohuo_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS luohuo_im_01 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'luohuo_dev'@'%' IDENTIFIED BY '5Dez5Yi7nAmpyh1C';
+GRANT ALL PRIVILEGES ON luohuo_dev.* TO 'luohuo_dev'@'%';
+GRANT ALL PRIVILEGES ON luohuo_im_01.* TO 'luohuo_dev'@'%';
+FLUSH PRIVILEGES;

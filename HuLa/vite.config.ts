@@ -13,6 +13,7 @@ import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
 import { atStartup } from './build/config/console'
+import { androidDevHostPlugin } from './build/plugins/androidDevHost'
 import packageJson from './package.json'
 
 function getLocalIP() {
@@ -39,30 +40,37 @@ const rawIP = getLocalIP() || (await internalIpV4())
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  const currentPlatform = config.TAURI_ENV_PLATFORM
+  // loadEnv only reads .env files; android-dev.ps1 sets process.env — merge both
+  const currentPlatform = process.env.TAURI_ENV_PLATFORM || config.TAURI_ENV_PLATFORM
   const isPC = currentPlatform === 'windows' || currentPlatform === 'darwin' || currentPlatform === 'linux'
 
   const serverPort = isPC ? 6130 : 5210
   const componentsDirs = getComponentsDirs(currentPlatform)
   const componentsDtsPath = getComponentsDtsPath(currentPlatform)
 
-  // 根据平台决定host地址
+  const isAndroid = mode === 'android' || currentPlatform === 'android'
+  const isIos = currentPlatform === 'ios'
+  // WebView origin in Tauri Android dev (NOT 10.0.2.2 — absolute worker URLs would cross-origin)
+  const androidDevOrigin = 'http://tauri.localhost'
+  // Tauri CLI on Windows sets this to your LAN IP (e.g. 192.168.1.154) before starting Vite
+  const tauriDevHost = process.env.TAURI_DEV_HOST
+  const viteListenHost = isAndroid ? (tauriDevHost || '0.0.0.0') : '0.0.0.0'
+
+  // 根据平台决定 host（HMR / 日志展示）
   const host = (() => {
     if (isPC) {
       return '127.0.0.1'
     }
-
-    // 移动端逻辑：检查是否为有效的内网IP地址
-    if (rawIP && !rawIP.endsWith('.0') && !rawIP.endsWith('.255')) {
-      return rawIP // 有效IP且非网段/广播地址
+    if (isAndroid) {
+      return tauriDevHost ?? 'tauri.localhost (WebView)'
     }
-
-    // 无效IP或特殊地址的情况
-    return config.TAURI_ENV_PLATFORM === 'ios'
-      ? (rawIP ?? '127.0.0.1')
-      : config.TAURI_ENV_PLATFORM === 'android'
-        ? '0.0.0.0'
-        : '127.0.0.1'
+    if (isIos && rawIP && !rawIP.endsWith('.0') && !rawIP.endsWith('.255')) {
+      return rawIP
+    }
+    if (rawIP && !rawIP.endsWith('.0') && !rawIP.endsWith('.255')) {
+      return rawIP
+    }
+    return isIos ? (rawIP ?? '127.0.0.1') : '127.0.0.1'
   })()
 
   // 是否开启启动时打印信息
@@ -101,6 +109,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }
     },
     plugins: [
+      androidDevHostPlugin(isAndroid),
       /**
        * vue3.5.0已支持解构并具有响应式
        * */
@@ -127,6 +136,23 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     worker: {
       format: 'es' as const
     },
+    ...(isAndroid
+      ? {
+          optimizeDeps: {
+            // Only scan app entry — avoid picking up Gradle problems-report.html under src-tauri/gen
+            entries: [fileURLToPath(new URL('./index.html', import.meta.url))],
+            include: [
+              'vue',
+              'vue-router',
+              'pinia',
+              'vant',
+              '@vant/area-data',
+              '@breezystack/lamejs',
+              'tauri-plugin-mic-recorder-api'
+            ]
+          }
+        }
+      : {}),
     build: {
       // 设置兼容低版本浏览器的目标
       target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
@@ -155,18 +181,28 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
-      hmr: {
-        protocol: 'ws',
-        host: host,
-        port: serverPort
-      },
+      // Same origin as WebView so Workers/modules load via tauri.localhost proxy (not 10.0.2.2 / 192.168.x.x)
+      ...(isAndroid ? { origin: androidDevOrigin } : {}),
+      hmr: isAndroid
+        ? {
+            // Do not bind HMR to 10.0.2.2 on the PC — that IP only exists inside the emulator.
+            protocol: 'ws',
+            port: serverPort,
+            clientPort: serverPort
+          }
+        : {
+            protocol: 'ws',
+            host: host,
+            port: serverPort
+          },
       cors: true, // 配置 CORS
-      host: '0.0.0.0',
+      // Android + Windows: Tauri CLI requires Vite on TAURI_DEV_HOST (LAN IP) or 0.0.0.0 — not 127.0.0.1 only
+      host: viteListenHost,
       port: serverPort,
       strictPort: true,
       watch: {
         // 3. tell vite to ignore watching `src-tauri`
-        ignored: ['**/src-tauri/**']
+        ignored: ['**/src-tauri/**', '**/src-tauri/gen/android/build/**']
       }
     }
   }

@@ -32,7 +32,9 @@ pub struct BackendSettings {
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct Youdao {
+    #[serde(default)]
     pub app_key: String,
+    #[serde(default)]
     pub app_secret: String,
 }
 
@@ -45,8 +47,11 @@ pub struct IceServer {
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct Tencent {
+    #[serde(default)]
     pub api_key: String,
+    #[serde(default)]
     pub secret_id: String,
+    #[serde(default)]
     pub map_key: String,
 }
 

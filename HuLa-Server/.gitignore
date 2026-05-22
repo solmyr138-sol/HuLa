@@ -32,9 +32,31 @@ build/
 ### VS Code ###
 .vscode/
 
+# Legacy paths (if present at repo root)
 docker/logs/**
 docker/namesrv/**
 docker/store/**
 docker/console/**
 docker/minio/**
 docker/redis/**
+
+# Local dev stack under docs/install/docker (see also repo-root .gitignore)
+docs/install/docker/mysql/data/
+docs/install/docker/minio/data/
+docs/install/docker/minio/config/
+docs/install/docker/redis/data/
+docs/install/docker/redis/logs/
+docs/install/docker/nacos/standalone-logs/
+docs/install/docker/rocketmq/broker/logs/
+docs/install/docker/rocketmq/broker/store/
+docs/install/docker/rocketmq/namesrv/logs/
+docs/install/docker/rocketmq/namesrv/store/
+docs/install/docker/rocketmq/timerwheel/
+docs/install/nacos/extracted/
+docs/install/nacos/extracted2/
+
+# JVM crash dumps & service logs
+hs_err_pid*.log
+replay_pid*.log
+luohuo-cloud/logs/
+luohuo-cloud/build.log

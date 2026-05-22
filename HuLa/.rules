@@ -1,5 +1,7 @@
 # HuLa Project Context
 
+Monorepo-wide agent skills and domain docs: see [`../AGENTS.md`](../AGENTS.md), [`../CONTEXT-MAP.md`](../CONTEXT-MAP.md), and [`../docs/agents/`](../docs/agents/).
+
 ## Overview
 HuLa is a modern, cross-platform Instant Messaging (IM) system. It leverages **Tauri v2** for the application container, **Vite 7** for fast frontend tooling, **Vue 3** for the user interface, and **TypeScript** for type safety. The backend logic is implemented in **Rust**.
 

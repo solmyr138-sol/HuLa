@@ -1,0 +1,3 @@
+CREATE USER IF NOT EXISTS 'luohuo_im_01'@'%' IDENTIFIED BY 'NHZEjXj2tJxt1rfa';
+GRANT ALL PRIVILEGES ON luohuo_im_01.* TO 'luohuo_im_01'@'%';
+FLUSH PRIVILEGES;

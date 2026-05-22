@@ -1,0 +1,38 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Personal notes & local secrets ---
+hula.txt
+.env.local
+.env.*.local
+HuLa/.env.android
+**/docker-compose.local.yml
+
+# --- JVM / build runtime ---
+hs_err_pid*.log
+replay_pid*.log
+**/build.log
+HuLa-Server/luohuo-cloud/logs/
+
+# --- Local Docker stack (HuLa-Server/docs/install/docker) ---
+HuLa-Server/docs/install/docker/mysql/data/
+HuLa-Server/docs/install/docker/minio/data/
+HuLa-Server/docs/install/docker/minio/config/
+HuLa-Server/docs/install/docker/redis/data/
+HuLa-Server/docs/install/docker/redis/logs/
+HuLa-Server/docs/install/docker/nacos/standalone-logs/
+HuLa-Server/docs/install/docker/rocketmq/broker/logs/
+HuLa-Server/docs/install/docker/rocketmq/broker/store/
+HuLa-Server/docs/install/docker/rocketmq/namesrv/logs/
+HuLa-Server/docs/install/docker/rocketmq/namesrv/store/
+HuLa-Server/docs/install/docker/rocketmq/timerwheel/
+
+# --- Nacos install scratch ---
+HuLa-Server/docs/install/nacos/extracted/
+HuLa-Server/docs/install/nacos/extracted2/
+
+# --- Local screenshots (not product assets) ---
+/images/

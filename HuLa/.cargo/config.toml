@@ -10,16 +10,26 @@ index = "https://rsproxy.cn/crates.io-index"
 [net]
 git-fetch-with-cli = true
 
+# Android cross-compile on Windows: avoid OOM (error 1455)
+[build]
+jobs = 2
+
 [env]
 CFLAGS_aarch64_apple_darwin = "-fno-modules"
 CFLAGS_x86_64_apple_darwin = "-fno-modules"
 
 # Android NDK 链接配置
+# Static libc++: Java preload of libc++_shared does not satisfy undefined C++ symbols
+# on modern Android (linker namespaces). Embed libc++ into libhula_app_lib.so.
 [target.aarch64-linux-android]
 linker = "aarch64-linux-android26-clang"
 rustflags = [
     "-C",
-    "link-arg=-lc++_shared",
+    "link-arg=-lc++_static",
+    "-C",
+    "link-arg=-lc++abi",
+    "-C",
+    "link-arg=-lunwind",
     "-C",
     "link-arg=-llog",
     "-C",
@@ -30,7 +40,11 @@ rustflags = [
 linker = "armv7a-linux-androideabi26-clang"
 rustflags = [
     "-C",
-    "link-arg=-lc++_shared",
+    "link-arg=-lc++_static",
+    "-C",
+    "link-arg=-lc++abi",
+    "-C",
+    "link-arg=-lunwind",
     "-C",
     "link-arg=-llog",
     "-C",
@@ -41,7 +55,11 @@ rustflags = [
 linker = "i686-linux-android26-clang"
 rustflags = [
     "-C",
-    "link-arg=-lc++_shared",
+    "link-arg=-lc++_static",
+    "-C",
+    "link-arg=-lc++abi",
+    "-C",
+    "link-arg=-lunwind",
     "-C",
     "link-arg=-llog",
     "-C",
@@ -52,7 +70,11 @@ rustflags = [
 linker = "x86_64-linux-android26-clang"
 rustflags = [
     "-C",
-    "link-arg=-lc++_shared",
+    "link-arg=-lc++_static",
+    "-C",
+    "link-arg=-lc++abi",
+    "-C",
+    "link-arg=-lunwind",
     "-C",
     "link-arg=-llog",
     "-C",

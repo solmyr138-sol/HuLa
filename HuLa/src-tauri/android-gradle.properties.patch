@@ -1,0 +1,5 @@
+# Copy these lines into src-tauri/gen/android/gradle.properties if Tauri regenerates the Android project.
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8
+org.gradle.parallel=false
+org.gradle.workers.max=2

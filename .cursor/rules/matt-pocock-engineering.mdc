@@ -1,0 +1,34 @@
+---
+description: Matt Pocock agent skills workflow and domain-doc conventions for HuLa
+alwaysApply: true
+---
+
+# Matt Pocock engineering workflow
+
+This repo uses [mattpocock/skills](https://github.com/mattpocock/skills). Skills live in `.agents/skills/`. Project wiring is in root `AGENTS.md` and `docs/agents/`.
+
+## Before coding (non-trivial work)
+
+1. Read `CONTEXT-MAP.md` and the relevant `HuLa/CONTEXT.md` or `HuLa-Server/CONTEXT.md`.
+2. Check `docs/adr/` for decisions in the area you will touch.
+3. Prefer **`grill-with-docs`** (or **`grill-me`**) to align scope before implementation — one question at a time when grilling.
+
+## While coding
+
+- **`tdd`**: vertical slices only (one failing test → make it pass → refactor). Client tests: `pnpm test:run` in `HuLa/`. Server: module-appropriate Maven/Gradle tests.
+- **`diagnose`**: bugs — reproduce, minimise, hypothesise, instrument, fix, regression test.
+- **`zoom-out`**: when entering unfamiliar modules, explain system context first.
+
+## Issues and planning
+
+- Tracker: GitHub `solmyr138-sol/HuLa` via `gh` — see `docs/agents/issue-tracker.md`.
+- Triage labels: `docs/agents/triage-labels.md`.
+- **`to-prd`** / **`to-issues`** for breaking work into issues; **`triage`** for incoming tickets.
+
+## Vocabulary
+
+Use terms from the active `CONTEXT.md`. Do not invent synonyms listed under _Avoid_.
+
+## HuLa client extras
+
+When editing only `HuLa/`, also follow `HuLa/AGENTS.md` and the `hula-skill` scope routing (frontend / backend / fullstack / build-release).

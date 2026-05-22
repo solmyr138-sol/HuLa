@@ -4,10 +4,10 @@
   "version": "3.0.9",
   "identifier": "com.hula.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm exec vite --mode android",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist",
-    "devUrl": "http://127.0.0.1:5210"
+    "devUrl": "http://127.0.0.1:5210/"
   },
   "bundle": {
     "active": true,

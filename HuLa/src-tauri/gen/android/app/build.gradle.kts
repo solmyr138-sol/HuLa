@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.tasks.compile.JavaCompile
 
 plugins {
     id("com.android.application")
@@ -58,6 +59,10 @@ rust {
     rootDirRel = "../../../"
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}
+
 dependencies {
     implementation("androidx.webkit:webkit:1.14.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
@@ -74,3 +79,37 @@ dependencies {
 }
 
 apply(from = "tauri.build.gradle.kts")
+
+// Host CLI checks devUrl on 127.0.0.1; emulator WebView must load 10.0.2.2
+fun patchAndroidDevUrl() {
+    val assets = file("src/main/assets/tauri.conf.json")
+    if (!assets.exists()) return
+    // Emulator on Windows: adb reverse + tauri --host 127.0.0.1 (see scripts/android-dev.ps1)
+    val emulatorUrl = "http://127.0.0.1:5210/"
+    val text = assets.readText()
+    var patched = text.replace(Regex(""""devUrl"\s*:\s*"[^"]*""""), """"devUrl":"$emulatorUrl"""")
+    patched = patched.replace(Regex("""http://(?:192\.168\.\d+\.\d+|10\.0\.2\.2):5210"""), "http://127.0.0.1:5210")
+    if (text != patched) assets.writeText(patched)
+}
+
+// Tauri-generated Rust.kt loads hula_app_lib without libc++ first
+fun patchRustKt() {
+    val rustKt = file("src/main/java/com/hula/app/generated/Rust.kt")
+    if (!rustKt.exists()) return
+    val text = rustKt.readText()
+    if (text.contains("loadLibrary(\"c++_shared\")")) return
+    val patched = text.replace(
+        "init {\n        System.loadLibrary(\"hula_app_lib\")",
+        "init {\n        System.loadLibrary(\"c++_shared\")\n        System.loadLibrary(\"hula_app_lib\")"
+    )
+    if (patched != text) rustKt.writeText(patched)
+}
+
+tasks.configureEach {
+    if (name.startsWith("rustBuild") || (name.contains("compile") && name.contains("Kotlin"))) {
+        doFirst {
+            patchAndroidDevUrl()
+            patchRustKt()
+        }
+    }
+}

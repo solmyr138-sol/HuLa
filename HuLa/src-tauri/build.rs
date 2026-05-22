@@ -7,9 +7,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ios_build_support::add_clang_runtime_search_path();
     ios_build_support::compile_ios_splash();
     ensure_frontend_dist()?;
+    add_android_cxx_link();
     tauri_build::build();
 
     Ok(())
+}
+
+/// Embed libc++ on Android (Tauri overwrites CARGO_TARGET_*_RUSTFLAGS at build time).
+fn add_android_cxx_link() {
+    let Ok(target) = env::var("TARGET") else {
+        return;
+    };
+    if !target.contains("android") {
+        return;
+    }
+    println!("cargo:rustc-link-arg=-lc++_static");
+    println!("cargo:rustc-link-arg=-lc++abi");
+    println!("cargo:rustc-link-arg=-lunwind");
 }
 
 fn ensure_frontend_dist() -> Result<(), Box<dyn std::error::Error>> {

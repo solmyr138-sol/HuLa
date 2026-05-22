@@ -18,36 +18,35 @@ mod platform {
 mod platform {
     use jni::{JavaVM, objects::JObject};
 
-    fn invoke(method: &str) -> Result<(), jni::errors::Error> {
-        let ctx = ndk_context::android_context();
-        let vm = unsafe { JavaVM::from_raw(ctx.vm().cast()) }?;
-        let mut env = vm.attach_current_thread()?;
+    fn invoke(method: &str) -> Option<()> {
+        let ctx = std::panic::catch_unwind(ndk_context::android_context).ok()?;
+        let vm = unsafe { JavaVM::from_raw(ctx.vm().cast()) }.ok()?;
+        let mut env = vm.attach_current_thread().ok()?;
         let activity = unsafe { JObject::from_raw(ctx.context() as jni::sys::jobject) };
 
-        // 直接调用Activity实例的方法，不使用静态方法
         let result = env.call_method(&activity, method, "()V", &[]);
-
         let _ = activity.into_raw();
 
-        result.map(|_| ()).map_err(|err| {
-            if env.exception_check().unwrap_or(false) {
-                let _ = env.exception_describe();
-                let _ = env.exception_clear();
+        match result {
+            Ok(_) => Some(()),
+            Err(err) => {
+                if env.exception_check().unwrap_or(false) {
+                    let _ = env.exception_describe();
+                    let _ = env.exception_clear();
+                }
+                tracing::warn!("[Splashscreen] JNI {} failed: {}", method, err);
+                None
             }
-            err
-        })
+        }
     }
 
     pub fn show() {
-        if let Err(err) = invoke("show") {
-            tracing::error!("[Splashscreen] failed to show on Android: {}", err);
-        }
+        // 启动页由 MainActivity launch_screen 负责
+        let _ = invoke("show");
     }
 
     pub fn hide() {
-        if let Err(err) = invoke("hide") {
-            tracing::error!("[Splashscreen] failed to hide on Android: {}", err);
-        }
+        let _ = invoke("hide");
     }
 }
 
