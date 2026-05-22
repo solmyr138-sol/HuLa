@@ -39,6 +39,7 @@ import com.luohuo.flex.im.core.chat.service.strategy.mark.MsgMarkFactory;
 import com.luohuo.flex.im.core.chat.service.strategy.msg.AbstractMsgHandler;
 import com.luohuo.flex.im.core.chat.service.strategy.msg.MsgHandlerFactory;
 import com.luohuo.flex.im.core.chat.service.strategy.msg.RecallMsgHandler;
+import com.luohuo.flex.im.core.policy.service.PolicyGuardService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -63,6 +64,7 @@ public class ChatServiceImpl implements ChatService {
     private ContactDao contactDao;
     private RoomCache roomCache;
     private GroupMemberDao groupMemberDao;
+    private PolicyGuardService policyGuardService;
     /**
      * 发送消息
      */
@@ -70,6 +72,10 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public Long sendMsg(ChatMessageReq request, Long uid) {
         check(true, request.isSkip(), request.isTemp(), request.getRoomId(), uid);
+        Room room = roomCache.get(request.getRoomId());
+        if (room != null && room.isRoomGroup()) {
+            policyGuardService.assertCanSendGroupMessage(uid, request.getRoomId(), request);
+        }
         AbstractMsgHandler<?> msgHandler = MsgHandlerFactory.getStrategyNoNull(request.getMsgType());
         Long msgId = msgHandler.checkAndSaveMsg(request, uid);
 
@@ -323,6 +329,27 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
+    public ChatMessageResp editMsg(Long uid, ChatMessageEditReq request) {
+        Message message = messageDao.getById(request.getMsgId());
+        AssertUtil.isNotEmpty(message, "消息有误");
+        policyGuardService.assertCanEditMessage(uid, message);
+        AssertUtil.notEqual(message.getType(), MessageTypeEnum.RECALL.getType(), "已撤回消息不可编辑");
+        AbstractMsgHandler<?> handler = MsgHandlerFactory.getStrategyNoNull(request.getMsgType());
+        handler.updateMsg(message, request.getBody(), uid);
+        Message update = new Message();
+        update.setId(message.getId());
+        update.setType(request.getMsgType());
+        update.setEditedAt(LocalDateTime.now());
+        update.setEditVersion((message.getEditVersion() == null ? 0 : message.getEditVersion()) + 1);
+        messageDao.updateById(update);
+        msgCache.delete(message.getId());
+        Message latest = messageDao.getById(message.getId());
+        SpringUtils.publishEvent(new MessageSendEvent(this, new ChatMsgSendDto(latest.getId(), uid)));
+        return getMsgResp(latest.getId(), uid);
+    }
+
+    @Override
     public void recallMsg(Long uid, ChatMessageBaseReq request) {
         Message message = messageDao.getById(request.getMsgId());
         //校验能不能执行撤回
@@ -405,21 +432,7 @@ public class ChatServiceImpl implements ChatService {
 	 * @return 返回撤回人的权限
 	 */
 	private void checkRecall(Long uid, Message message) {
-        AssertUtil.isNotEmpty(message, "消息有误");
-        AssertUtil.notEqual(message.getType(), MessageTypeEnum.RECALL.getType(), "消息无法撤回");
-
-		Room room = roomCache.get(message.getRoomId());
-		if(room.getType().equals(RoomTypeEnum.GROUP.getType())){
-			GroupMember member = groupMemberCache.getMemberDetail(message.getRoomId(), uid);
-			if (member.getRoleId().equals(GroupRoleEnum.LEADER.getType()) || member.getRoleId().equals(GroupRoleEnum.MANAGER.getType())) {
-				return;
-			}
-		}
-
-        boolean self = Objects.equals(uid, message.getFromUid());
-        AssertUtil.isTrue(self, "抱歉,您没有权限");
-        long between = Duration.between(message.getCreateTime(), LocalDateTime.now()).toMinutes();
-        AssertUtil.isTrue(between < 2, "超过2分钟的消息不能撤回");
+        policyGuardService.assertCanRecallMessage(uid, message);
     }
 
     public List<ChatMessageResp> getMsgRespBatch(List<Message> messages, Long receiveUid) {

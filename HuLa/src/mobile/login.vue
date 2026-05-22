@@ -135,22 +135,36 @@
             </n-flex>
           </n-flex>
 
-          <!-- 注册表单 - 第一步：昵称和密码 -->
+          <!-- 注册：第一步企业号 -->
           <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80%" vertical :size="16">
             <n-input
               size="large"
-              maxlength="8"
-              minlength="1"
-              v-model:value="registerInfo.nickName"
+              v-model:value="registerInfo.enterpriseCode"
               type="text"
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              :allow-input="noSideSpace"
-              :placeholder="registerNamePH"
-              @focus="registerNamePH = ''"
-              @blur="registerNamePH = t('login.mobile.register.input.nickname')"
+              :placeholder="t('auth.register.placeholders.enterprise_code')"
+              clearable
+              @blur="resolveEnterpriseOnMobile" />
+            <p v-if="resolvedTenantName" class="text-12px text-#13987f w-full text-left">
+              {{ t('auth.register.labels.enterprise_name') }}：{{ resolvedTenantName }}
+            </p>
+            <n-button
+              tertiary
+              style="color: #fff"
+              class="w-full mt-8px mb-50px gradient-button"
+              :disabled="!registerInfo.enterpriseCode?.trim() || !resolvedTenantName"
+              @click="handleRegisterStep">
+              <span>{{ t('auth.register.actions.next') }}</span>
+            </n-button>
+          </n-flex>
+
+          <!-- 注册：第二步手机号+密码 -->
+          <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
+            <n-input
+              size="large"
+              v-model:value="registerInfo.mobile"
+              type="tel"
+              maxlength="11"
+              :placeholder="t('auth.register.placeholders.mobile')"
               clearable />
 
             <n-input
@@ -160,14 +174,8 @@
               show-password-on="click"
               v-model:value="registerInfo.password"
               type="password"
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
               :allow-input="noSideSpace"
               :placeholder="registerPasswordPH"
-              @focus="registerPasswordPH = ''"
-              @blur="registerPasswordPH = t('login.mobile.register.input.password')"
               clearable />
 
             <n-input
@@ -177,17 +185,10 @@
               show-password-on="click"
               v-model:value="registerInfo.confirmPassword"
               type="password"
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
               :allow-input="noSideSpace"
               :placeholder="confirmPasswordPH"
-              @focus="confirmPasswordPH = ''"
-              @blur="confirmPasswordPH = t('login.mobile.register.input.confirm_password')"
               clearable />
 
-            <!-- 密码提示信息 -->
             <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
               <Validation
                 :value="registerInfo.password"
@@ -203,82 +204,28 @@
                 :validator="validateSpecialChar" />
             </n-flex>
 
-            <!-- 协议 -->
             <n-flex align="center" justify="center" :size="6" class="mt-10px">
               <n-checkbox v-model:checked="registerProtocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>{{ t('login.term.checkout.text1') }}</span>
-                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
-                  {{ t('login.term.checkout.text2') }}
-                </span>
+                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">{{ t('login.term.checkout.text2') }}</span>
                 <span>{{ t('login.term.checkout.text3') }}</span>
-                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
-                  {{ t('login.term.checkout.text4') }}
-                </span>
+                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">{{ t('login.term.checkout.text4') }}</span>
               </div>
             </n-flex>
 
-            <n-button
-              :loading="registerLoading"
-              :disabled="!isStep1Valid"
-              tertiary
-              style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
-              @click="handleRegisterStep">
-              <span>{{ t('login.mobile.register.btn.next') }}</span>
-            </n-button>
-          </n-flex>
-
-          <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
-          <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
-            <n-auto-complete
-              size="large"
-              v-model:value="registerInfo.email"
-              :placeholder="registerEmailPH"
-              :options="commonEmailDomains"
-              :get-show="getShow"
-              clearable
-              type="text"
-              @focus="registerEmailPH = ''"
-              @blur="registerEmailPH = t('login.mobile.register.input.email')" />
-
-            <!-- 邮箱验证码 -->
-            <div class="flex justify-between items-center gap-10px">
-              <n-input
-                size="large"
-                maxlength="6"
-                v-model:value="registerInfo.code"
-                type="text"
-                spellCheck="false"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                :allow-input="noSideSpace"
-                :placeholder="registerCodePH"
-                @focus="registerCodePH = ''"
-                @blur="registerCodePH = t('login.mobile.register.input.email_verification_code')"
-                clearable />
-
+            <n-flex class="w-full gap-10px">
+              <n-button class="flex-1" @click="currentStep = 1">{{ t('auth.register.actions.back') }}</n-button>
               <n-button
+                :loading="registerLoading"
+                :disabled="!isStep2Valid"
                 tertiary
                 style="color: #fff"
-                class="flex-shrink-0 gradient-button"
-                :loading="sendCodeLoading"
-                :disabled="sendCodeDisabled"
-                @click="handleSendEmailCode">
-                <span>{{ sendCodeButtonText }}</span>
+                class="flex-1 gradient-button"
+                @click="handleRegisterStep">
+                <span>{{ t('auth.register.actions.submit') }}</span>
               </n-button>
-            </div>
-
-            <n-button
-              :loading="registerLoading"
-              :disabled="!isStep2Valid"
-              tertiary
-              style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
-              @click="handleRegisterStep">
-              <span>{{ t('login.mobile.register.btn.register') }}</span>
-            </n-button>
+            </n-flex>
           </n-flex>
         </div>
       </template>
@@ -291,11 +238,12 @@ import { useDebounceFn } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
 import Validation from '@/components/common/Validation.vue'
 import router from '@/router'
-import type { RegisterUserReq, UserInfoType } from '@/services/types'
+import type { UserInfoType } from '@/services/types'
+import { resolveEnterpriseCode } from '@/services/enterprise'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { registerByEnterpriseMobile } from '@/utils/ImRequestUtils'
 import { isAndroid, isIOS } from '@/utils/PlatformConstants'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 import { useMitt } from '../hooks/useMitt'
@@ -305,8 +253,12 @@ import { clearListener } from '../utils/ReadCountQueue'
 import { useLogin } from '../hooks/useLogin'
 import { useI18n } from 'vue-i18n'
 
-// 本地注册信息类型，扩展API类型以包含确认密码
-interface LocalRegisterInfo extends RegisterUserReq {}
+interface LocalRegisterInfo {
+  enterpriseCode: string
+  mobile: string
+  password: string
+  confirmPassword: string
+}
 
 const { t } = useI18n()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -326,16 +278,13 @@ const currentStep = ref(1)
 
 /** 注册账号信息 */
 const registerInfo = ref<LocalRegisterInfo>({
-  nickName: '',
-  email: '',
+  enterpriseCode: '',
+  mobile: '',
   password: '',
-  confirmPassword: '',
-  code: '',
-  uuid: '',
-  avatar: '',
-  key: 'REGISTER_EMAIL',
-  systemType: 2
+  confirmPassword: ''
 })
+const resolvedTenantName = ref('')
+const mobilePattern = /^1[3-9]\d{9}$/
 
 // 登录相关的占位符和状态
 const accountPH = ref(t('login.mobile.input.account_placeholder'))
@@ -447,20 +396,29 @@ const isPasswordValid = computed(() => {
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
 
-/** 检查第一步是否可以继续 */
-const isStep1Valid = computed(() => {
+/** 检查第二步是否可以注册 */
+const isStep2Valid = computed(() => {
   return (
-    registerInfo.value.nickName &&
+    mobilePattern.test(registerInfo.value.mobile?.trim() || '') &&
     isPasswordValid.value &&
     registerInfo.value.confirmPassword === registerInfo.value.password &&
     registerProtocol.value
   )
 })
 
-/** 检查第二步是否可以继续 */
-const isStep2Valid = computed(() => {
-  return isEmailValid.value && !!registerInfo.value.code.trim()
-})
+async function resolveEnterpriseOnMobile() {
+  const code = registerInfo.value.enterpriseCode?.trim()
+  if (!code) {
+    resolvedTenantName.value = ''
+    return
+  }
+  try {
+    const r = await resolveEnterpriseCode(code)
+    resolvedTenantName.value = r.tenantName
+  } catch {
+    resolvedTenantName.value = ''
+  }
+}
 
 const getShow = (value: string) => {
   if (value.endsWith('@')) {
@@ -519,31 +477,25 @@ const resetLoginForm = () => {
 /** 重置注册表单 */
 const resetRegisterForm = () => {
   registerInfo.value = {
-    nickName: '',
-    email: '',
+    enterpriseCode: '',
+    mobile: '',
     password: '',
-    confirmPassword: '',
-    code: '',
-    uuid: '',
-    avatar: '',
-    systemType: 2,
-    key: 'REGISTER_EMAIL'
-  } as LocalRegisterInfo
+    confirmPassword: ''
+  }
+  resolvedTenantName.value = ''
   currentStep.value = 1
-  registerNamePH.value = t('login.mobile.register.input.nickname')
-  registerEmailPH.value = t('login.mobile.register.input.email')
   registerPasswordPH.value = t('login.mobile.register.input.password')
   confirmPasswordPH.value = t('login.mobile.register.input.confirm_password')
-  registerCodePH.value = t('login.mobile.register.input.email_verification_code')
-
-  sendCodeLoading.value = false
-  stopSendCodeCountdown()
 }
 
 /** 处理注册步骤 */
 const handleRegisterStep = async () => {
   if (currentStep.value === 1) {
-    // 进入第二步
+    await resolveEnterpriseOnMobile()
+    if (!resolvedTenantName.value) {
+      window.$message.warning(t('auth.register.messages.enterprise_invalid'))
+      return
+    }
     currentStep.value = 2
     return
   }
@@ -587,28 +539,19 @@ const handleRegisterComplete = async () => {
 
   try {
     registerLoading.value = true
-    registerInfo.value.email = registerInfo.value.email.trim()
-    registerInfo.value.code = registerInfo.value.code.trim()
-    // 随机生成头像编号
-    const avatarNum = Math.floor(Math.random() * 21) + 1
-    const avatarId = avatarNum.toString().padStart(3, '0')
-    registerInfo.value.avatar = avatarId
-
-    // 注册 - 只传递API需要的字段
-    const { ...apiRegisterInfo } = registerInfo.value
-
-    await register(apiRegisterInfo)
-
-    // 关闭弹窗并切换到登录页面
+    await registerByEnterpriseMobile({
+      enterpriseCode: registerInfo.value.enterpriseCode.trim(),
+      mobile: registerInfo.value.mobile.trim(),
+      password: registerInfo.value.password,
+      confirmPassword: registerInfo.value.confirmPassword,
+      systemType: 2
+    })
     activeTab.value = 'login'
-    userInfo.value.account = registerInfo.value.nickName || registerInfo.value.email
-    window.$message.success(t('login.mobile.register_success'))
-
-    // 重置注册表单
+    userInfo.value.account = registerInfo.value.mobile
+    window.$message.success(t('auth.register.messages.register_success'))
     resetRegisterForm()
   } catch (error) {
-    // 处理注册失败
-    window.$message.error((error as any) || t('login.mobile.register_fail'))
+    window.$message.error(t('auth.register.messages.register_fail'))
     console.error(error)
   } finally {
     registerLoading.value = false

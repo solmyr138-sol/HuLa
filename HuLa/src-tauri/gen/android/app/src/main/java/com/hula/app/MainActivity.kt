@@ -3,6 +3,7 @@
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
@@ -56,6 +57,8 @@ class MainActivity : TauriActivity() {
     override fun onWebViewCreate(webView: WebView) {
         super.onWebViewCreate(webView)
         currentWebView = webView
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
         webView.setBackgroundColor(0xFFFFFFFF.toInt())
         window.setBackgroundDrawableResource(R.drawable.launch_screen)
         splashHidden = false

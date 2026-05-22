@@ -1,6 +1,5 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
-import TlbsMap from 'tlbs-map-vue'
 import { setupI18n } from '@/services/i18n'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
@@ -38,7 +37,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export const forceUpdateMessageTop = (topValue: number) => {
-  // 获取所有符合条件的元素
   const messages = document.querySelectorAll('.n-message-container.n-message-container--top')
 
   messages.forEach((el) => {
@@ -59,19 +57,24 @@ async function setup() {
   await invoke('set_complete', { task: 'frontend' })
 }
 
-const app = createApp(App)
-app
-  .use(router)
-  .use(pinia)
-  .use(TlbsMap)
-  .use(setupI18n)
-  .directive('resize', vResize)
-  .directive('slide', vSlide)
-  .mount('#app')
-app.config.errorHandler = (err) => {
-  if (err instanceof AppException) {
-    window.$message.error(err.message)
-    return
+async function bootstrap() {
+  const app = createApp(App)
+  app.use(router).use(pinia).use(setupI18n).directive('resize', vResize).directive('slide', vSlide)
+
+  if (!isMobile()) {
+    const { default: TlbsMap } = await import('tlbs-map-vue')
+    app.use(TlbsMap)
   }
-  throw err
+
+  app.config.errorHandler = (err) => {
+    if (err instanceof AppException) {
+      window.$message.error(err.message)
+      return
+    }
+    throw err
+  }
+
+  app.mount('#app')
 }
+
+void bootstrap()

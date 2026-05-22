@@ -213,6 +213,25 @@ export const useChatStore = defineStore(
 
     // 存储所有消息的Record
     const messageMap = reactive<Record<string, Record<string, MessageType>>>({})
+    let messageMapFlushScheduled = false
+    const pendingMessageMapRooms = new Set<string>()
+    /** Coalesce reactive room map commits to one frame (mobile scroll perf). */
+    const scheduleMessageMapCommit = (roomId: string) => {
+      if (!roomId) return
+      pendingMessageMapRooms.add(roomId)
+      if (messageMapFlushScheduled) return
+      messageMapFlushScheduled = true
+      requestAnimationFrame(() => {
+        messageMapFlushScheduled = false
+        for (const id of pendingMessageMapRooms) {
+          const room = messageMap[id]
+          if (room) {
+            messageMap[id] = { ...room }
+          }
+        }
+        pendingMessageMapRooms.clear()
+      })
+    }
     // 消息加载状态
     const messageOptions = reactive<Record<string, { isLast: boolean; isLoading: boolean; cursor: string }>>({})
 
@@ -514,9 +533,11 @@ export const useChatStore = defineStore(
         messageMap[roomId] = {}
       }
 
+      const roomBatch = { ...(messageMap[roomId] ?? {}) }
       for (const msg of data.list) {
-        messageMap[roomId][msg.message.id] = msg
+        roomBatch[msg.message.id] = msg
       }
+      messageMap[roomId] = roomBatch
     }
 
     const remoteSyncLocks = new Set<string>()
@@ -1103,15 +1124,14 @@ export const useChatStore = defineStore(
       if (uploadProgress !== undefined) {
         console.log(`更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
         roomMessages[nextMsgId] = { ...msg, uploadProgress }
-        messageMap[resolvedRoomId] = { ...roomMessages }
       } else {
         roomMessages[nextMsgId] = msg
       }
 
       if (newMsgId && msgId !== newMsgId) {
         delete roomMessages[msgId]
-        messageMap[resolvedRoomId] = { ...roomMessages }
       }
+      scheduleMessageMapCommit(resolvedRoomId)
     }
 
     // 防止短时间内重复调用的缓存

@@ -36,3 +36,5 @@ HuLa-Server/docs/install/nacos/extracted2/
 
 # --- Local screenshots (not product assets) ---
 /images/
+/HuLa-Admin/node_modules
+/HuLa-Platform-Admin/node_modules

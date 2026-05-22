@@ -609,6 +609,12 @@ export enum ImUrlEnum {
   LOGOUT = 'logout',
   /** 注册 */
   REGISTER = 'register',
+  /** 企业码+手机号注册 */
+  REGISTER_ENTERPRISE_MOBILE = 'registerEnterpriseMobile',
+  /** 解析企业邀请码 */
+  RESOLVE_ENTERPRISE_CODE = 'resolveEnterpriseCode',
+  /** 当前用户企业信息 */
+  ENTERPRISE_PROFILE = 'enterpriseProfile',
 
   // 系统相关
   /** 获取七牛云token */

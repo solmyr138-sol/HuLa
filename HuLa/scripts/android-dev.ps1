@@ -50,6 +50,7 @@ if ($abi -notmatch 'x86') {
 Write-Host "Device ABI: $abi (expect Rust log: x86_64-linux-android -> jniLibs/x86_64)"
 
 & (Join-Path $PSScriptRoot "patch-android-rust-kt.ps1")
+& (Join-Path $PSScriptRoot "patch-android-mainactivity.ps1")
 
 $so = Join-Path $root "src-tauri\target\x86_64-linux-android\debug\libhula_app_lib.so"
 if (Test-Path $so) {
@@ -79,3 +80,4 @@ Write-Host "Tauri: pnpm tauri $($tauriArgs -join ' ')  (ANDROID_SERIAL=$env:ANDR
 pnpm tauri @tauriArgs
 
 & (Join-Path $PSScriptRoot "patch-android-rust-kt.ps1")
+& (Join-Path $PSScriptRoot "patch-android-mainactivity.ps1")

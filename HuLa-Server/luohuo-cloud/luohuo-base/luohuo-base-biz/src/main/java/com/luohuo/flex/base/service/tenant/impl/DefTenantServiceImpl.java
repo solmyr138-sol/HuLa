@@ -147,4 +147,23 @@ public class DefTenantServiceImpl extends SuperCacheServiceImpl<DefTenantManager
     public List<DefTenantResultVO> listTenantByUserId(Long userId) {
         return superManager.listTenantByUserId(userId);
     }
+
+    @Override
+    public DefTenant getByInviteCode(String inviteCode) {
+        ArgumentAssert.notEmpty(inviteCode, "企业邀请码不能为空");
+        String normalized = inviteCode.trim();
+        return superManager.getOne(Wraps.<DefTenant>lbQ()
+                .apply("LOWER(invite_code) = {0}", normalized.toLowerCase())
+                .eq(DefTenant::getState, true)
+                .last("LIMIT 1"));
+    }
+
+    @Override
+    public DefTenant getByAdminDomain(String adminDomain) {
+        ArgumentAssert.notEmpty(adminDomain, "域名不能为空");
+        return superManager.getOne(Wraps.<DefTenant>lbQ()
+                .eq(DefTenant::getAdminDomain, adminDomain.trim())
+                .eq(DefTenant::getState, true)
+                .last("LIMIT 1"));
+    }
 }

@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.luohuo.flex.im.domain.entity.msg.MessageExtra;
 
+import java.time.LocalDateTime;
+
 /**
  * <p>
  * 消息表
@@ -75,4 +77,16 @@ public class Message extends TenantEntity<Long> {
      */
     @TableField(value = "extra", typeHandler = JacksonTypeHandler.class)
     private MessageExtra extra;
+
+    /**
+     * 最后编辑时间
+     */
+    @TableField("edited_at")
+    private LocalDateTime editedAt;
+
+    /**
+     * 编辑版本
+     */
+    @TableField("edit_version")
+    private Integer editVersion;
 }

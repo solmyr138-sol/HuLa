@@ -128,6 +128,11 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
     DefUser getUserByMobile(Integer loginType, String mobile);
 
     /**
+     * 登录专用：直查库，绕过登录名/手机号二级缓存
+     */
+    DefUser findUserForLogin(Integer loginType, String account, boolean emailLogin);
+
+    /**
      * 重置密码
      *
      * @param data 重置密码信息
@@ -207,6 +212,11 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
      * @return
      */
     String register(DefUser defUser);
+
+    /**
+     * IM 手机号注册（生成账号，不含 IM 子系统同步）
+     */
+    DefUser registerImByMobile(DefUser defUser);
 
     /**
      * 分页查询用户

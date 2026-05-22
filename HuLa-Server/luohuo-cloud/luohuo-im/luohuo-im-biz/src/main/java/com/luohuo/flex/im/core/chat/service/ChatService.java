@@ -54,6 +54,8 @@ public interface ChatService {
 
     void recallMsg(Long uid, ChatMessageBaseReq request);
 
+    ChatMessageResp editMsg(Long uid, ChatMessageEditReq request);
+
     Collection<MsgReadInfoDTO> getMsgReadInfo(Long uid, ChatMessageReadInfoReq request);
 
     CursorPageBaseResp<ChatMessageReadResp> getReadPage(Long uid, ChatMessageReadReq request);

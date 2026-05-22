@@ -10,8 +10,9 @@ import { NaiveUiResolver, VantResolver } from 'unplugin-vue-components/resolvers
 import Components from 'unplugin-vue-components/vite' //组件注册
 import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
-import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
+import { getComponentsDirs, getComponentsDtsPath, isMobilePlatform } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
+import { isMobileBuildTarget, MOBILE_STUB_MODULES } from './build/config/mobile-build'
 import { atStartup } from './build/config/console'
 import { androidDevHostPlugin } from './build/plugins/androidDevHost'
 import packageJson from './package.json'
@@ -50,6 +51,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
 
   const isAndroid = mode === 'android' || currentPlatform === 'android'
   const isIos = currentPlatform === 'ios'
+  const isMobileBuild = isMobileBuildTarget(currentPlatform, mode)
+  const stubPath = fileURLToPath(new URL('./build/stubs/empty-module.ts', import.meta.url))
+  const mobileStubAlias = Object.fromEntries(MOBILE_STUB_MODULES.map((m) => [m, stubPath]))
   // WebView origin in Tauri Android dev (NOT 10.0.2.2 — absolute worker URLs would cross-origin)
   const androidDevOrigin = 'http://tauri.localhost'
   // Tauri CLI on Windows sets this to your LAN IP (e.g. 192.168.1.154) before starting Vite
@@ -84,8 +88,12 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         // 配置移动端路径别名#
         '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
         // 配置路径别名~(根路径)
-        '~': fileURLToPath(new URL('.', import.meta.url))
+        '~': fileURLToPath(new URL('.', import.meta.url)),
+        ...(isMobileBuild ? mobileStubAlias : {})
       }
+    },
+    define: {
+      __HULA_MOBILE_BUILD__: JSON.stringify(isMobileBuild)
     },
     css: {
       preprocessorOptions: {
@@ -128,7 +136,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/
       Components({
-        dirs: componentsDirs, // 根据平台加载对应组件目录
+        dirs: componentsDirs,
+        // Mobile still uses Naive UI globally (NaiveProvider, login, chat). Vant-only breaks runtime.
         resolvers: [NaiveUiResolver(), VantResolver()],
         dts: componentsDtsPath
       })
@@ -154,12 +163,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         }
       : {}),
     build: {
-      // 设置兼容低版本浏览器的目标
-      target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
-      cssCodeSplit: true, // 启用 CSS 代码拆分
-      minify: 'oxc' as const, // Vite 8 默认使用 Oxc 压缩，减少对 esbuild 依赖
-      // chunk 大小警告的限制(kb)
-      chunkSizeWarningLimit: 1200,
+      target: isMobileBuild ? ['chrome100', 'safari15'] : ['chrome87', 'edge88', 'firefox78', 'safari14'],
+      cssCodeSplit: true,
+      minify: 'oxc' as const,
+      chunkSizeWarningLimit: isMobileBuild ? 800 : 1200,
+      reportCompressedSize: true,
       // Vite 8 默认使用 Oxc，生产环境移除 console.log、debugger
       oxc: mode === 'production' ? { dropConsole: true, dropDebugger: true } : undefined,
       // 显式关闭 esbuild 转译链路，避免 worker 构建时触发 transformWithEsbuild
@@ -171,7 +179,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           chunkFileNames: 'static/js/[name]-[hash].js', // 引入文件名的名称
           entryFileNames: 'static/js/[name]-[hash].js', // 包的入口文件名称
           assetFileNames: 'static/[ext]/[name]-[hash].[ext]', // 资源文件像 字体，图片等
-          manualChunks: createManualChunks(dependencies)
+          manualChunks: createManualChunks(dependencies, isMobileBuild)
         }
       }
     },

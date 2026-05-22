@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GroupPolicySettings from '@/components/rightBox/chatBox/GroupPolicySettings.vue'
 import { useI18n } from 'vue-i18n'
 import { NotificationTypeEnum, RoomActEnum, SessionOperateEnum } from '@/enums'
 import { IsAllUserEnum, type UserItem, type SessionItem } from '@/services/types'
@@ -210,6 +211,8 @@ watch(
           :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
           @update:value="emit('notification', $event)" />
       </div>
+
+      <GroupPolicySettings />
 
       <template v-if="groupStore.isAdminOrLord()">
         <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>

@@ -26,6 +26,7 @@ import com.luohuo.flex.im.core.chat.service.cache.RoomGroupCache;
 import com.luohuo.flex.im.core.user.dao.UserApplyDao;
 import com.luohuo.flex.im.core.user.dao.UserFriendDao;
 import com.luohuo.flex.im.core.user.service.ApplyService;
+import com.luohuo.flex.im.core.policy.service.PolicyGuardService;
 import com.luohuo.flex.im.core.user.service.FriendService;
 import com.luohuo.flex.im.core.user.service.NoticeService;
 import com.luohuo.flex.im.core.user.service.adapter.FriendAdapter;
@@ -84,6 +85,7 @@ public class ApplyServiceImpl implements ApplyService {
 	private CachePlusOps cachePlusOps;
 	private RoomAppService roomAppService;
 	private TransactionTemplate transactionTemplate;
+	private PolicyGuardService policyGuardService;
 
     /**
      * 申请好友
@@ -93,6 +95,7 @@ public class ApplyServiceImpl implements ApplyService {
     @Override
 	@RedissonLock(prefixKey = "friend:handlerApply", key = "#uid")
     public UserApply handlerApply(Long uid, FriendApplyReq request) {
+        policyGuardService.assertCanAddFriend(uid, request.getTargetUid());
         //是否有好友关系
         UserFriend friend = userFriendDao.getByFriend(uid, request.getTargetUid());
         AssertUtil.isEmpty(friend, "你们已经是好友了");

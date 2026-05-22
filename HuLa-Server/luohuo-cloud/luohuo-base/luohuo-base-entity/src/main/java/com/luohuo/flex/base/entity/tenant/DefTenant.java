@@ -34,6 +34,10 @@ public class DefTenant extends Entity<Long> {
 	@Schema(description = "租户名 | 企业名称")
 	private String name;
 
+	@Schema(description = "企业邀请码(一码一租户)")
+	@TableField("invite_code")
+	private String inviteCode;
+
 	@Schema(description = "联系人的用户编号")
 	private Long contactUserId;
 
@@ -54,6 +58,10 @@ public class DefTenant extends Entity<Long> {
 
 	@Schema(description = "绑定域名")
 	private String website;
+
+	@Schema(description = "企业管理后台绑定域名")
+	@TableField("admin_domain")
+	private String adminDomain;
 
 	@Schema(description = "类型;#{CREATE:创建;REGISTER:注册}")
 	private DefTenantRegisterTypeEnum registerType;

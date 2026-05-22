@@ -32,6 +32,8 @@
     "========= 启动安卓程序(简化命令，请用 scripts/android-dev.ps1 连模拟器) =========": "",
     "adev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/android-dev.ps1",
     "adev:raw": "tauri android dev",
+    "mobile:analyze": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/analyze-mobile-bundle.ps1",
+    "mobile:release": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-android-release.ps1",
     "========= 启动ios程序(简化命令) =========": "",
     "idev": "tauri ios dev",
     "========= 打包桌面应用程序(简化命令) =========": "",

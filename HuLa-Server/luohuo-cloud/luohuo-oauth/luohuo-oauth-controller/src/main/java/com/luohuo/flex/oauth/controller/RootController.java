@@ -40,6 +40,7 @@ import com.luohuo.flex.oauth.granter.TokenGranterBuilder;
 import com.luohuo.flex.oauth.service.UserInfoService;
 import com.luohuo.flex.oauth.vo.param.LoginParamVO;
 import com.luohuo.flex.oauth.vo.param.RegisterByEmailVO;
+import com.luohuo.flex.oauth.vo.param.ImEnterpriseRegisterVO;
 import com.luohuo.flex.oauth.vo.param.RegisterByMobileVO;
 import com.luohuo.flex.oauth.vo.result.LoginResultVO;
 import org.springframework.beans.factory.annotation.Value;
@@ -214,6 +215,12 @@ public class RootController {
 		return R.success(userInfoService.registerByMobile(register));
 	}
 
+	@Operation(summary = "企业码+手机号注册(IM)", description = "第一步企业邀请码，第二步手机号密码，无需邮箱验证码")
+	@PostMapping("/anyTenant/registerByEnterpriseMobile")
+	public R<String> registerByEnterpriseMobile(@Validated @RequestBody ImEnterpriseRegisterVO register) {
+		return R.success(userInfoService.registerByEnterpriseMobile(register));
+	}
+
 	@Operation(summary = "根据邮箱注册", description = "根据邮箱注册")
 	@PostMapping("/anyTenant/registerByEmail")
 	public R<String> register(@Parameter(hidden = true) @LoginUser(isEmployee = true) SysUser sysUser, @Validated @RequestBody RegisterByEmailVO register) throws BizException {
@@ -230,6 +237,13 @@ public class RootController {
 	@GetMapping("/anyTenant/checkMobile")
 	public R<Boolean> checkMobile(@RequestParam("mobile") String mobile) {
 		return R.success(defUserService.checkMobile(mobile, null));
+	}
+
+	@Operation(summary = "解析企业邀请码")
+	@GetMapping("/anyTenant/resolveEnterpriseCode")
+	public R<com.luohuo.flex.oauth.vo.result.EnterpriseResolveResp> resolveEnterpriseCode(
+			@RequestParam("code") String code) {
+		return R.success(userInfoService.resolveEnterpriseCode(code));
 	}
 
 	@GetMapping("/anyTenant/qr/generate")

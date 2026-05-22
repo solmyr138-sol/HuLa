@@ -6,7 +6,7 @@
         :hidden-right="true"
         :enable-default-background="false"
         :enable-shadow="false"
-        :room-name="t('mobile_edit_profile.title')" />
+        :room-name="t('enterprise.profile_title')" />
     </template>
     <template #container>
       <div class="flex flex-col overflow-auto h-full">
@@ -47,6 +47,12 @@
 
               <n-divider class="my-3! p-0!" />
 
+              <n-form-item :label="t('mobile_personal_info.account')">
+                <n-input readonly :value="userStore.userInfo?.account || '—'" class="bg-transparent!" />
+              </n-form-item>
+
+              <n-divider class="my-3! p-0!" />
+
               <n-form-item
                 :label="t('mobile_edit_profile.gender')"
                 :placeholder="t('mobile_edit_profile.placeholder.gender')">
@@ -72,7 +78,21 @@
               </n-form-item>
 
               <n-divider class="my-3! p-0!" />
-
+            </n-form>
+          </n-card>
+          <n-card class="p-0! rounded-16px mt-12px">
+            <n-form label-placement="left" label-align="left" :label-width="80">
+              <n-form-item :label="t('enterprise.enterprise_code')">
+                <n-input readonly :value="enterprise?.inviteCode || '—'" class="bg-transparent!" />
+              </n-form-item>
+              <n-divider class="my-3! p-0!" />
+              <n-form-item :label="t('enterprise.enterprise_name')">
+                <n-input readonly :value="enterprise?.tenantName || '—'" class="bg-transparent!" />
+              </n-form-item>
+            </n-form>
+          </n-card>
+          <n-card class="p-0! rounded-16px mt-12px">
+            <n-form @submit="saveEditInfo" label-placement="left" label-align="left" :label-width="80">
               <n-form-item label="地区" :placeholder="t('mobile_edit_profile.placeholder.brithday')">
                 <n-input
                   @click="pickerState.region = true"
@@ -219,8 +239,10 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { ModifyUserInfo } from '@/utils/ImRequestUtils'
 import { useI18n } from 'vue-i18n'
+import { fetchEnterpriseProfile, type EnterpriseProfile } from '@/services/enterprise'
 
 const { t } = useI18n()
+const enterprise = ref<EnterpriseProfile | null>(null)
 const genderText = computed(() => {
   const item = pickerColumn.value.gender.find((i) => i.value === localUserInfo.value.sex)
   return item ? item.text : ''
@@ -341,6 +363,11 @@ const saveEditInfo = () => {
 
 onMounted(async () => {
   localUserInfo.value = { ...userStore.userInfo! }
+  try {
+    enterprise.value = await fetchEnterpriseProfile()
+  } catch {
+    enterprise.value = null
+  }
 })
 </script>
 

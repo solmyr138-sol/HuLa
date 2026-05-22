@@ -80,4 +80,14 @@ public interface DefTenantService extends SuperCacheService<Long, DefTenant> {
      * @return
      */
     DefTenant register(DefTenantSaveVO defTenantSaveVO);
+
+    /**
+     * 根据企业邀请码查询租户
+     */
+    DefTenant getByInviteCode(String inviteCode);
+
+    /**
+     * 根据管理后台域名查询租户
+     */
+    DefTenant getByAdminDomain(String adminDomain);
 }

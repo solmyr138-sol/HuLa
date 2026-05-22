@@ -25,6 +25,7 @@ import com.luohuo.flex.oauth.biz.OauthUserBiz;
 import com.luohuo.flex.oauth.service.CaptchaService;
 import com.luohuo.flex.oauth.service.UserInfoService;
 import com.luohuo.flex.oauth.vo.result.DefUserInfoResultVO;
+import com.luohuo.flex.oauth.vo.result.EnterpriseProfileResp;
 import com.luohuo.flex.oauth.vo.result.OrgResultVO;
 
 import java.util.List;
@@ -51,6 +52,12 @@ public class UserInfoController {
     @GetMapping(value = "/getUserInfo")
     public R<DefUserInfoResultVO> getUserInfo() throws BizException {
         return R.success(oauthUserBiz.getUserById(ContextUtil.getUserId()));
+    }
+
+    @Operation(summary = "当前用户所属企业信息")
+    @GetMapping("/enterprise")
+    public R<EnterpriseProfileResp> getEnterprise() {
+        return R.success(userInfoService.getCurrentEnterpriseProfile());
     }
 
     @Operation(summary = "修改头像", description = "修改头像")

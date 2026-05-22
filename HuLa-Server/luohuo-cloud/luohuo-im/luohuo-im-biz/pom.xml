@@ -133,6 +133,11 @@
             <groupId>com.luohuo.flex</groupId>
             <artifactId>luohuo-base-cloud-impl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.luohuo.flex</groupId>
+            <artifactId>luohuo-base-biz</artifactId>
+            <version>${luohuo-project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

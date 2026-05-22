@@ -28,8 +28,8 @@
         </div>
         <HuLaAssistant :active="true" :custom-model="customModelPath" class="mobile-assistant-view" />
       </div>
-      <div v-else @click="handleChatMainClick" class="h-full overflow-y-auto">
-        <ChatMain @scroll="handleScroll" />
+      <div v-else class="h-full overflow-hidden">
+        <MobileChatMessageList @scroll="handleScroll" />
       </div>
     </template>
     <template #footer>
@@ -97,11 +97,6 @@ const selectedModelLabel = computed(() => {
   const first = assistantModelPresets.value[0]
   return first ? formatPresetLabel(first) : '选择模型'
 })
-
-const handleChatMainClick = () => {
-  // 移动端点击聊天区域不再自动关闭面板
-  // 用户需要手动点击按钮来关闭面板
-}
 
 const handleScroll = () => {
   // 移动端滚动聊天区域不再自动关闭面板

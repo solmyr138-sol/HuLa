@@ -106,6 +106,11 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
     }
 
     @Override
+    public DefUser findUserForLogin(Integer loginType, String account, boolean emailLogin) {
+        return superManager.findUserForLogin(loginType, account, emailLogin);
+    }
+
+    @Override
     public DefUser getUserByEmail(Integer loginType, String email) {
         return superManager.getUserByEmail(loginType, email);
     }
@@ -161,20 +166,52 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    public DefUser registerImByMobile(DefUser defUser) {
+        ArgumentAssert.isFalse(checkMobile(defUser.getMobile(), null), "手机号：{}已经存在", defUser.getMobile());
+        if (defUser.getSystemType() == null) {
+            defUser.setSystemType(2);
+        }
+        applyDefaultTenantIfAbsent(defUser);
+        defUser.setSalt(RandomUtil.randomString(20));
+        defUser.setPassword(SecureUtil.sha256(defUser.getPassword() + defUser.getSalt()));
+        defUser.setPasswordErrorNum(0);
+        defUser.setState(true);
+        defUser.setUsername("temp_" + System.currentTimeMillis());
+        boolean useGeneratedNick = StrUtil.isEmpty(defUser.getNickName());
+        if (useGeneratedNick) {
+            defUser.setNickName(defUser.getMobile());
+        }
+        superManager.save(defUser);
+        String account = accountGenerator.generateAccountByUserId(defUser.getId());
+        if (useGeneratedNick) {
+            defUser.setNickName("用户" + account.substring(Math.max(0, account.length() - 4)));
+        }
+        defUser.setUsername(account);
+        superManager.updateById(defUser);
+        superManager.delUserCache(Collections.singletonList(defUser.getId()));
+        return defUser;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
     public String registerByEmail(DefUser defUser) {
         ArgumentAssert.isFalse(checkMobile(defUser.getEmail(), null), "邮箱：{}已经存在", defUser.getMobile());
 
         // 先设置基本信息（不设置账号）
-        defUser.setTenantId(1L);
+        applyDefaultTenantIfAbsent(defUser);
         defUser.setSalt(RandomUtil.randomString(20));
         defUser.setPassword(SecureUtil.sha256(defUser.getPassword() + defUser.getSalt()));
         defUser.setPasswordErrorNum(0);
         defUser.setState(true);
         defUser.setUsername("temp_" + System.currentTimeMillis());  // 临时用户名
+        boolean useGeneratedNick = StrUtil.isEmpty(defUser.getNickName());
+        if (useGeneratedNick) {
+            defUser.setNickName(StrUtil.emptyToDefault(defUser.getEmail(), defUser.getMobile()));
+        }
         superManager.save(defUser);
 
         String account = accountGenerator.generateAccountByUserId(defUser.getId());
-        if (StrUtil.isEmpty(defUser.getNickName())) {
+        if (useGeneratedNick) {
             defUser.setNickName("HuLa用户_" + account.substring(account.length() - 6));
         }
 
@@ -185,8 +222,14 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
         return defUser.getEmail();
     }
 
+    private void applyDefaultTenantIfAbsent(DefUser defUser) {
+        if (defUser.getTenantId() == null || defUser.getTenantId() <= 0) {
+            defUser.setTenantId(1L);
+        }
+    }
+
     private void setDefUser(DefUser defUser) {
-		defUser.setTenantId(1L);
+        applyDefaultTenantIfAbsent(defUser);
         defUser.setSalt(RandomUtil.randomString(20));
         defUser.setPassword(SecureUtil.sha256(defUser.getPassword() + defUser.getSalt()));
         defUser.setPasswordErrorNum(0);

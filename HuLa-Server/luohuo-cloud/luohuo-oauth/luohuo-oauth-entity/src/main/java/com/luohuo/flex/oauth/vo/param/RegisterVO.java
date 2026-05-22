@@ -53,4 +53,8 @@ public class RegisterVO {
 
 	@NotNull(message = "请选择系统类型")
 	private Integer systemType;
+
+	@Schema(description = "企业邀请码")
+	@NotEmpty(message = "请填写企业邀请码")
+	private String enterpriseCode;
 }

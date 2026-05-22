@@ -71,6 +71,17 @@ public abstract class AbstractMsgHandler<T> {
     protected abstract void saveMsg(Message message, T body);
 
     /**
+     * 编辑已存在消息
+     */
+    @Transactional
+    public void updateMsg(Message message, Object body, Long uid) {
+        T typedBody = toBean(body);
+        AssertUtil.allCheckValidateThrow(typedBody);
+        checkMsg(typedBody, message.getRoomId(), uid);
+        saveMsg(message, typedBody);
+    }
+
+    /**
      * 展示消息
      */
     public abstract Object showMsg(Message msg);

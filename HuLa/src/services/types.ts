@@ -68,6 +68,18 @@ export type RegisterUserReq = {
   key?: string
   confirmPassword: string
   systemType: number
+  /** 企业邀请码 */
+  enterpriseCode: string
+}
+
+/** 企业码 + 手机号注册 */
+export type EnterpriseRegisterReq = {
+  enterpriseCode: string
+  mobile: string
+  password: string
+  confirmPassword: string
+  systemType: number
+  nickName?: string
 }
 
 /** 分页翻页 */

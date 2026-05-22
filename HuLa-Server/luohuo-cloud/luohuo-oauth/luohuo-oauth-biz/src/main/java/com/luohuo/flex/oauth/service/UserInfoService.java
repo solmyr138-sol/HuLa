@@ -3,7 +3,10 @@ package com.luohuo.flex.oauth.service;
 import com.luohuo.flex.base.entity.user.BaseOrg;
 import com.luohuo.flex.model.entity.system.SysUser;
 import com.luohuo.flex.oauth.vo.param.RegisterByEmailVO;
+import com.luohuo.flex.oauth.vo.param.ImEnterpriseRegisterVO;
 import com.luohuo.flex.oauth.vo.param.RegisterByMobileVO;
+import com.luohuo.flex.oauth.vo.result.EnterpriseProfileResp;
+import com.luohuo.flex.oauth.vo.result.EnterpriseResolveResp;
 import com.luohuo.flex.oauth.vo.result.OrgResultVO;
 
 import java.util.List;
@@ -58,5 +61,17 @@ public interface UserInfoService {
 	 * 校验邮箱是否存在
 	 * @param email 	邮箱信息
 	 */
-	Boolean checkEmail(String email);
+    Boolean checkEmail(String email);
+
+    /**
+     * 解析企业邀请码
+     */
+    EnterpriseResolveResp resolveEnterpriseCode(String code);
+
+    EnterpriseProfileResp getCurrentEnterpriseProfile();
+
+    /**
+     * 企业码 + 手机号注册（IM，无验证码）
+     */
+    String registerByEnterpriseMobile(ImEnterpriseRegisterVO register);
 }

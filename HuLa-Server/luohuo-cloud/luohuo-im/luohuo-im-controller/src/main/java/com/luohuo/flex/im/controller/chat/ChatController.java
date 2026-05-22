@@ -94,6 +94,12 @@ public class ChatController {
         return R.success();
     }
 
+    @PutMapping("/msg/edit")
+    @Operation(summary = "编辑消息")
+    public R<ChatMessageResp> editMsg(@Valid @RequestBody ChatMessageEditReq request) {
+        return R.success(chatService.editMsg(ContextUtil.getUid(), request));
+    }
+
     @GetMapping("/msg/read/page")
     @Operation(summary ="消息的已读未读列表")
     public R<CursorPageBaseResp<ChatMessageReadResp>> getReadPage(@Valid ChatMessageReadReq request) {

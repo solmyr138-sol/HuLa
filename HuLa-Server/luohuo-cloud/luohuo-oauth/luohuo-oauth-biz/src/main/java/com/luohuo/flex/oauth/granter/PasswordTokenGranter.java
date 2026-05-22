@@ -76,15 +76,7 @@ public class PasswordTokenGranter extends AbstractTokenGranter implements TokenG
 		Integer systemType = loginParam.getSystemType();
 		String account = loginParam.getAccount();
 		boolean emailLogin = ValidatorUtil.isEmail(account);
-		if (emailLogin) {
-			return defUserService.getUserByEmail(systemType, account);
-		}
-
-		DefUser defUser = defUserService.getUserByUsername(systemType, account);
-		if (defUser == null) {
-			return defUserService.getUserByMobile(systemType, account);
-		}
-		return defUser;
+		return defUserService.findUserForLogin(systemType, account, emailLogin);
 	}
 
     /**

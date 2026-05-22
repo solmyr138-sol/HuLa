@@ -1,0 +1,14 @@
+{
+  "enterprise_code": "企业号",
+  "enterprise_name": "企业主体",
+  "my_title": "我的",
+  "profile_title": "个人资料",
+  "notify_settings": "通知设置",
+  "notify_partial": "未完全开启",
+  "version_upgrade": "版本升级",
+  "settings": "设置",
+  "restart_app": "重启 App",
+  "qr_card": "二维码名片",
+  "about_title": "关于",
+  "about_app_name": "企业传书"
+}

@@ -120,6 +120,11 @@ public interface DefUserManager extends SuperCacheManager<DefUser>, LoadService 
     DefUser getUserByMobile(Integer loginType, String mobile);
 
     /**
+     * 登录专用：直查数据库，避免「用户不存在」被二级缓存长期命中
+     */
+    DefUser findUserForLogin(Integer loginType, String account, boolean emailLogin);
+
+    /**
      * 清理缓存
      * @param list id或用户对象
      */

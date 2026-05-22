@@ -1,5 +1,12 @@
 import { ImUrlEnum, TauriCommand, type NotificationTypeEnum } from '@/enums'
-import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq, UserItem } from '@/services/types'
+import type {
+  CacheBadgeReq,
+  EnterpriseRegisterReq,
+  LoginUserReq,
+  ModifyUserInfoType,
+  RegisterUserReq,
+  UserItem
+} from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler, invokeWithRetry } from '@/utils/TauriInvokeHandler'
 import { useChatStore } from '../stores/chat'
 import { useGroupStore } from '../stores/group'
@@ -577,6 +584,13 @@ export async function getUploadProvider(): Promise<{ provider: 'qiniu' | 'minio'
 export async function register(body: RegisterUserReq) {
   return await imRequest({
     url: ImUrlEnum.REGISTER,
+    body
+  })
+}
+
+export async function registerByEnterpriseMobile(body: EnterpriseRegisterReq) {
+  return await imRequest({
+    url: ImUrlEnum.REGISTER_ENTERPRISE_MOBILE,
     body
   })
 }

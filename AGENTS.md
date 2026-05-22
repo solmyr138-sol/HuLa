@@ -42,6 +42,8 @@ Multi-context monorepo: read `CONTEXT-MAP.md`, then the relevant `HuLa/CONTEXT.m
 | `HuLa/` | Tauri v2 + Vue 3 + Rust client (desktop/mobile) |
 | `HuLa-Server/` | Spring Boot 3 / Spring Cloud IM backend (`luohuo-*` modules) |
 | `HuLa-Server/docs/install/docker/` | Local Docker stack for dev (MySQL, Redis, Nacos, RocketMQ, MinIO) |
+| `HuLa-Admin/` | 租户级 IM 运营后台（单企业） |
+| `HuLa-Platform-Admin/` | 平台总后台 devOperation（跨租户企业管理） |
 | `.agents/skills/` | Matt Pocock agent skills (engineering + productivity) |
 
 ## Language

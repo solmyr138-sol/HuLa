@@ -320,6 +320,9 @@ pub enum ImUrl {
     CheckToken,
     Logout,
     Register,
+    RegisterEnterpriseMobile,
+    ResolveEnterpriseCode,
+    EnterpriseProfile,
     GetQiniuToken,
     InitConfig,
     StorageProvider,
@@ -553,6 +556,11 @@ impl ImUrl {
             ImUrl::CheckToken => (http::Method::POST, "oauth/check"),
             ImUrl::Logout => (http::Method::POST, "oauth/anyUser/logout"),
             ImUrl::Register => (http::Method::POST, "oauth/anyTenant/registerByEmail"),
+            ImUrl::RegisterEnterpriseMobile => {
+                (http::Method::POST, "oauth/anyTenant/registerByEnterpriseMobile")
+            }
+            ImUrl::ResolveEnterpriseCode => (http::Method::GET, "oauth/anyTenant/resolveEnterpriseCode"),
+            ImUrl::EnterpriseProfile => (http::Method::GET, "oauth/anyone/enterprise"),
 
             // 系统相关
             ImUrl::GetQiniuToken => (http::Method::GET, "system/anyTenant/ossToken"),
@@ -863,6 +871,9 @@ impl ImUrl {
             "checkToken" => Ok(ImUrl::CheckToken),
             "logout" => Ok(ImUrl::Logout),
             "register" => Ok(ImUrl::Register),
+            "registerEnterpriseMobile" => Ok(ImUrl::RegisterEnterpriseMobile),
+            "resolveEnterpriseCode" => Ok(ImUrl::ResolveEnterpriseCode),
+            "enterpriseProfile" => Ok(ImUrl::EnterpriseProfile),
 
             // 系统相关
             "getQiniuToken" => Ok(ImUrl::GetQiniuToken),

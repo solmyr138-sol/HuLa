@@ -2,6 +2,7 @@ package com.luohuo.flex.base.manager.tenant.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
@@ -112,6 +113,24 @@ public class DefUserManagerImpl extends SuperCacheManagerImpl<DefUserMapper, Def
     }
 
     @Override
+    public DefUser findUserForLogin(Integer loginType, String account, boolean emailLogin) {
+        if (emailLogin) {
+            return getOne(Wrappers.<DefUser>lambdaQuery()
+                    .eq(DefUser::getSystemType, loginType)
+                    .eq(DefUser::getEmail, account), false);
+        }
+        DefUser user = getOne(Wrappers.<DefUser>lambdaQuery()
+                .eq(DefUser::getSystemType, loginType)
+                .eq(DefUser::getUsername, account), false);
+        if (user == null) {
+            user = getOne(Wrappers.<DefUser>lambdaQuery()
+                    .eq(DefUser::getSystemType, loginType)
+                    .eq(DefUser::getMobile, account), false);
+        }
+        return user;
+    }
+
+    @Override
     public DefUser getUserByEmail(Integer loginType, String email) {
         CacheKey key = DefUserEmailCacheKeyBuilder.builder(ToolsUtil.combineStrings(loginType.toString(), email));
         return getDefUser(key, loginType, email, DefUser::getEmail);
@@ -162,16 +181,28 @@ public class DefUserManagerImpl extends SuperCacheManagerImpl<DefUserMapper, Def
         ArgumentAssert.notEmpty(defUsers, "待删除数据不存在");
         List<CacheKey> keyList = new ArrayList<>();
         for (DefUser defUser : defUsers) {
-            CacheKey idCardKey = DefUserIdCardCacheKeyBuilder.builder(defUser.getIdCard());
-            CacheKey mobileKey = DefUserMobileCacheKeyBuilder.builder(defUser.getMobile());
-            CacheKey emailKey = DefUserEmailCacheKeyBuilder.builder(defUser.getEmail());
-            CacheKey usernameKey = DefUserUserNameCacheKeyBuilder.builder(defUser.getUsername());
-            keyList.add(idCardKey);
-            keyList.add(mobileKey);
-            keyList.add(emailKey);
-            keyList.add(usernameKey);
+            if (StrUtil.isNotBlank(defUser.getIdCard())) {
+                keyList.add(DefUserIdCardCacheKeyBuilder.builder(defUser.getIdCard()));
+            }
+            addLoginLookupCacheKeys(keyList, defUser.getMobile(), DefUserMobileCacheKeyBuilder::builder);
+            addLoginLookupCacheKeys(keyList, defUser.getEmail(), DefUserEmailCacheKeyBuilder::builder);
+            addLoginLookupCacheKeys(keyList, defUser.getUsername(), DefUserUserNameCacheKeyBuilder::builder);
         }
 
         cacheOps.del(keyList);
+    }
+
+    /** 登录查询缓存键带 systemType 前缀，清理时需一并删除 */
+    private static void addLoginLookupCacheKeys(
+            List<CacheKey> keyList,
+            String value,
+            java.util.function.Function<String, CacheKey> builder) {
+        if (StrUtil.isBlank(value)) {
+            return;
+        }
+        keyList.add(builder.apply(value));
+        for (int loginType : new int[]{1, 2}) {
+            keyList.add(builder.apply(ToolsUtil.combineStrings(String.valueOf(loginType), value)));
+        }
     }
 }

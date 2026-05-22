@@ -106,6 +106,7 @@ import com.luohuo.flex.model.entity.WsBaseResp;
 import com.luohuo.flex.im.domain.vo.req.MergeMessageReq;
 import com.luohuo.flex.model.entity.ws.ChatMemberResp;
 import com.luohuo.flex.model.entity.ws.WSMemberChange;
+import com.luohuo.flex.im.core.policy.service.PolicyGuardService;
 import com.luohuo.flex.im.core.user.service.FriendService;
 import com.luohuo.flex.im.core.user.service.RoleService;
 import com.luohuo.flex.im.core.user.service.adapter.WsAdapter;
@@ -162,6 +163,7 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 	private FriendService friendService;
 	private OnlineService onlineService;
 	private TransactionTemplate transactionTemplate;
+	private PolicyGuardService policyGuardService;
 
 	private void warmUpGroupMemberCache(Long roomId) {
 		// 1. 查询房间中所有用户
@@ -555,6 +557,12 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 		Triple<RoomGroup, GroupMember, Boolean> permissionCheck = checkGroupPermission(uid, request.getId());
 		RoomGroup roomGroup = permissionCheck.getLeft();
 		GroupMember member = permissionCheck.getMiddle();
+		var groupPolicy = policyGuardService.getGroupPolicy(roomGroup.getRoomId());
+		boolean admin = GroupRoleEnum.LEADER.getType().equals(member.getRoleId())
+				|| GroupRoleEnum.MANAGER.getType().equals(member.getRoleId());
+		if (!admin && Boolean.FALSE.equals(groupPolicy.getAllowMemberChangeNickname())) {
+			throw new BizException("群已禁止修改群昵称");
+		}
 
 		// 2.修改我的信息
 		boolean equals = member.getMyName().equals(StrUtil.isEmpty(request.getMyName()) ? "" : request.getMyName());
@@ -789,6 +797,7 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 
 	@Override
 	public void mergeMessage(Long uid, MergeMessageReq req) {
+		policyGuardService.assertCanBroadcast(uid);
 		// 1. 校验人员是否在群里、或者有没有对方的好友
 		Room room = roomCache.get(req.getFromRoomId());
 		if (ObjectUtil.isNull(room)) {
@@ -1047,6 +1056,7 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 	@Override
 	@RedissonLock(key = "#request.roomId")
 	public void addMember(Long uid, MemberAddReq request) {
+		policyGuardService.assertCanInviteToGroup(uid, request.getRoomId(), new ArrayList<>(request.getUidList()));
 		HashSet<Long> inviteUidList = request.getUidList();
 		AssertUtil.isNotEmpty(inviteUidList.contains(DefValConstants.DEF_BOT_ID), "不能拉小管家进群!");
 		// 1. 校验数据
@@ -1215,11 +1225,17 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 	@Override
 	@RedissonLock(prefixKey = "addGroup:", key = "#uid")
 	public Long addGroup(Long uid, GroupAddReq request) {
+		policyGuardService.assertCanCreateGroup(uid);
 		Map<Long, SummeryInfoDTO> inviteUserMap = userSummaryCache.getBatch(request.getUidList());
 		inviteUserMap.remove(DefValConstants.DEF_BOT_ID);
 		AssertUtil.isTrue(inviteUserMap.size() > 1, "群聊人数应大于2人");
 
 		List<Long> inviteUidList = new ArrayList<>(inviteUserMap.keySet());
+		for (Long inviteeUid : inviteUidList) {
+			if (!Objects.equals(inviteeUid, uid)) {
+				policyGuardService.assertCanAddFriend(uid, inviteeUid);
+			}
+		}
 		AtomicReference<Long> roomIdAtomic = new AtomicReference(0L);
 
 		// 创建群组数据并推送数据到前端

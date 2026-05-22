@@ -1,6 +1,7 @@
 package com.luohuo.flex.oauth.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.luohuo.basic.exception.BizException;
 import com.luohuo.flex.base.vo.save.user.BaseEmployeeOrgRelSaveVO;
 import com.luohuo.flex.base.vo.save.user.BaseEmployeeRoleRelSaveVO;
@@ -16,7 +17,9 @@ import com.luohuo.basic.cache.repository.CacheOps;
 import com.luohuo.basic.context.ContextUtil;
 import com.luohuo.basic.model.cache.CacheKey;
 import com.luohuo.basic.utils.ArgumentAssert;
+import com.luohuo.flex.base.entity.tenant.DefTenant;
 import com.luohuo.flex.base.entity.tenant.DefUser;
+import com.luohuo.flex.base.service.tenant.DefTenantService;
 import com.luohuo.flex.base.entity.user.BaseEmployee;
 import com.luohuo.flex.base.entity.user.BaseOrg;
 import com.luohuo.flex.base.service.tenant.DefUserService;
@@ -26,7 +29,10 @@ import com.luohuo.flex.common.cache.common.CaptchaCacheKeyBuilder;
 import com.luohuo.flex.common.properties.SystemProperties;
 import com.luohuo.flex.oauth.service.UserInfoService;
 import com.luohuo.flex.oauth.vo.param.RegisterByEmailVO;
+import com.luohuo.flex.oauth.vo.param.ImEnterpriseRegisterVO;
 import com.luohuo.flex.oauth.vo.param.RegisterByMobileVO;
+import com.luohuo.flex.oauth.vo.result.EnterpriseProfileResp;
+import com.luohuo.flex.oauth.vo.result.EnterpriseResolveResp;
 import com.luohuo.flex.oauth.vo.result.OrgResultVO;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +51,7 @@ public class UserInfoServiceImpl implements UserInfoService {
     protected final BaseEmployeeService baseEmployeeService;
     protected final BaseOrgService baseOrgService;
     protected final DefUserService defUserService;
+    protected final DefTenantService defTenantService;
     protected final CacheOps cacheOps;
     protected final SystemProperties systemProperties;
     private final ImUserApi imUserApi;
@@ -85,6 +92,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         ArgumentAssert.equals(register.getConfirmPassword(), register.getPassword(), "密码和确认密码不一致");
         DefUser defUser = BeanUtil.toBean(register, DefUser.class);
+        defUser.setTenantId(resolveTenantId(register.getEnterpriseCode()));
 
         defUserService.register(defUser);
         return defUser.getMobile();
@@ -101,6 +109,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         ArgumentAssert.equals(register.getConfirmPassword(), register.getPassword(), "密码和确认密码不一致");
         DefUser defUser = BeanUtil.toBean(register, DefUser.class);
+        defUser.setTenantId(resolveTenantId(register.getEnterpriseCode()));
 		try {
 			defUserService.registerByEmail(defUser);
 		} catch (Exception e) {
@@ -162,6 +171,60 @@ public class UserInfoServiceImpl implements UserInfoService {
 			}
 		};
     }
+
+	@Override
+	public EnterpriseResolveResp resolveEnterpriseCode(String code) {
+		DefTenant tenant = defTenantService.getByInviteCode(code);
+		ArgumentAssert.notNull(tenant, "企业邀请码无效或已停用");
+		ArgumentAssert.isTrue(Boolean.TRUE.equals(tenant.getState()), "企业已停用");
+		return new EnterpriseResolveResp(tenant.getId(), tenant.getName());
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public String registerByEnterpriseMobile(ImEnterpriseRegisterVO register) {
+		ArgumentAssert.equals(register.getConfirmPassword(), register.getPassword(), "密码和确认密码不一致");
+		Long tenantId = resolveTenantId(register.getEnterpriseCode());
+		DefUser defUser = new DefUser();
+		defUser.setMobile(register.getMobile().trim());
+		defUser.setPassword(register.getPassword());
+		defUser.setTenantId(tenantId);
+		defUser.setSystemType(register.getSystemType() != null ? register.getSystemType() : 2);
+		if (StrUtil.isNotBlank(register.getNickName())) {
+			defUser.setNickName(register.getNickName().trim());
+		}
+		defUser = defUserService.registerImByMobile(defUser);
+		UserRegisterVo userRegisterVo = new UserRegisterVo();
+		userRegisterVo.setAccount(defUser.getUsername());
+		userRegisterVo.setUserId(defUser.getId());
+		userRegisterVo.setEmail(defUser.getMobile());
+		userRegisterVo.setName(defUser.getNickName());
+		userRegisterVo.setSex(defUser.getSex());
+		userRegisterVo.setAvatar(defUser.getAvatar());
+		userRegisterVo.setTenantId(defUser.getTenantId());
+		userRegisterVo.setUserType(UserTypeEnum.NORMAL.getValue());
+		if (!Boolean.TRUE.equals(imUserApi.register(userRegisterVo).getData())) {
+			throw new BizException("注册失败，请稍后重试");
+		}
+		return defUser.getMobile();
+	}
+
+	@Override
+	public EnterpriseProfileResp getCurrentEnterpriseProfile() {
+		Long tenantId = ContextUtil.getTenantId();
+		ArgumentAssert.notNull(tenantId, "未绑定企业");
+		DefTenant tenant = defTenantService.getById(tenantId);
+		ArgumentAssert.notNull(tenant, "企业不存在");
+		return new EnterpriseProfileResp(tenant.getId(), tenant.getInviteCode(), tenant.getName());
+	}
+
+	private Long resolveTenantId(String enterpriseCode) {
+		ArgumentAssert.notEmpty(enterpriseCode, "请填写企业邀请码");
+		DefTenant tenant = defTenantService.getByInviteCode(enterpriseCode.trim());
+		ArgumentAssert.notNull(tenant, "企业邀请码无效或已停用");
+		ArgumentAssert.isTrue(Boolean.TRUE.equals(tenant.getState()), "企业已停用");
+		return tenant.getId();
+	}
 
 	@Override
 	public Boolean checkEmail(String email) {
