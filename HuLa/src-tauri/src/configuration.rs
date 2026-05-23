@@ -295,7 +295,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
             .map_err(|e| config::ConfigError::Message(e.to_string()))?;
 
         // 构建最终配置对象
-        config::Config::builder()
+        let mut settings: Settings = config::Config::builder()
             .add_source(config::File::from_str(
                 base_content,
                 config::FileFormat::Yaml,
@@ -310,7 +310,13 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
                     .separator("__"),
             )
             .build()?
-            .try_deserialize::<Settings>()
+            .try_deserialize()?;
+
+        if active_config == "local" {
+            crate::android_backend::apply_local_emulator_hosts(&mut settings.backend);
+        }
+
+        Ok(settings)
     }
 }
 

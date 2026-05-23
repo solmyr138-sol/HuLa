@@ -48,6 +48,12 @@ $env:CXX_armv7_linux_androideabi = "armv7a-linux-androideabi26-clang++"
 $env:CC_i686_linux_android = "i686-linux-android26-clang"
 $env:CXX_i686_linux_android = "i686-linux-android26-clang++"
 
+# cargo build --target aarch64-linux-android 需要完整 linker 路径（与 Tauri CLI 一致）
+$clang = Join-Path $ndkBin "aarch64-linux-android26-clang.cmd"
+if (Test-Path -LiteralPath $clang) {
+    $env:CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = $clang
+}
+
 # libc++ 链接写在 src-tauri/build.rs + .cargo/config.toml，不要在这里设 CARGO_TARGET_*_RUSTFLAGS
 # （与 Tauri 注入的 flags 冲突会导致每次启动全量重编）
 

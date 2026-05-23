@@ -61,7 +61,7 @@ async function bootstrap() {
   const app = createApp(App)
   app.use(router).use(pinia).use(setupI18n).directive('resize', vResize).directive('slide', vSlide)
 
-  if (!isMobile()) {
+  if (!__HULA_MOBILE_BUILD__ && !isMobile()) {
     const { default: TlbsMap } = await import('tlbs-map-vue')
     app.use(TlbsMap)
   }

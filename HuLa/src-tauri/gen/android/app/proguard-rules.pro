@@ -1,21 +1,30 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# HuLa Android release — keep Tauri bridge, WebView, plugins (R8 minify breaks these if stripped)
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod, Exceptions
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# App + JNI entrypoints (Rust calls Activity.show/hide)
+-keep class com.hula.app.** { *; }
+-keepclassmembers class com.hula.app.MainActivity {
+    public void show();
+    public void hide();
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Tauri Android runtime
+-keep class app.tauri.** { *; }
+-keep class com.plugin.** { *; }
+
+# WebView JS bridge
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keep class androidx.webkit.** { *; }
+
+# ML Kit barcode (bundled scanner)
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.mlkit.**
+-dontwarn com.google.android.gms.**
+
+# Kotlin metadata for reflection used by plugins
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class kotlin.** { *; }

@@ -1,3 +1,4 @@
+import { ImUrlEnum } from '@/enums'
 import { imRequest } from '@/utils/ImRequestUtils'
 
 export type GroupPolicy = {
@@ -13,23 +14,21 @@ export type GroupPolicy = {
 
 export async function fetchGroupPolicy(roomId: number) {
   return imRequest<GroupPolicy>({
-    url: '/im/room/group/policy',
+    url: ImUrlEnum.FETCH_GROUP_POLICY,
     params: { id: roomId }
   })
 }
 
 export async function updateGroupPolicy(body: GroupPolicy) {
   return imRequest({
-    url: '/im/room/group/policy',
-    method: 'PUT',
+    url: ImUrlEnum.UPDATE_GROUP_POLICY,
     body
   })
 }
 
 export async function muteGroupMember(body: { roomId: number; uid: number; mutedUntil?: string | null }) {
   return imRequest({
-    url: '/im/room/group/policy/member/mute',
-    method: 'PUT',
+    url: ImUrlEnum.MUTE_GROUP_MEMBER,
     body
   })
 }
@@ -41,8 +40,7 @@ export async function updateMemberAcl(body: {
   canRecallAnyMessage?: boolean
 }) {
   return imRequest({
-    url: '/im/room/group/policy/member/acl',
-    method: 'PUT',
+    url: ImUrlEnum.UPDATE_GROUP_MEMBER_ACL,
     body
   })
 }

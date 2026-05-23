@@ -667,6 +667,14 @@ export enum ImUrlEnum {
   GROUP_DETAIL = 'groupDetail',
   /** 群聊信息 */
   GROUP_INFO = 'groupInfo',
+  /** 获取群策略 */
+  FETCH_GROUP_POLICY = 'fetchGroupPolicy',
+  /** 更新群策略 */
+  UPDATE_GROUP_POLICY = 'updateGroupPolicy',
+  /** 群成员禁言 */
+  MUTE_GROUP_MEMBER = 'muteGroupMember',
+  /** 群成员扩展权限 */
+  UPDATE_GROUP_MEMBER_ACL = 'updateGroupMemberAcl',
 
   // 群聊管理员
   /** 撤销管理员 */

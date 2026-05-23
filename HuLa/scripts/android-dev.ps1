@@ -67,7 +67,7 @@ if ($isEmulator) {
     Write-Host "Mode: PHYSICAL DEVICE | devUrl=PC LAN IP (e.g. 192.168.x.x) — phone and PC must be same Wi-Fi"
 }
 Write-Host "Wait for: optimized dependencies (~1-2 min first run). Do not edit vite.config.ts while running."
-Write-Host "API: local.yaml -> http://10.0.2.2:18760/api (emulator backend)"
+Write-Host "API: local.yaml LAN IP; emulator auto -> http://10.0.2.2:18760/api"
 Write-Host ""
 
 # Do NOT pass adb serial to Tauri (e.g. emulator-5554): CLI matches device *name*, fails, then defaults to

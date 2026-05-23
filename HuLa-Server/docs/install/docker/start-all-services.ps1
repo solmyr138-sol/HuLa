@@ -50,4 +50,5 @@ foreach ($svc in $services) {
 Write-Host "Done. Logs: $LogsDir"
 Write-Host "API: http://127.0.0.1:18760/api"
 Write-Host "WS:  ws://127.0.0.1:18760/api/ws/ws"
-Write-Host "Android emulator: http://10.0.2.2:18760/api"
+Write-Host "Phone / LAN: http://${HostIp}:18760/api"
+Write-Host "Android emulator: app auto uses http://10.0.2.2:18760/api"

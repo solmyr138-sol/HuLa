@@ -5,7 +5,11 @@
         <div class="title">企业传书平台总后台</div>
         <div class="sub">devOperation · 跨租户</div>
       </div>
-      <n-menu :value="route.path" :options="menu" @update:value="(k) => router.push(k)" />
+      <n-menu
+        inverted
+        :value="route.path"
+        :options="menu"
+        @update:value="(k) => router.push(k)" />
     </n-layout-sider>
     <n-layout>
       <n-layout-header bordered class="header">平台运营</n-layout-header>

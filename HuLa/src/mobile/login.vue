@@ -162,7 +162,7 @@
             <n-input
               size="large"
               v-model:value="registerInfo.mobile"
-              type="tel"
+              type="text"
               maxlength="11"
               :placeholder="t('auth.register.placeholders.mobile')"
               clearable />
@@ -293,30 +293,11 @@ const protocol = ref(true)
 const arrowStatus = ref(false)
 
 // 注册相关的占位符和状态
-const registerNamePH = ref(t('login.mobile.register.input.nickname'))
-const registerEmailPH = ref(t('login.mobile.register.input.email'))
 const registerPasswordPH = ref(t('login.mobile.register.input.password'))
 const confirmPasswordPH = ref(t('login.mobile.register.input.confirm_password'))
-const registerCodePH = ref(t('login.mobile.register.input.email_verification_code'))
 const registerProtocol = ref(true)
 const registerLoading = ref(false)
-const sendCodeLoading = ref(false)
-const sendCodeCountdown = ref(0)
-const MOBILE_EMAIL_TIMER_ID = 'mobile_register_email_timer'
-const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
 const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLogin()
-
-const sendCodeButtonText = computed(() => {
-  if (sendCodeCountdown.value > 0) {
-    const s = sendCodeCountdown.value
-    return t('login.mobile.register.btn.resend_in', { seconds: s })
-  }
-  return t('login.mobile.register.btn.send_email_code')
-})
-
-const sendCodeDisabled = computed(() => {
-  return sendCodeLoading.value || sendCodeCountdown.value > 0 || !registerInfo.value.email || !isEmailValid.value
-})
 
 const agreementStyle = computed(() => {
   const inset = safeArea.value.bottom || 0
@@ -329,63 +310,8 @@ const agreementStyle = computed(() => {
   return { bottom: 'var(--safe-area-inset-bottom)' }
 })
 
-const stopSendCodeCountdown = () => {
-  timerWorker.postMessage({
-    type: 'clearTimer',
-    msgId: MOBILE_EMAIL_TIMER_ID
-  })
-  sendCodeCountdown.value = 0
-}
-
-const startSendCodeCountdown = () => {
-  sendCodeCountdown.value = 60
-  timerWorker.postMessage({
-    type: 'startTimer',
-    msgId: MOBILE_EMAIL_TIMER_ID,
-    duration: 60 * 1000
-  })
-}
-
-timerWorker.onmessage = (e) => {
-  const { type, msgId, remainingTime } = e.data
-  if (msgId !== MOBILE_EMAIL_TIMER_ID) return
-
-  if (type === 'debug') {
-    sendCodeCountdown.value = Math.max(0, Math.ceil(remainingTime / 1000))
-  } else if (type === 'timeout') {
-    sendCodeCountdown.value = 0
-  }
-}
-
-timerWorker.onerror = () => {
-  sendCodeCountdown.value = 0
-}
-
-watch(activeTab, () => {
-  stopSendCodeCountdown()
-  sendCodeLoading.value = false
-})
-
-// 常用邮箱后缀
-const commonEmailDomains = computed(() => {
-  return ['@gmail.com', '@163.com', '@qq.com'].map((suffix) => {
-    const prefix = registerInfo.value.email.split('@')[0]
-    return {
-      label: prefix + suffix,
-      value: prefix + suffix
-    }
-  })
-})
-
 /** 不允许输入空格 */
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
-
-/** 检查邮箱格式 */
-const isEmailValid = computed(() => {
-  const email = registerInfo.value.email.trim()
-  if (!email) return false
-  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
-})
 
 /** 密码验证函数 */
 const validateMinLength = (value: string) => value.length >= 6
@@ -418,13 +344,6 @@ async function resolveEnterpriseOnMobile() {
   } catch {
     resolvedTenantName.value = ''
   }
-}
-
-const getShow = (value: string) => {
-  if (value.endsWith('@')) {
-    return true
-  }
-  return false
 }
 
 // 监听登录表单变化
@@ -500,34 +419,6 @@ const handleRegisterStep = async () => {
     return
   }
   await handleRegisterComplete()
-}
-
-/** 发送邮箱验证码 */
-const handleSendEmailCode = async () => {
-  if (!isEmailValid.value) {
-    window.$message.warning(t('login.mobile.email_invalid'))
-    return
-  }
-
-  if (sendCodeCountdown.value > 0 || sendCodeLoading.value) {
-    return
-  }
-
-  sendCodeLoading.value = true
-  try {
-    await sendCaptcha({
-      email: registerInfo.value.email,
-      operationType: 'register',
-      templateCode: 'REGISTER_EMAIL'
-    })
-    window.$message.success(t('login.mobile.code_sent_email'))
-    startSendCodeCountdown()
-  } catch (error) {
-    console.error(t('login.mobile.code_send_failed_with_reason', { reason: error }))
-    window.$message.error(t('login.mobile.code_send_failed_retry'))
-  } finally {
-    sendCodeLoading.value = false
-  }
 }
 
 /** 完成注册 */
@@ -677,8 +568,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
-  stopSendCodeCountdown()
-  timerWorker.terminate()
   if (isIOS()) {
     invoke('set_webview_keyboard_adjustment', { enabled: false })
   }

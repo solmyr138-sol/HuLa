@@ -5,7 +5,7 @@
   "identifier": "com.hula.app",
   "build": {
     "beforeDevCommand": "pnpm exec vite --mode android",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm build:android",
     "frontendDist": "../dist",
     "devUrl": "http://127.0.0.1:5210/"
   },

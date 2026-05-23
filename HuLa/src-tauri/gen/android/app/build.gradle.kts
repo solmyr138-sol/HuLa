@@ -1,3 +1,4 @@
+import java.io.FileInputStream
 import java.util.Properties
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -14,6 +15,12 @@ val tauriProperties = Properties().apply {
     }
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     compileSdk = 36
     namespace = "com.hula.app"
@@ -24,6 +31,16 @@ android {
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+    }
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["password"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["password"] as String
+            }
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -39,10 +56,17 @@ android {
             }
         }
         getByName("release") {
-            isMinifyEnabled = true
+            // 本地 active_config=local 使用 http 局域网网关；生产环境仍走 https URL
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            // Debug 正常、Release 闪退多为 R8 误删 Tauri/WebView/ML Kit；先关混淆，规则见 proguard-rules.pro
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
-                    .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
+                    .plus(getDefaultProguardFile("proguard-android.txt"))
                     .toList().toTypedArray()
             )
         }
@@ -52,6 +76,11 @@ android {
     }
     buildFeatures {
         buildConfig = true
+    }
+    packaging {
+        jniLibs {
+            excludes += setOf("**/libc++_shared.so")
+        }
     }
 }
 
@@ -92,24 +121,27 @@ fun patchAndroidDevUrl() {
     if (text != patched) assets.writeText(patched)
 }
 
-// Tauri-generated Rust.kt loads hula_app_lib without libc++ first
+// Honor/Huawei: loadLibrary("c++_shared") resolves to /hw_product/... and crashes; Rust uses static libc++.
 fun patchRustKt() {
     val rustKt = file("src/main/java/com/hula/app/generated/Rust.kt")
     if (!rustKt.exists()) return
     val text = rustKt.readText()
-    if (text.contains("loadLibrary(\"c++_shared\")")) return
-    val patched = text.replace(
-        "init {\n        System.loadLibrary(\"hula_app_lib\")",
-        "init {\n        System.loadLibrary(\"c++_shared\")\n        System.loadLibrary(\"hula_app_lib\")"
+    val stripped = text.replace(
+        Regex("""\s*System\.loadLibrary\("c\+\+_shared"\)\s*;?\s*\n"""),
+        "\n"
     )
-    if (patched != text) rustKt.writeText(patched)
+    if (stripped != text) {
+        rustKt.writeText(stripped)
+        logger.lifecycle("patchRustKt: removed c++_shared preload from Rust.kt")
+    }
 }
 
 tasks.configureEach {
-    if (name.startsWith("rustBuild") || (name.contains("compile") && name.contains("Kotlin"))) {
-        doFirst {
-            patchAndroidDevUrl()
-            patchRustKt()
-        }
+    if (name.startsWith("rustBuild")) {
+        doFirst { patchAndroidDevUrl() }
+        doLast { patchRustKt() }
+    }
+    if (name.contains("compile") && name.contains("Kotlin")) {
+        doFirst { patchRustKt() }
     }
 }

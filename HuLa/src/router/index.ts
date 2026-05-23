@@ -11,13 +11,15 @@ import { commonRoutes } from '@/router/common.routes'
 import { desktopRoutes } from '@/router/desktop.routes'
 import { mobileRoutes } from '@/router/mobile.routes'
 import { TauriCommand } from '@/enums'
+import { ensureAppStateReady } from '@/utils/AppStateReady'
 
 const { BASE_URL } = import.meta.env
 
-const isMobile = type() === 'ios' || type() === 'android'
+const isMobileRuntime = type() === 'ios' || type() === 'android'
+const isMobileApp = __HULA_MOBILE_BUILD__ || isMobileRuntime
 
 const getAllRoutes = () => {
-  if (isMobile) {
+  if (isMobileApp) {
     return mobileRoutes
   }
   return [...commonRoutes, ...desktopRoutes]
@@ -29,11 +31,13 @@ const router: any = createRouter({
 })
 
 router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  if (!isMobile) {
+  if (!isMobileApp) {
     return next()
   }
 
   try {
+    await ensureAppStateReady()
+
     const isLoginPage = to.path === '/mobile/login'
     const isSplashPage = to.path === '/mobile/splashscreen'
     const isForgetPage = to.path === '/mobile/MobileForgetPassword'

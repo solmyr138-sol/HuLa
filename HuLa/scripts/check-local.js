@@ -5,6 +5,7 @@ import { join } from 'path'
 // 用于检查和创建 src-tauri/configuration/local.yaml 配置文件
 const configDir = join(process.cwd(), 'src-tauri', 'configuration')
 const localConfigPath = join(configDir, 'local.yaml')
+const exampleConfigPath = join(configDir, 'local.yaml.example')
 const productionConfigPath = join(configDir, 'production.yaml')
 
 try {
@@ -15,8 +16,10 @@ try {
 
   let content = ''
 
-  // 优先使用 production.yaml 作为模板，因为它包含更完整的配置
-  if (existsSync(productionConfigPath)) {
+  if (existsSync(exampleConfigPath)) {
+    content = readFileSync(exampleConfigPath, 'utf8')
+    console.log(chalk.blue('📋 使用 local.yaml.example 作为模板'))
+  } else if (existsSync(productionConfigPath)) {
     content = readFileSync(productionConfigPath, 'utf8')
     console.log(chalk.blue('📋 使用 production.yaml 作为模板'))
   } else {

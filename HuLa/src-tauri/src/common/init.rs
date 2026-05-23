@@ -1,4 +1,5 @@
 use tauri::{Runtime, plugin::TauriPlugin};
+#[cfg(not(mobile))]
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use tauri_plugin_log::{Target, TargetKind};
 
@@ -6,16 +7,14 @@ pub trait CustomInit {
     fn init_plugin(self) -> Self;
 }
 
-/// 构建平台特定的日志插件
-fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    let builder = tauri_plugin_log::Builder::new()
+fn apply_log_levels(builder: tauri_plugin_log::Builder) -> tauri_plugin_log::Builder {
+    builder
         .level(tracing::log::LevelFilter::Info)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .level_for("sqlx", tracing::log::LevelFilter::Warn)
         .level_for("sqlx::query", tracing::log::LevelFilter::Warn)
         .level_for("sea_orm", tracing::log::LevelFilter::Warn)
         .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
-        // 过滤掉无用的 tauri 内部日志
         .level_for("tauri", tracing::log::LevelFilter::Warn)
         .level_for("tauri::manager", tracing::log::LevelFilter::Warn)
         .level_for("tauri::event", tracing::log::LevelFilter::Warn)
@@ -24,6 +23,23 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
         .level_for("tao", tracing::log::LevelFilter::Warn)
         .level_for("wry", tracing::log::LevelFilter::Warn)
         .level_for("tracing::span", tracing::log::LevelFilter::Warn)
+}
+
+/// 移动端：Stdout（Android 上由插件转发到 logcat）+ Webview，不用 LogDir/彩色
+#[cfg(mobile)]
+fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
+    apply_log_levels(tauri_plugin_log::Builder::new())
+        .targets([
+            Target::new(TargetKind::Stdout),
+            Target::new(TargetKind::Webview),
+        ])
+        .build()
+}
+
+/// 桌面端日志
+#[cfg(not(mobile))]
+fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
+    apply_log_levels(tauri_plugin_log::Builder::new())
         .targets([
             Target::new(TargetKind::Stdout),
             Target::new(TargetKind::Webview),
@@ -37,14 +53,8 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
             debug: Color::White,
             info: Color::Green,
             trace: Color::White,
-        });
-
-    // #[cfg(desktop)]
-    // {
-    //     builder = builder.skip_logger();
-    // }
-
-    builder.build()
+        })
+        .build()
 }
 
 /// 初始化公共插件（所有平台通用）
@@ -60,9 +70,10 @@ pub fn init_common_plugins<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Bui
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_mic_recorder::init());
+        .plugin(tauri_plugin_clipboard_manager::init());
 
-    // 添加日志插件
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_mic_recorder::init());
+
     builder.plugin(build_log_plugin())
 }

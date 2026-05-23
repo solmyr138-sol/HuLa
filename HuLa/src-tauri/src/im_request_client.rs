@@ -353,6 +353,10 @@ pub enum ImUrl {
     InviteGroupMember,
     RemoveGroupMember,
     CreateGroup,
+    FetchGroupPolicy,
+    UpdateGroupPolicy,
+    MuteGroupMember,
+    UpdateGroupMemberAcl,
     Shield,
     Notification,
     DeleteSession,
@@ -607,6 +611,10 @@ impl ImUrl {
             ImUrl::InviteGroupMember => (http::Method::POST, "im/room/group/member"),
             ImUrl::RemoveGroupMember => (http::Method::DELETE, "im/room/group/member"),
             ImUrl::CreateGroup => (http::Method::POST, "im/room/group"),
+            ImUrl::FetchGroupPolicy => (http::Method::GET, "im/room/group/policy"),
+            ImUrl::UpdateGroupPolicy => (http::Method::PUT, "im/room/group/policy"),
+            ImUrl::MuteGroupMember => (http::Method::PUT, "im/room/group/policy/member/mute"),
+            ImUrl::UpdateGroupMemberAcl => (http::Method::PUT, "im/room/group/policy/member/acl"),
 
             // 聊天会话相关
             ImUrl::Shield => (http::Method::POST, "im/chat/setShield"),
@@ -917,6 +925,10 @@ impl ImUrl {
             "inviteGroupMember" => Ok(ImUrl::InviteGroupMember),
             "removeGroupMember" => Ok(ImUrl::RemoveGroupMember),
             "createGroup" => Ok(ImUrl::CreateGroup),
+            "fetchGroupPolicy" => Ok(ImUrl::FetchGroupPolicy),
+            "updateGroupPolicy" => Ok(ImUrl::UpdateGroupPolicy),
+            "muteGroupMember" => Ok(ImUrl::MuteGroupMember),
+            "updateGroupMemberAcl" => Ok(ImUrl::UpdateGroupMemberAcl),
 
             // 聊天会话相关
             "shield" => Ok(ImUrl::Shield),

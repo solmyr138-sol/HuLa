@@ -12,7 +12,7 @@ import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getComponentsDirs, getComponentsDtsPath, isMobilePlatform } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
-import { isMobileBuildTarget, MOBILE_STUB_MODULES } from './build/config/mobile-build'
+import { createMobileBuildAliases, isMobileBuildTarget } from './build/config/mobile-build'
 import { atStartup } from './build/config/console'
 import { androidDevHostPlugin } from './build/plugins/androidDevHost'
 import packageJson from './package.json'
@@ -52,8 +52,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   const isAndroid = mode === 'android' || currentPlatform === 'android'
   const isIos = currentPlatform === 'ios'
   const isMobileBuild = isMobileBuildTarget(currentPlatform, mode)
-  const stubPath = fileURLToPath(new URL('./build/stubs/empty-module.ts', import.meta.url))
-  const mobileStubAlias = Object.fromEntries(MOBILE_STUB_MODULES.map((m) => [m, stubPath]))
+  const mobileBuildAliases = createMobileBuildAliases()
   // WebView origin in Tauri Android dev (NOT 10.0.2.2 — absolute worker URLs would cross-origin)
   const androidDevOrigin = 'http://tauri.localhost'
   // Tauri CLI on Windows sets this to your LAN IP (e.g. 192.168.1.154) before starting Vite
@@ -82,15 +81,12 @@ export default defineConfig(({ mode }: ConfigEnv) => {
 
   return {
     resolve: {
-      alias: {
-        // 配置主路径别名@
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        // 配置移动端路径别名#
-        '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
-        // 配置路径别名~(根路径)
-        '~': fileURLToPath(new URL('.', import.meta.url)),
-        ...(isMobileBuild ? mobileStubAlias : {})
-      }
+      alias: [
+        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+        { find: '#', replacement: fileURLToPath(new URL('./src/mobile', import.meta.url)) },
+        { find: '~', replacement: fileURLToPath(new URL('.', import.meta.url)) },
+        ...(isMobileBuild ? mobileBuildAliases : [])
+      ]
     },
     define: {
       __HULA_MOBILE_BUILD__: JSON.stringify(isMobileBuild)

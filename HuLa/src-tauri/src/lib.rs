@@ -1,3 +1,5 @@
+mod android_backend;
+
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
@@ -89,9 +91,6 @@ use mobiles::ios::badge::request_ios_badge_authorization;
 use mobiles::ios::badge::set_ios_badge;
 #[cfg(target_os = "ios")]
 use mobiles::ios::trigger_haptic_feedback;
-#[cfg(mobile)]
-use mobiles::splash;
-
 #[derive(Debug)]
 pub struct AppData {
     db_conn: Arc<RwLock<DatabaseConnection>>,
@@ -350,8 +349,8 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
     // Android: ndk_context 在 Activity 创建后才初始化；此处调用会 SIGABRT。启动页用 launch_screen。
-    #[cfg(not(target_os = "android"))]
-    splash::show();
+    #[cfg(target_os = "ios")]
+    mobiles::splash::show();
     // 创建一个缓存实例
     // let cache: Cache<String, String> = Cache::builder()
     //     // Time to idle (TTI):  30 minutes
@@ -383,6 +382,44 @@ fn setup_mobile() {
     }
 }
 
+fn install_initialized_app_data(
+    app_handle: &AppHandle,
+    init_result: Result<
+        (
+            Arc<RwLock<DatabaseConnection>>,
+            Arc<Mutex<UserInfo>>,
+            Arc<Mutex<im_request_client::ImRequestClient>>,
+            Arc<Mutex<Settings>>,
+        ),
+        CommonError,
+    >,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match init_result {
+        Ok((db, user_info, rc, settings)) => {
+            app_handle.manage(AppData {
+                db_conn: db.clone(),
+                user_info: user_info.clone(),
+                rc,
+                config: settings,
+                frontend_task: Mutex::new(false),
+                backend_task: Mutex::new(true),
+                write_lock: Arc::new(Mutex::new(())),
+                stream_tasks: Arc::new(Mutex::new(std::collections::HashMap::new())),
+            });
+            app_handle.manage(OauthServerState::default());
+            APP_STATE_READY.store(true, Ordering::SeqCst);
+            if let Err(e) = app_handle.emit("app-state-ready", ()) {
+                tracing::warn!("Failed to emit app-state-ready event: {}", e);
+            }
+            Ok(())
+        }
+        Err(e) => {
+            tracing::error!("Failed to initialize application data: {}", e);
+            Err(format!("Failed to initialize app data: {}", e).into())
+        }
+    }
+}
+
 // 公共的 setup 函数
 fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let scope = app_handle.fs_scope();
@@ -393,31 +430,22 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
     #[cfg(desktop)]
     setup_logout_listener(app_handle.clone());
 
-    // 异步初始化应用数据，避免阻塞主线程
-    match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-        Ok((db, user_info, rc, settings)) => {
-            // 使用 manage 方法在运行时添加状态
-            app_handle.manage(AppData {
-                db_conn: db.clone(),
-                user_info: user_info.clone(),
-                rc: rc,
-                config: settings,
-                frontend_task: Mutex::new(false),
-                // 后端任务默认完成
-                backend_task: Mutex::new(true),
-                write_lock: Arc::new(Mutex::new(())),
-                stream_tasks: Arc::new(Mutex::new(std::collections::HashMap::new())),
-            });
-            app_handle.manage(OauthServerState::default());
-            APP_STATE_READY.store(true, Ordering::SeqCst);
-            if let Err(e) = app_handle.emit("app-state-ready", ()) {
-                tracing::warn!("Failed to emit app-state-ready event: {}", e);
+    // Android/iOS：setup 常在 JavaBridge/Tokio 线程上执行，block_on 会 panic→SIGABRT（release panic=abort）
+    #[cfg(mobile)]
+    {
+        let handle = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            let init = initialize_app_data(handle.clone()).await;
+            if let Err(e) = install_initialized_app_data(&handle, init) {
+                tracing::error!("Mobile background init failed: {}", e);
             }
-        }
-        Err(e) => {
-            tracing::error!("Failed to initialize application data: {}", e);
-            return Err(format!("Failed to initialize app data: {}", e).into());
-        }
+        });
+    }
+
+    #[cfg(desktop)]
+    {
+        let init = tauri::async_runtime::block_on(initialize_app_data(app_handle.clone()));
+        install_initialized_app_data(&app_handle, init)?;
     }
 
     #[cfg(desktop)]
