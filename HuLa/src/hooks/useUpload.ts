@@ -8,6 +8,7 @@ import { useUserStore } from '@/stores/user'
 import { extractFileName } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
 import { getQiniuToken, getUploadProvider } from '@/utils/ImRequestUtils'
+import { uploadFileToServer } from '@/utils/storageUpload'
 import { isAndroid, isMobile } from '@/utils/PlatformConstants'
 import { getWasmMd5 } from '@/utils/Md5Util'
 import { removeTempFile } from '@/utils/TempFileManager'
@@ -95,7 +96,12 @@ export const useUpload = () => {
   const { on: onChange, trigger } = createEventHook()
   const onStart = createEventHook()
 
-  const uploadFileWithTauriPut = async (targetUrl: string, file: File, contentType: string) => {
+  /** MinIO 预签名 PUT 通常只签 host，不能额外带 Content-Type 等头，否则会 403 SignatureDoesNotMatch */
+  const uploadFileWithTauriPut = async (
+    targetUrl: string,
+    file: File,
+    options?: { contentType?: string }
+  ) => {
     const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
     const baseDirName = isMobile() ? 'AppData' : 'AppCache'
     const safeFileName = file.name.replace(/[\\/]/g, '_')
@@ -115,11 +121,16 @@ export const useUpload = () => {
         }
       }
 
+      const headers: Record<string, string> = {}
+      if (options?.contentType) {
+        headers['Content-Type'] = options.contentType
+      }
+
       await invoke(TauriCommand.UPLOAD_FILE_PUT, {
         url: targetUrl,
         path: tempPath,
         baseDir: baseDirName,
-        headers: { 'Content-Type': contentType },
+        headers,
         onProgress
       })
     } finally {
@@ -466,12 +477,21 @@ export const useUpload = () => {
         await onStart.trigger(fileInfo)
 
         if ((cred as any)?.uploadUrl) {
-          const contentType = file.type || 'application/octet-stream'
+          const providerInfo = await getUploadProvider()
+          if (providerInfo?.provider === 'minio') {
+            const bizType = options?.scene ?? UploadSceneEnum.CHAT
+            const downloadUrl = await uploadFileToServer(file, bizType)
+            isUploading.value = false
+            progress.value = 100
+            fileInfo.value = { ...info, downloadUrl }
+            trigger('success')
+            return { downloadUrl }
+          }
 
           isUploading.value = true
           progress.value = 0
 
-          await uploadFileWithTauriPut((cred as any).uploadUrl, file, contentType)
+          await uploadFileWithTauriPut((cred as any).uploadUrl, file)
 
           isUploading.value = false
           progress.value = 100
@@ -510,26 +530,26 @@ export const useUpload = () => {
         fileInfo.value = { ...(await parseFile(file, options)) }
         await onStart.trigger(fileInfo)
 
-        const presign = await getQiniuToken({ scene: options?.scene, fileName: file.name })
-        const contentType = file.type || 'application/octet-stream'
-
         isUploading.value = true
         progress.value = 0
 
-        await uploadFileWithTauriPut(presign.uploadUrl, file, contentType)
+        const bizType = options?.scene ?? UploadSceneEnum.CHAT
+        const downloadUrl = await uploadFileToServer(file, bizType)
 
         isUploading.value = false
         progress.value = 100
 
-        fileInfo.value = { ...fileInfo.value!, downloadUrl: presign.downloadUrl }
+        fileInfo.value = { ...fileInfo.value!, downloadUrl }
         trigger('success')
-        return { downloadUrl: presign.downloadUrl }
+        return { downloadUrl }
       } catch (error) {
         isUploading.value = false
         console.error('MinIO 上传失败:', error)
         await trigger('fail')
+        throw error instanceof Error ? error : new Error('MinIO 上传失败')
       }
     }
+    throw new Error('未配置可用的上传方式')
   }
 
   /**
@@ -633,7 +653,7 @@ export const useUpload = () => {
               url: (cred as any).uploadUrl,
               path,
               ...(absolutePath ? {} : { baseDir: baseDirName }),
-              headers: { 'Content-Type': 'application/octet-stream' },
+              headers: {},
               onProgress
             })
 

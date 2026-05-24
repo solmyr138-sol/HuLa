@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use reqwest::header;
+use serde::Deserialize;
 use serde_json::json;
 use tracing::error;
 
@@ -9,6 +10,12 @@ use crate::{
     pojo::common::ApiResult,
     vo::vo::{LoginReq, LoginResp},
 };
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ServerFileUploadData {
+    url: String,
+}
 
 #[derive(Debug)]
 pub struct ImRequestClient {
@@ -167,6 +174,60 @@ impl ImRequestClient {
                 }
             }
         }
+    }
+
+    /// 未配置 OSS 时，multipart 上传到服务端本地存储。
+    pub async fn upload_local_file(
+        &mut self,
+        bytes: Vec<u8>,
+        file_name: &str,
+        mime: &str,
+        biz_type: &str,
+    ) -> Result<String, anyhow::Error> {
+        let part = reqwest::multipart::Part::bytes(bytes)
+            .file_name(file_name.to_string())
+            .mime_str(mime)
+            .map_err(|e| anyhow::anyhow!("multipart: {e}"))?;
+        let form = reqwest::multipart::Form::new()
+            .part("file", part)
+            .text("bizType", biz_type.to_string());
+
+        let path = "system/anyTenant/file/upload";
+        let url = format!("{}/{}", self.base_url.trim_end_matches('/'), path);
+        let mut req = self.client.post(url).multipart(form);
+        if let Some(token) = &self.token {
+            req = req.header("token", token);
+        }
+
+        let response = req
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("network_error: {e}"))?;
+        let result: ApiResult<ServerFileUploadData> = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("network_error: {e}"))?;
+
+        if result.code != Some(200) {
+            return Err(anyhow::anyhow!(
+                "{}",
+                result.msg.unwrap_or_else(|| "上传失败".to_string())
+            ));
+        }
+
+        let data = result
+            .data
+            .ok_or_else(|| anyhow::anyhow!("未返回文件地址"))?;
+        let mut file_url = data.url;
+        if !file_url.starts_with("http://") && !file_url.starts_with("https://") {
+            let base = self.base_url.trim_end_matches('/');
+            file_url = if file_url.starts_with('/') {
+                format!("{base}{file_url}")
+            } else {
+                format!("{base}/{file_url}")
+            };
+        }
+        Ok(file_url)
     }
 
     /// 流式请求方法（用于 SSE 等流式响应）

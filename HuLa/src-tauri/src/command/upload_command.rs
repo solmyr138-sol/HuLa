@@ -4,8 +4,10 @@ use md5::{Digest, Md5};
 use serde::Deserialize;
 use serde::Serialize;
 use std::{collections::HashMap, path::PathBuf};
-use tauri::{AppHandle, Manager, ipc::Channel, path::BaseDirectory};
+use tauri::{AppHandle, Manager, State, ipc::Channel, path::BaseDirectory};
 use tokio::{fs::File, io::AsyncReadExt};
+
+use crate::AppData;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -325,4 +327,33 @@ async fn qiniu_resumable_upload(
         .map_err(|e| format!("Failed to parse mkfile response: {e}"))?;
 
     Ok(payload.key.unwrap_or(key))
+}
+
+/// 未配置 OSS 时，将文件 multipart 上传到服务端本地存储。
+#[tauri::command]
+pub async fn server_file_upload(
+    app_handle: AppHandle,
+    state: State<'_, AppData>,
+    path: String,
+    base_dir: Option<String>,
+    biz_type: Option<String>,
+) -> Result<String, String> {
+    let file_path = resolve_upload_path(&app_handle, &path, base_dir.as_deref())?;
+    let file_name = file_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("avatar.webp");
+    let bytes = tokio::fs::read(&file_path)
+        .await
+        .map_err(|e| format!("Failed to read file: {e}"))?;
+
+    let mime = mime_guess::from_path(&file_path)
+        .first_or_octet_stream()
+        .to_string();
+
+    let mut rc = state.rc.lock().await;
+    let biz = biz_type.as_deref().unwrap_or("avatar");
+    rc.upload_local_file(bytes, file_name, &mime, biz)
+        .await
+        .map_err(|e| e.to_string())
 }

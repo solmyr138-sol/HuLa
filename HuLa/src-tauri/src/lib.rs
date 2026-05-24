@@ -463,7 +463,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     #[cfg(mobile)]
     use crate::command::set_complete;
     use crate::command::upload_command::qiniu_upload_resumable;
-    use crate::command::upload_command::upload_file_put;
+    use crate::command::upload_command::{server_file_upload, upload_file_put};
     use crate::command::user_command::get_user_tokens;
     use crate::command::user_command::save_user_info;
     use crate::command::user_command::update_token;
@@ -566,6 +566,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         parse_markdown,
         get_readme_html,
         upload_file_put,
+        server_file_upload,
         qiniu_upload_resumable,
         #[cfg(mobile)]
         set_complete,

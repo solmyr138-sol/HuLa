@@ -1,23 +1,12 @@
-import { open } from '@tauri-apps/plugin-dialog'
-import { readFile } from '@tauri-apps/plugin-fs'
 import { UploadSceneEnum } from '@/enums'
-import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
-import { isMobile } from '@/utils/PlatformConstants'
-import { UploadProviderEnum, useUpload } from './useUpload'
+import { uploadImageWithStorageFallback } from '@/utils/storageUpload'
 
 export interface AvatarUploadOptions {
-  // 上传成功后的回调函数，参数为下载URL
-  onSuccess?: (downloadUrl: string) => void
-  // 上传场景，默认为头像
+  onSuccess?: (downloadUrl: string) => void | Promise<void>
   scene?: UploadSceneEnum
-  // 文件大小限制（KB），默认为150KB
   sizeLimit?: number
 }
 
-/**
- * 上传头像的hook
- * @param options 上传配置
- */
 export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 150 } = options
 
@@ -26,10 +15,8 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   const showCropper = ref(false)
   const cropperRef = ref()
 
-  // 打开文件选择器
-  const openFileSelector = () => {
-    void openAvatarCropper()
-  }
+  const openFileSelector = () => openAvatarCropper()
+  const openAvatarCropper = () => fileInput.value?.click()
 
   const previewImageFile = (file: File) => {
     const img = new Image()
@@ -47,103 +34,45 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
     img.src = url
   }
 
-  const loadImageFromPath = async (path: string) => {
-    const fileData = await readFile(path)
-    const fileName = extractFileName(path)
-    const mimeType = getMimeTypeFromExtension(fileName)
-    const blob = new Blob([new Uint8Array(fileData)], { type: mimeType })
-    previewImageFile(new File([blob], fileName, { type: mimeType }))
-  }
-
-  // 处理文件选择
   const handleFileChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
-    if (file) {
-      previewImageFile(file)
-    }
+    if (file) previewImageFile(file)
+    if (fileInput.value) fileInput.value.value = ''
   }
 
-  const openAvatarCropper = async () => {
-    if (isMobile()) {
-      try {
-        const selected = await open({
-          multiple: false,
-          filters: [
-            {
-              name: 'Images',
-              extensions: ['jpeg', 'jpg', 'png', 'webp']
-            }
-          ]
-        })
-        if (!selected || Array.isArray(selected)) return
-        await loadImageFromPath(selected)
-      } catch (error) {
-        console.error('[useAvatarUpload] 打开图片失败:', error)
-        window.$message.error('打开图片失败')
-      }
-      return
-    }
-    fileInput.value?.click()
+  const uploadAvatarFile = async (file: File): Promise<string> => {
+    return await uploadImageWithStorageFallback(file, {
+      scene,
+      enableDeduplication: true,
+      bizType: 'avatar'
+    })
   }
 
-  // 处理裁剪
   const handleCrop = async (cropBlob: Blob) => {
     try {
-      const fileName = `avatar_${Date.now()}.webp`
-      const file = new File([cropBlob], fileName, { type: 'image/webp' })
+      const file = new File([cropBlob], `avatar_${Date.now()}.webp`, { type: 'image/webp' })
 
-      // 检查裁剪后的文件大小
       if (file.size > sizeLimit * 1024) {
-        window.$message.error(`图片大小不能超过${sizeLimit}KB，当前图片裁剪后大小为${Math.round(file.size / 1024)}KB`)
-        // 结束加载状态
+        window.$message.error(`图片大小不能超过${sizeLimit}KB`)
         cropperRef.value?.finishLoading()
         return
       }
 
-      // 先设置图片URL，等待图片加载完成后再显示裁剪窗口
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        window.$message.error('只支持 JPG、PNG、WebP 格式的图片')
-        // 结束加载状态
-        cropperRef.value?.finishLoading()
-        return
-      }
+      const downloadUrl = await uploadAvatarFile(file)
 
-      // 使用useUpload中的七牛云上传功能
-      const { uploadFile, fileInfo } = useUpload()
-
-      // 执行上传，使用七牛云上传方式
-      await uploadFile(file, {
-        provider: UploadProviderEnum.QINIU,
-        enableDeduplication: true,
-        scene: scene
-      })
-
-      // 获取下载URL
-      const downloadUrl = fileInfo.value?.downloadUrl || ''
-
-      // 调用成功回调
       if (onSuccess) {
-        onSuccess(downloadUrl)
+        await onSuccess(downloadUrl)
       }
 
-      // 清理资源
-      if (localImageUrl.value) {
-        URL.revokeObjectURL(localImageUrl.value)
-      }
+      if (localImageUrl.value) URL.revokeObjectURL(localImageUrl.value)
       localImageUrl.value = ''
-      if (fileInput.value) {
-        fileInput.value.value = ''
-      }
+      if (fileInput.value) fileInput.value.value = ''
 
-      // 结束加载状态
       cropperRef.value?.finishLoading()
-      // 关闭裁剪窗口
       showCropper.value = false
     } catch (error) {
-      console.error('上传头像失败:', error)
-      window.$message.error('上传头像失败')
-      // 发生错误时也需要结束加载状态
+      console.error('[useAvatarUpload]', error)
+      window.$message.error(error instanceof Error ? error.message : '上传头像失败')
       cropperRef.value?.finishLoading()
     }
   }

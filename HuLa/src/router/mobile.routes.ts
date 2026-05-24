@@ -4,7 +4,6 @@ import { lazyView } from '@/router/lazy'
 import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
 import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
-import MyLayout from '#/layout/my/MyLayout.vue'
 import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
 import MobileLogin from '#/login.vue'
 import Splashscreen from '#/views/Splashscreen.vue'
@@ -153,7 +152,7 @@ export const mobileRoutes: Array<RouteRecordRaw> = [
   {
     path: '/mobile/mobileMy',
     name: 'mobileMyLayout',
-    component: MyLayout,
+    component: lazyView(() => import('#/layout/my/MyLayout.vue')),
     children: [
       {
         path: '',

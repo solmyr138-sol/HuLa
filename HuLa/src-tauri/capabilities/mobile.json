@@ -40,6 +40,8 @@
     "safe-area-insets:default",
     "log:default",
     "log:allow-log",
+    "dialog:default",
+    "dialog:allow-open",
     "barcode-scanner:default",
     "barcode-scanner:allow-scan",
     "barcode-scanner:allow-cancel",

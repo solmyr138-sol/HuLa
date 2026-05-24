@@ -16,6 +16,9 @@ public interface SysConfigService {
 	 */
 	void clearConfigCache();
 
+	/** 清空并重新从数据库加载配置缓存 */
+	void resetConfigCache();
+
 	/**
 	 * 把数据同步到redis, 此方法适用于redis为空的时候进行一次批量输入
 	 */

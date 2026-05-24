@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.luohuo.flex.entity.IceServer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ public class SysSysConfigServiceImpl implements SysConfigService {
 	 */
 	@PostConstruct
 	public void init() {
+		clearConfigCache();
 		async(configMapper.selectList(new QueryWrapper<>()));
 		getSystemInit();
 	}
@@ -77,12 +79,16 @@ public class SysSysConfigServiceImpl implements SysConfigService {
 		loadingConfigCache();
 		CacheResult<String> result = cachePlusOps.hGet(ConfigCacheKeyBuilder.build(name));
 		String data = result.getValue();
-		if (ObjectUtil.isNull(data) || StrUtil.isBlank(data)) {
-			// 没有找到数据
+		if (StrUtil.isNotBlank(data)) {
+			return data;
+		}
+		Config row = configMapper.selectOne(
+				Wrappers.<Config>lambdaQuery().eq(Config::getConfigKey, name).last("LIMIT 1"));
+		if (row == null || StrUtil.isBlank(row.getConfigValue())) {
 			return "";
 		}
-		// 去数据库查找，然后写入redis
-		return result.getValue();
+		cachePlusOps.hSet(ConfigCacheKeyBuilder.build(name), row.getConfigValue());
+		return row.getConfigValue();
 	}
 
 	public void async(List<Config> configs) {

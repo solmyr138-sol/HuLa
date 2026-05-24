@@ -12,12 +12,19 @@
       <div class="flex flex-col overflow-auto h-full">
         <div class="flex flex-col gap-15px py-15px px-20px flex-1 min-h-0 z-1">
           <n-card size="small" embedded class="rounded-10px p-0" content-class="p-0!">
-            <div class="flex py-10px rounded-10px w-full items-center gap-10px" @click="clickInfo">
+            <div class="flex py-10px rounded-10px w-full items-center gap-10px relative" @click="clickInfo">
+              <input
+                v-if="isGroup"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="avatar-pick-input-row"
+                @change="handleFileChange"
+                @click.stop />
               <!-- 群头像 -->
               <div class="flex justify-center">
                 <div class="rounded-full relative bg-white w-38px h-38px overflow-hidden" style="margin-left: 10px">
                   <n-avatar
-                    class="absolute"
+                    class="absolute pointer-events-none"
                     :size="38"
                     :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')"
                     fallback-src="/logo.png"
@@ -29,13 +36,6 @@
                     }"
                     round />
                 </div>
-                <input
-                  v-if="isGroup"
-                  ref="fileInput"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  class="hidden"
-                  @change="handleFileChange" />
                 <AvatarCropper
                   ref="cropperRef"
                   v-model:show="showCropper"
@@ -323,7 +323,6 @@ const initialNameValue = ref('')
 const {
   localImageUrl,
   showCropper,
-  openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop
 } = useAvatarUpload({
@@ -451,7 +450,7 @@ const hasBadge6 = computed(() => {
 
 const clickInfo = () => {
   if (isGroup.value) {
-    openAvatarCropper()
+    return
   } else {
     const detailId = activeItem.value?.detailId
     if (!detailId) {
@@ -721,4 +720,14 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.avatar-pick-input-row {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+</style>

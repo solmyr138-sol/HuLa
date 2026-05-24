@@ -565,13 +565,20 @@ export async function getQiniuToken(params?: { scene?: string; fileName?: string
 }
 
 /** 获取默认上传提供者 */
-let __uploadProviderCache: { provider: 'qiniu' | 'minio' } | null = null
-let __uploadProviderPending: Promise<{ provider: 'qiniu' | 'minio' }> | null = null
+export type UploadProviderInfo = { provider: 'qiniu' | 'minio'; ready?: boolean }
 
-export async function getUploadProvider(): Promise<{ provider: 'qiniu' | 'minio' }> {
+let __uploadProviderCache: UploadProviderInfo | null = null
+let __uploadProviderPending: Promise<UploadProviderInfo> | null = null
+
+export function clearUploadProviderCache() {
+  __uploadProviderCache = null
+  __uploadProviderPending = null
+}
+
+export async function getUploadProvider(): Promise<UploadProviderInfo> {
   if (__uploadProviderCache) return __uploadProviderCache
   if (__uploadProviderPending) return await __uploadProviderPending
-  __uploadProviderPending = imRequest<{ provider: 'qiniu' | 'minio' }>({
+  __uploadProviderPending = imRequest<UploadProviderInfo>({
     url: ImUrlEnum.STORAGE_PROVIDER
   }).then((res) => {
     __uploadProviderCache = res
@@ -579,6 +586,16 @@ export async function getUploadProvider(): Promise<{ provider: 'qiniu' | 'minio'
     return res
   })
   return await __uploadProviderPending
+}
+
+/** OSS（七牛/MinIO）是否已配置可用 */
+export async function isOssStorageReady(): Promise<boolean> {
+  try {
+    const res = await getUploadProvider()
+    return res?.ready === true
+  } catch {
+    return false
+  }
 }
 
 export async function register(body: RegisterUserReq) {

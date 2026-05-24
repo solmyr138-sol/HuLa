@@ -14,10 +14,9 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
-import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
 import { getGroupDetail, scanQRCodeAPI } from '@/utils/ImRequestUtils'
@@ -26,6 +25,11 @@ interface ScanData {
   type: string // 必须有
   [key: string]: any // 允许有其他任意字段
 }
+
+const globalStore = useGlobalStore()
+const userStore = useUserStore()
+const router = useRouter()
+const route = useRoute()
 
 const handleScanLogin = async (data: ScanData) => {
   if (!Object.hasOwn(data, 'qrId')) {
@@ -48,9 +52,6 @@ const handleScanLogin = async (data: ScanData) => {
     }
   })
 }
-
-const globalStore = useGlobalStore()
-const userStore = useUserStore()
 
 const handleScanAddFriend = async (data: ScanData) => {
   console.log('尝试扫码添加好友')
@@ -139,5 +140,4 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
   }
 })
 
-const route = useRoute()
 </script>

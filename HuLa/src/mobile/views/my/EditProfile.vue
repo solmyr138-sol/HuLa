@@ -13,25 +13,24 @@
         <div class="p-20px">
           <!-- 头像 -->
           <div class="flex justify-center mb-50px">
-            <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden" @click="openAvatarCropper">
+            <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden avatar-pick-target">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="avatar-pick-input"
+                @change="handleFileChange" />
               <n-avatar
-                class="absolute"
+                class="absolute pointer-events-none"
                 :size="86"
-                :src="AvatarUtils.getAvatarUrl(localUserInfo.avatar!)"
+                :src="profileAvatarUrl"
                 fallback-src="/logo.png"
                 round />
               <div
-                class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
-              <div class="absolute bottom-25% text-center w-full text-12px text-white">
+                class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100 pointer-events-none"></div>
+              <div class="absolute bottom-25% text-center w-full text-12px text-white pointer-events-none">
                 {{ t('mobile_edit_profile.change_avatar') }}
               </div>
             </div>
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              class="hidden"
-              @change="handleFileChange" />
             <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
           </div>
           <!-- 个人信息 -->
@@ -237,12 +236,33 @@ import { useGroupStore } from '@/stores/group'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { ModifyUserInfo } from '@/utils/ImRequestUtils'
+import { ModifyUserInfo, uploadAvatar } from '@/utils/ImRequestUtils'
 import { useI18n } from 'vue-i18n'
 import { fetchEnterpriseProfile, type EnterpriseProfile } from '@/services/enterprise'
 
 const { t } = useI18n()
+const groupStore = useGroupStore()
+const userStore = useUserStore()
+const loginHistoriesStore = useLoginHistoriesStore()
 const enterprise = ref<EnterpriseProfile | null>(null)
+const localUserInfo = ref<Partial<ModifyUserInfoType>>({
+  name: '',
+  sex: 1,
+  phone: '',
+  avatar: '',
+  resume: '',
+  modifyNameChance: 0
+} as ModifyUserInfoType)
+
+const profileAvatarUrl = computed(() => {
+  const raw = localUserInfo.value.avatar || ''
+  const url = AvatarUtils.getAvatarUrl(raw)
+  const ts = userStore.userInfo?.avatarUpdateTime
+  if (!raw || AvatarUtils.isDefaultAvatar(raw) || url === '/logoD.png') return url
+  const sep = url.includes('?') ? '&' : '?'
+  return ts ? `${url}${sep}t=${ts}` : url
+})
+
 const genderText = computed(() => {
   const item = pickerColumn.value.gender.find((i) => i.value === localUserInfo.value.sex)
   return item ? item.text : ''
@@ -281,21 +301,30 @@ const pickerState = ref({
 const {
   localImageUrl,
   showCropper,
-  openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
-    // 更新编辑信息
-    localUserInfo.value.avatar = downloadUrl
-    // 更新用户信息
-    userStore.userInfo!.avatar = downloadUrl
-    // 更新头像更新时间
-    userStore.userInfo!.avatarUpdateTime = Date.now()
-    // 更新登录历史记录
-    loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo!.uid)[0].avatar = downloadUrl
-    // 更新缓存里面的用户信息
-    updateCurrentUserCache('avatar', downloadUrl)
+    if (!downloadUrl) {
+      window.$message.error('上传头像失败，未获取到文件地址')
+      return
+    }
+    try {
+      await uploadAvatar({ avatar: downloadUrl })
+      localUserInfo.value.avatar = downloadUrl
+      userStore.userInfo!.avatar = downloadUrl
+      userStore.userInfo!.avatarUpdateTime = Date.now()
+      const history = loginHistoriesStore.loginHistories.find((item) => item.uid === userStore.userInfo!.uid)
+      if (history) {
+        history.avatar = downloadUrl
+      }
+      updateCurrentUserCache('avatar', downloadUrl)
+      loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo)
+      window.$message.success(t('home.profile_edit.toast.avatar_update_success'))
+    } catch (error) {
+      console.error('[EditProfile] 保存头像失败:', error)
+      window.$message.error('头像保存失败')
+    }
   }
 })
 
@@ -304,17 +333,12 @@ const handleCrop = async (cropBlob: Blob) => {
   await onCrop(cropBlob)
 }
 
-const groupStore = useGroupStore()
-const userStore = useUserStore()
-const loginHistoriesStore = useLoginHistoriesStore()
-const localUserInfo = ref<Partial<ModifyUserInfoType>>({
-  name: '',
-  sex: 1,
-  phone: '',
-  avatar: '',
-  resume: '',
-  modifyNameChance: 0
-} as ModifyUserInfoType)
+const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: any) => {
+  const currentUser = userStore.userInfo!.uid && groupStore.getUserInfo(userStore.userInfo!.uid)
+  if (currentUser) {
+    currentUser[key] = value // 更新缓存里面的用户信息
+  }
+}
 
 const toEditBirthday = () => {
   router.push('/mobile/mobileMy/editBirthday')
@@ -322,13 +346,6 @@ const toEditBirthday = () => {
 
 const toEditBio = () => {
   router.push('/mobile/mobileMy/editBio')
-}
-
-const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: any) => {
-  const currentUser = userStore.userInfo!.uid && groupStore.getUserInfo(userStore.userInfo!.uid)
-  if (currentUser) {
-    currentUser[key] = value // 更新缓存里面的用户信息
-  }
 }
 
 const saveEditInfo = () => {
@@ -374,10 +391,18 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @use '@/styles/scss/form-item.scss';
 
-@use 'vant/lib/index.css';
-
 .custom-border-b-1 {
   border-bottom: 1px solid;
   border-color: #d9d9d9;
+}
+
+.avatar-pick-input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 </style>

@@ -7,12 +7,19 @@ import com.luohuo.flex.entity.Config;
 import com.luohuo.flex.entity.Init;
 import com.luohuo.flex.mapper.ConfigMapper;
 import com.luohuo.flex.service.SysConfigService;
+import com.luohuo.flex.flex.storage.LocalFileStorageService;
 import com.luohuo.flex.flex.storage.StorageDriver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,6 +38,7 @@ public class IndexController {
 
 	private final SysConfigService sysConfigService;
 	private final StorageDriver storageDriver;
+	private final LocalFileStorageService localFileStorageService;
 	private final ConfigMapper configMapper;
 
 	@GetMapping("/config/init")
@@ -50,8 +58,44 @@ public class IndexController {
 	public R<JSONObject> storageProvider() {
 		var provider = sysConfigService.get("storageDefault");
 		var json = new JSONObject();
-		json.put("provider", provider);
+		json.put("provider", provider == null || provider.isBlank() ? "qiniu" : provider);
+		json.put("ready", storageDriver.isStorageReady());
 		return R.success(json);
+	}
+
+	@PostMapping(value = "/file/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "服务端文件上传（MinIO 直传或本地落盘）")
+	public R<JSONObject> uploadLocalFile(
+			@RequestPart("file") MultipartFile file,
+			@RequestParam(value = "bizType", defaultValue = "avatar") String bizType) throws Exception {
+		if (storageDriver.isStorageReady() && storageDriver.isMinioEngine()) {
+			return R.success(storageDriver.uploadViaMinio(file, bizType));
+		}
+		if (storageDriver.isStorageReady()) {
+			return R.fail("七牛云请使用客户端直传");
+		}
+		String relative = localFileStorageService.upload(file, bizType);
+		var json = new JSONObject();
+		json.put("path", relative);
+		json.put("url", "system/anyTenant/file/access/" + relative);
+		return R.success(json);
+	}
+
+	@GetMapping("/file/access/**")
+	@Operation(summary = "访问服务端本地已上传文件")
+	public ResponseEntity<Resource> accessLocalFile(HttpServletRequest request) throws Exception {
+		String uri = request.getRequestURI();
+		String marker = "/file/access/";
+		int idx = uri.indexOf(marker);
+		if (idx < 0) {
+			return ResponseEntity.notFound().build();
+		}
+		String relative = uri.substring(idx + marker.length());
+		Resource resource = localFileStorageService.load(relative);
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.body(resource);
 	}
 
 	@GetMapping("/config/list")
@@ -73,10 +117,8 @@ public class IndexController {
 	public R<Boolean> updateConfig(@RequestBody Config config) {
 		int rows = configMapper.updateById(config);
 		if (rows > 0) {
-			// 清空配置缓存
 			sysConfigService.clearConfigCache();
-			// 重新加载配置到缓存
-			sysConfigService.loadingConfigCache();
+			sysConfigService.resetConfigCache();
 		}
 		return R.success(rows > 0);
 	}
@@ -87,10 +129,8 @@ public class IndexController {
 		for (Config config : configs) {
 			configMapper.updateById(config);
 		}
-		// 清空配置缓存
 		sysConfigService.clearConfigCache();
-		// 重新加载配置到缓存
-		sysConfigService.loadingConfigCache();
+		sysConfigService.resetConfigCache();
 		return R.success(true);
 	}
 }
