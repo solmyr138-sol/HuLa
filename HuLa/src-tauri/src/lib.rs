@@ -349,8 +349,6 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
     // Android: ndk_context 在 Activity 创建后才初始化；此处调用会 SIGABRT。启动页用 launch_screen。
-    #[cfg(target_os = "ios")]
-    mobiles::splash::show();
     // 创建一个缓存实例
     // let cache: Cache<String, String> = Cache::builder()
     //     // Time to idle (TTI):  30 minutes

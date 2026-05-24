@@ -43,7 +43,7 @@
       {
         "title": "登录",
         "label": "mobile-home",
-        "url": "/mobile/splashscreen",
+        "url": "/mobile/login",
         "width": 800,
         "height": 600,
         "resizable": false,

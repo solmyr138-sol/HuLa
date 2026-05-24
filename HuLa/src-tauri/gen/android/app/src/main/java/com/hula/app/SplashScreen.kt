@@ -4,8 +4,6 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
-import androidx.appcompat.widget.AppCompatImageView
 
 object SplashScreen {
     private var overlay: FrameLayout? = null
@@ -22,17 +20,6 @@ object SplashScreen {
                 setBackgroundResource(R.color.splash_background)
                 isClickable = true
                 isFocusable = true
-
-                val imageView = AppCompatImageView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setImageResource(R.drawable.splash)
-                    contentDescription = "Splash"
-                }
-                addView(imageView)
             }.also {
                 overlay = it
             }
