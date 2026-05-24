@@ -30,22 +30,23 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     return true
   }
 
+  const isLoginPage = to.path === '/mobile/login'
+  const isSplashPage = to.path === '/mobile/splashscreen'
+  const isForgetPage = to.path === '/mobile/MobileForgetPassword'
+  const isAgreementPage = to.path === '/mobile/serviceAgreement' || to.path === '/mobile/privacyAgreement'
+
+  // 首屏/登录相关页面先渲染 UI，不阻塞在 Rust 数据库初始化上
+  if (isLoginPage || isSplashPage || isForgetPage || isAgreementPage) {
+    return true
+  }
+
   try {
     await ensureAppStateReady()
-
-    const isLoginPage = to.path === '/mobile/login'
-    const isSplashPage = to.path === '/mobile/splashscreen'
-    const isForgetPage = to.path === '/mobile/MobileForgetPassword'
-    const isAgreementPage = to.path === '/mobile/serviceAgreement' || to.path === '/mobile/privacyAgreement'
-
-    if (isSplashPage || isForgetPage || isAgreementPage) {
-      return true
-    }
 
     const tokens = await invoke<{ token: string | null; refreshToken: string | null }>(TauriCommand.GET_USER_TOKENS)
     const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
-    if (!isLoggedIn && !isLoginPage) {
+    if (!isLoggedIn) {
       return '/mobile/login'
     }
 

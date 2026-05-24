@@ -67,13 +67,13 @@ class MainActivity : TauriActivity() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 chrome?.onProgressChanged(view, newProgress)
-                if (newProgress >= 100) {
+                if (newProgress >= 15) {
                     runOnUiThread { hideStartupBackground() }
                 }
             }
         }
 
-        // Fallback: native launch_screen is solid white — hide even if JS is slow on first Vite run
-        webView.postDelayed({ runOnUiThread { hideStartupBackground() } }, 8000)
+        // Fallback: hide white window background if JS bundle is slow on first cold start
+        webView.postDelayed({ runOnUiThread { hideStartupBackground() } }, 1500)
     }
 }

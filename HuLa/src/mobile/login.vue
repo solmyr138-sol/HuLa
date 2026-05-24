@@ -551,9 +551,6 @@ onMounted(async () => {
     return
   }
 
-  // 进入登录页面时立即隐藏首屏，确保无论登录成功或失败都能看到登录界面
-  await invoke('hide_splash_screen')
-
   useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
     loginDisabled.value = true
     loginText.value = t('login.status.service_disconnected')
@@ -564,6 +561,9 @@ onMounted(async () => {
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
+
+  // 登录页已渲染后再隐藏原生白屏（不阻塞首屏）
+  void invoke('hide_splash_screen')
 })
 
 onUnmounted(() => {
