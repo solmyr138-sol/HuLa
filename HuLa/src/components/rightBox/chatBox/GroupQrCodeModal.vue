@@ -11,6 +11,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatLocPlace } from '@/utils/StringUtils'
 import { canvasToImageBytes } from '@/utils/Canvas2Dom'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
@@ -356,7 +357,7 @@ const handleForwardGroupQr = async () => {
       uid: userStore.userInfo!.uid,
       username: selfInfo?.name || userStore.userInfo!.name || '',
       avatar: selfInfo?.avatar || userStore.userInfo!.avatar || '',
-      locPlace: selfInfo?.locPlace || ''
+      locPlace: formatLocPlace(selfInfo?.locPlace) || ''
     }
 
     const tempMessage: MessageType = {

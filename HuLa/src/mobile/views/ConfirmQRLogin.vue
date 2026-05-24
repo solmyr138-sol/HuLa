@@ -20,10 +20,6 @@
             <span>{{ props.ip }}</span>
           </div>
           <div class="flex justify-between">
-            <span>登录地址</span>
-            <span>{{ props.locPlace }}</span>
-          </div>
-          <div class="flex justify-between">
             <span>登录时间</span>
             <span>{{ nowFormatted }}</span>
           </div>

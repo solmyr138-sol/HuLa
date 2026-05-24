@@ -19,13 +19,6 @@
       <span class="text-(14px #909090)">{{ t('home.chat_details.single.empty_signature') }}</span>
 
       <n-flex align="center" justify="space-between" :size="30" class="text-#606060 select-none cursor-default">
-        <span>
-          {{
-            t('home.chat_details.single.region', {
-              place: item.locPlace || t('home.chat_details.single.unknown')
-            })
-          }}
-        </span>
         <n-flex align="center">
           <span>{{ t('home.chat_details.single.badge_label') }}</span>
           <template v-for="badge in item.itemIds" :key="badge">

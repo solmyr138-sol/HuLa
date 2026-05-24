@@ -138,13 +138,6 @@
         </n-flex>
       </n-flex>
 
-      <!-- 地址 -->
-      <n-flex align="center" :size="26" class="select-none">
-        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.location') }}</span>
-        <span class="text-(13px [--chat-text-color])">
-          {{ groupStore.getUserInfo(uid)?.locPlace || t('home.profile_card.location_unknown') }}
-        </span>
-      </n-flex>
       <!-- 获得的徽章 -->
       <n-flex v-if="groupStore.getUserInfo(uid)?.itemIds" :size="26" class="select-none">
         <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.badges') }}</span>

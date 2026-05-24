@@ -59,11 +59,6 @@
           <span class="text-12px">9999+</span>
         </n-flex>
       </n-flex>
-      <!-- 地址 -->
-      <n-flex :size="26" class="select-none">
-        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.location') }}</span>
-        <span>{{ currentUserLocation || t('home.profile_card.location_unknown') }}</span>
-      </n-flex>
       <!-- 动态 -->
       <n-flex :size="40" class="select-none">
         <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.activities') }}</span>
@@ -92,22 +87,15 @@ import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
-import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus.ts'
 import { leftHook } from '../hook.ts'
 
 const userStore = useUserStore()
-const groupStore = useGroupStore()
 const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar as string))
-const currentUserLocation = computed(() => {
-  const uid = userStore.userInfo?.uid
-  if (!uid) return ''
-  return groupStore.getUserInfo(uid)?.locPlace ?? ''
-})
 const { shrinkStatus, infoShow, themeColor, openContent, handleEditing } = leftHook()
 const { statusIcon, statusTitle, statusBgColor } = useOnlineStatus()
 </script>

@@ -124,8 +124,6 @@
                   @click.stop="handleMentionUser">
                   {{ senderDisplayName }}
                 </span>
-                <!-- 消息归属地 -->
-                <span v-if="senderLocPlace" class="text-(12px #909090)">({{ senderLocPlace }})</span>
               </n-flex>
             </ContextMenu>
             <!-- 群主 -->
@@ -448,14 +446,6 @@ watchEffect(() => {
   if (!senderDisplayName.value || senderDisplayName.value === '未知用户') {
     ensureSenderInfo(props.fromUser.uid)
   }
-})
-
-const senderLocPlace = computed(() => {
-  const storeLocPlace = groupStore.getUserInfo(props.fromUser.uid)?.locPlace
-  if (storeLocPlace) {
-    return storeLocPlace
-  }
-  return props.message.fromUser.locPlace || ''
 })
 
 const componentMap: Partial<Record<MsgEnum, Component>> = {

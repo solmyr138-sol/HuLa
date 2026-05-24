@@ -47,7 +47,7 @@ const handleScanLogin = async (data: ScanData) => {
       ip: result.ip,
       expireTime: result.expireTime,
       deviceType: result.deviceType,
-      locPlace: Object.hasOwn(result, 'locPlace') ? (result.locPlace ? result.locPlace : '深圳') : '深圳',
+      locPlace: '-',
       qrId
     }
   })
@@ -139,5 +139,4 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
       throw new Error('二维码缺少type字段:', data as any)
   }
 })
-
 </script>

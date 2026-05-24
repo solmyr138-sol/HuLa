@@ -35,13 +35,6 @@
                   class="text-(16px [--text-color])">
                   {{ userStore.userInfo?.name ? userStore.userInfo.name : t('mobile_home.noname') }}
                 </p>
-                <p class="text-(10px [--text-color])">
-                  {{
-                    userStore.userInfo?.uid
-                      ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || t('mobile_home.china')
-                      : t('mobile_home.china')
-                  }}
-                </p>
               </n-flex>
             </n-flex>
           </template>
