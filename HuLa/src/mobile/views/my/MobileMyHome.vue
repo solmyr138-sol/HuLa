@@ -23,7 +23,7 @@
             <n-avatar :size="56" :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ?? '')" round />
           </div>
           <div class="card-divider" />
-          <div class="card-bottom" @click.stop="router.push('/mobile/mobileMy/scanQRCode')">
+          <div class="card-bottom" @click.stop="router.push({ path: '/mobile/myQRCode', query: { from: 'my' } })">
             <span>{{ t('enterprise.qr_card') }}</span>
             <svg class="w-18px h-18px"><use href="#right"></use></svg>
           </div>
