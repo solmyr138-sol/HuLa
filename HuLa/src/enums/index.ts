@@ -184,6 +184,8 @@ export enum StoresEnum {
   FILE_DOWNLOAD = 'fileDownload',
   /** 移动端状态 */
   MOBILE = 'mobile',
+  /** 用户资料扩展（地区/生日/手机号本地与服务端补充） */
+  PROFILE_EXTENSION = 'profileExtension',
   /** 目录扫描器 */
   SCANNER = 'scanner',
   /** 引导状态 */

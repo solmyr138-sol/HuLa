@@ -1,5 +1,5 @@
 <template>
-  <MobileScaffold :show-footer="false">
+  <MobileScaffold :show-footer="false" :safe-area="false">
     <template #header>
       <HeaderBar
         :isOfficial="false"
@@ -11,7 +11,6 @@
     <template #container>
       <div class="flex flex-col overflow-auto h-full">
         <div class="p-20px">
-          <!-- 头像 -->
           <div class="flex justify-center mb-50px">
             <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden avatar-pick-target">
               <input
@@ -33,13 +32,18 @@
             </div>
             <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
           </div>
-          <!-- 个人信息 -->
+
           <n-card class="p-0! rounded-16px">
-            <n-form @submit="saveEditInfo" label-placement="left" label-align="left" :label-width="80">
+            <n-form label-placement="left" label-align="left" :label-width="80">
               <n-form-item :label="t('mobile_edit_profile.nickname')">
                 <n-input
-                  readonly
-                  v-model:value="localUserInfo.name"
+                  v-model:value="editName"
+                  :maxlength="8"
+                  :allow-input="noSideSpace"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
                   :placeholder="t('mobile_edit_profile.placeholder.nickname')"
                   class="bg-transparent!" />
               </n-form-item>
@@ -52,9 +56,7 @@
 
               <n-divider class="my-3! p-0!" />
 
-              <n-form-item
-                :label="t('mobile_edit_profile.gender')"
-                :placeholder="t('mobile_edit_profile.placeholder.gender')">
+              <n-form-item :label="t('mobile_edit_profile.gender')">
                 <n-input
                   @click="pickerState.gender = true"
                   v-model:value="genderText"
@@ -65,9 +67,7 @@
 
               <n-divider class="my-3! p-0!" />
 
-              <n-form-item
-                :label="t('mobile_edit_profile.brithday')"
-                :placeholder="t('mobile_edit_profile.placeholder.brithday')">
+              <n-form-item :label="t('mobile_edit_profile.brithday')">
                 <n-input
                   @click="toEditBirthday"
                   v-model:value="birthday"
@@ -75,10 +75,9 @@
                   :placeholder="t('mobile_edit_profile.placeholder.brithday')"
                   class="bg-transparent!" />
               </n-form-item>
-
-              <n-divider class="my-3! p-0!" />
             </n-form>
           </n-card>
+
           <n-card class="p-0! rounded-16px mt-12px">
             <n-form label-placement="left" label-align="left" :label-width="80">
               <n-form-item :label="t('enterprise.enterprise_code')">
@@ -90,37 +89,37 @@
               </n-form-item>
             </n-form>
           </n-card>
+
           <n-card class="p-0! rounded-16px mt-12px">
-            <n-form @submit="saveEditInfo" label-placement="left" label-align="left" :label-width="80">
-              <n-form-item label="地区" :placeholder="t('mobile_edit_profile.placeholder.brithday')">
+            <n-form label-placement="left" label-align="left" :label-width="80">
+              <n-form-item :label="t('mobile_edit_profile.region')">
                 <n-input
                   @click="pickerState.region = true"
                   v-model:value="region"
                   readonly
-                  :placeholder="t('mobile_edit_profile.placeholder.brithday')"
+                  :placeholder="t('mobile_edit_profile.placeholder.region')"
                   class="bg-transparent!" />
               </n-form-item>
 
               <n-divider class="my-3! p-0!" />
 
-              <n-form-item
-                disabled
-                :label="t('mobile_edit_profile.phone')"
-                :placeholder="t('mobile_edit_profile.placeholder.phone')">
+              <n-form-item :label="t('mobile_edit_profile.phone')">
                 <n-input
-                  disabled
-                  readonly
-                  v-model:value="localUserInfo.phone"
+                  v-model:value="editPhone"
+                  type="tel"
+                  inputmode="numeric"
+                  :maxlength="11"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
                   :placeholder="t('mobile_edit_profile.placeholder.phone')"
                   class="bg-transparent!" />
               </n-form-item>
 
               <n-divider class="my-3! p-0!" />
 
-              <n-form-item
-                disabled
-                :label="t('mobile_edit_profile.bio')"
-                :placeholder="t('mobile_edit_profile.placeholder.bio')">
+              <n-form-item :label="t('mobile_edit_profile.bio')">
                 <n-input
                   type="textarea"
                   v-model:value="localUserInfo.resume"
@@ -129,25 +128,6 @@
                   @click="toEditBio"
                   readonly />
               </n-form-item>
-              <!-- <van-cell-group class="shadow" inset> -->
-              <!-- 昵称 -->
-              <!-- <van-field
-                    :disabled="true"
-                    v-model="localUserInfo.name"
-                    name="昵称"
-                    :label="t('mobile_edit_profile.nickname')"
-                    :placeholder="t('mobile_edit_profile.placeholder.nickname')"
-                    :rules="[{ required: true, message: t('mobile_edit_profile.placeholder.nickname') }]" /> -->
-
-              <!-- 性别 -->
-              <!-- <van-field
-                    v-model="genderText"
-                    is-link
-                    readonly
-                    name="picker"
-                    :label="t('mobile_edit_profile.gender')"
-                    :placeholder="t('mobile_edit_profile.placeholder.gender')"
-                    @click="pickerState.gender = true" /> -->
 
               <n-drawer
                 v-model:show="pickerState.gender"
@@ -161,62 +141,14 @@
                   @confirm="pickerConfirm.gender"
                   @cancel="pickerState.gender = false" />
               </n-drawer>
-              <!-- <van-popup v-model:show="pickerState.gender" position="bottom">
-                    <van-picker
-                      :columns="pickerColumn.gender"
-                      @confirm="pickerConfirm.gender"
-                      @cancel="pickerState.gender = false" />
-                  </van-popup> -->
 
-              <!-- 生日 -->
-              <!-- <van-field
-                    v-model="birthday"
-                    :name="t('mobile_edit_profile.brithday')"
-                    :label="t('mobile_edit_profile.brithday')"
-                    :placeholder="t('mobile_edit_profile.placeholder.brithday')"
-                    is-link
-                    readonly
-                    @click="toEditBirthday" /> -->
-
-              <!-- 地区 -->
-              <!-- <van-field
-                    v-model="region"
-                    is-link
-                    readonly
-                    name="area"
-                    :label="t('mobile_edit_profile.brithday')"
-                    :placeholder="t('mobile_edit_profile.placeholder.brithday')"
-                    @click="pickerState.region = true" />
-                  -->
               <area-drawer
                 v-model:show="pickerState.region"
                 @confirm="pickerConfirm.region"
                 @cancel="pickerState.region = false" />
 
-              <!-- 手机号 -->
-              <!-- <van-field
-                    :disabled="true"
-                    v-model="localUserInfo.phone"
-                    type="tel"
-                    name="手机号"
-                    :label="t('mobile_edit_profile.phone')"
-                    :placeholder="t('mobile_edit_profile.placeholder.phone')"
-                    :rules="[{ required: false, message: '请填写手机号' }]" /> -->
-
-              <!-- 简介 -->
-              <!-- <van-field
-                    v-model="localUserInfo.resume"
-                    name="简介"
-                    :label="t('mobile_edit_profile.bio')"
-                    :placeholder="t('mobile_edit_profile.placeholder.bio')"
-                    type="textarea"
-                    rows="3"
-                    autosize
-                    @click="toEditBio" /> -->
-              <!-- </van-cell-group> -->
-
-              <div class="flex justify-center mt-20px">
-                <n-button block attr-type="submit" type="primary" strong secondary round>
+              <div class="flex justify-center mt-20px pb-10px">
+                <n-button block type="primary" strong secondary round :loading="saving" @click="saveEditInfo">
                   {{ t('mobile_edit_profile.save_btn') }}
                 </n-button>
               </div>
@@ -229,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import router from '@/router'
 import type { ModifyUserInfoType, UserInfoType } from '@/services/types.ts'
@@ -236,15 +169,23 @@ import { useGroupStore } from '@/stores/group'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { ModifyUserInfo, uploadAvatar } from '@/utils/ImRequestUtils'
+import { getUserDetail, ModifyUserInfo, uploadAvatar } from '@/utils/ImRequestUtils'
+import { getProfileExtension, patchProfileExtension, resolveDisplayPhone } from '@/utils/profileExtension'
 import { useI18n } from 'vue-i18n'
 import { fetchEnterpriseProfile, type EnterpriseProfile } from '@/services/enterprise'
+import { AppException } from '@/common/exception'
 
 const { t } = useI18n()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
 const loginHistoriesStore = useLoginHistoriesStore()
+const route = useRoute()
 const enterprise = ref<EnterpriseProfile | null>(null)
+const saving = ref(false)
+const loadedUid = ref('')
+const editName = ref('')
+const editPhone = ref('')
+
 const localUserInfo = ref<Partial<ModifyUserInfoType>>({
   name: '',
   sex: 1,
@@ -255,7 +196,7 @@ const localUserInfo = ref<Partial<ModifyUserInfoType>>({
 } as ModifyUserInfoType)
 
 const profileAvatarUrl = computed(() => {
-  const raw = localUserInfo.value.avatar || ''
+  const raw = localUserInfo.value.avatar || userStore.userInfo?.avatar || ''
   const url = AvatarUtils.getAvatarUrl(raw)
   const ts = userStore.userInfo?.avatarUpdateTime
   if (!raw || AvatarUtils.isDefaultAvatar(raw) || url === '/logoD.png') return url
@@ -269,7 +210,6 @@ const genderText = computed(() => {
 })
 
 const region = ref('')
-
 const birthday = ref('')
 
 const pickerColumn = ref({
@@ -279,24 +219,71 @@ const pickerColumn = ref({
   ]
 })
 
+const resolveRegionLabel = (payload: {
+  selectedOptions?: Array<{ text?: string; name?: string }>
+}) => {
+  const selected = payload?.selectedOptions ?? []
+  return selected
+    .map((item) => item.text ?? item.name ?? '')
+    .filter(Boolean)
+    .join('/')
+}
+
 const pickerConfirm = {
-  gender: (data: { selectedOptions: any }) => {
-    const selected = data.selectedOptions[0].value
-    localUserInfo.value.sex = selected
+  gender: (data: { selectedOptions: Array<{ value: number }> }) => {
+    localUserInfo.value.sex = data.selectedOptions[0]?.value ?? localUserInfo.value.sex
     pickerState.value.gender = false
   },
-  region: (data: { selectedOptions: any }) => {
-    const selected = data.selectedOptions
-    region.value = selected.map((item: { text: any }) => item.text).join('/')
+  region: (payload: { selectedOptions?: Array<{ text?: string; name?: string }> }) => {
+    region.value = resolveRegionLabel(payload)
     pickerState.value.region = false
   }
 }
 
 const pickerState = ref({
   gender: false,
-  region: false,
-  date: false
+  region: false
 })
+
+const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
+const mobilePattern = /^1[3-9]\d{9}$/
+
+const resolveAvatarForSave = (userInfo: UserInfoType) => {
+  const avatar = localUserInfo.value.avatar || userInfo.avatar
+  if (avatar && avatar.trim()) return avatar
+  return '/logoD.png'
+}
+
+const applyExtensionFields = (userInfo: UserInfoType) => {
+  const extension = getProfileExtension(userInfo.uid)
+  editPhone.value = resolveDisplayPhone(userInfo.account, userInfo.phone, extension.phone)
+  birthday.value = userInfo.birthday || extension.birthday || ''
+  region.value = userInfo.region || extension.region || ''
+}
+
+const loadProfileFields = (force = false) => {
+  const userInfo = userStore.userInfo
+  if (!userInfo?.uid) return
+  if (!force && loadedUid.value === userInfo.uid) return
+
+  editName.value = userInfo.name ?? ''
+  localUserInfo.value = {
+    ...userInfo,
+    sex: userInfo.sex,
+    avatar: userInfo.avatar,
+    resume: userInfo.resume,
+    modifyNameChance: userInfo.modifyNameChance
+  }
+  applyExtensionFields(userInfo)
+  loadedUid.value = userInfo.uid
+}
+
+const refreshBirthdayFromStore = () => {
+  const uid = userStore.userInfo?.uid
+  if (!uid) return
+  const extension = getProfileExtension(uid)
+  birthday.value = userStore.userInfo?.birthday || extension.birthday || birthday.value
+}
 
 const {
   localImageUrl,
@@ -328,15 +315,14 @@ const {
   }
 })
 
-// 处理裁剪，调用hook中的方法
 const handleCrop = async (cropBlob: Blob) => {
   await onCrop(cropBlob)
 }
 
-const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: any) => {
-  const currentUser = userStore.userInfo!.uid && groupStore.getUserInfo(userStore.userInfo!.uid)
+const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: string) => {
+  const currentUser = userStore.userInfo?.uid && groupStore.getUserInfo(userStore.userInfo.uid)
   if (currentUser) {
-    currentUser[key] = value // 更新缓存里面的用户信息
+    currentUser[key] = value
   }
 }
 
@@ -348,38 +334,115 @@ const toEditBio = () => {
   router.push('/mobile/mobileMy/editBio')
 }
 
-const saveEditInfo = () => {
-  if (!localUserInfo.value.name || localUserInfo.value.name.trim() === '') {
+const saveEditInfo = async () => {
+  if (saving.value) return
+
+  const userInfo = userStore.userInfo
+  if (!userInfo) {
+    window.$message.error('用户信息缺失')
+    return
+  }
+
+  const nextName = editName.value.trim()
+  if (!nextName) {
     window.$message.error('昵称不能为空')
     return
   }
-  // if (localUserInfo.value.modifyNameChance === 0) {
-  //   window.$message.error('改名次数不足')
-  //   return
-  // }
 
-  ModifyUserInfo({
-    name: localUserInfo.value.name!,
-    sex: localUserInfo.value.sex!,
-    phone: localUserInfo.value.phone ?? '',
-    avatar: localUserInfo.value.avatar ?? '',
-    resume: localUserInfo.value.resume ?? '',
-    modifyNameChance: localUserInfo.value.modifyNameChance!
-  }).then(() => {
-    // 更新本地缓存的用户信息
-    userStore.userInfo!.name = localUserInfo.value.name!
-    userStore.userInfo!.sex = localUserInfo.value.sex!
-    userStore.userInfo!.phone = localUserInfo.value.phone!
-    loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
-    updateCurrentUserCache('name', localUserInfo.value.name) // 更新缓存里面的用户信息
-    if (!localUserInfo.value.modifyNameChance) return
-    localUserInfo.value.modifyNameChance -= 1
+  const previousName = userInfo.name
+  const nextPhone = editPhone.value.trim()
+  if (nextPhone && !mobilePattern.test(nextPhone)) {
+    window.$message.error('请输入正确的手机号')
+    return
+  }
+
+  const nextRegion = region.value.trim()
+  const nextBirthday = birthday.value.trim()
+  const nextAvatar = resolveAvatarForSave(userInfo)
+
+  saving.value = true
+  try {
+    patchProfileExtension(userInfo.uid, {
+      birthday: nextBirthday,
+      region: nextRegion,
+      phone: nextPhone
+    })
+
+    await ModifyUserInfo({
+      name: nextName,
+      sex: localUserInfo.value.sex!,
+      phone: nextPhone,
+      avatar: nextAvatar,
+      resume: localUserInfo.value.resume ?? userInfo.resume ?? '',
+      region: nextRegion,
+      birthday: nextBirthday,
+      modifyNameChance: localUserInfo.value.modifyNameChance ?? userInfo.modifyNameChance
+    })
+
+    userInfo.name = nextName
+    userInfo.sex = localUserInfo.value.sex!
+    userInfo.phone = nextPhone
+    userInfo.region = nextRegion
+    userInfo.birthday = nextBirthday
+    userInfo.resume = localUserInfo.value.resume ?? userInfo.resume ?? ''
+    userInfo.avatar = nextAvatar
+
+    localUserInfo.value.name = nextName
+    localUserInfo.value.phone = nextPhone
+    localUserInfo.value.avatar = nextAvatar
+    editName.value = nextName
+    editPhone.value = nextPhone
+
+    try {
+      const detail = (await getUserDetail()) as Partial<UserInfoType>
+      Object.assign(userInfo, userStore.mergeProfileExtension(detail), {
+        name: nextName,
+        phone: nextPhone,
+        region: nextRegion,
+        birthday: nextBirthday
+      })
+    } catch (error) {
+      console.warn('[EditProfile] 刷新用户详情失败，使用本地已保存数据', error)
+    }
+
+    loginHistoriesStore.updateLoginHistory(<UserInfoType>userInfo)
+    updateCurrentUserCache('name', nextName)
+
+    if (localUserInfo.value.modifyNameChance && nextName !== previousName) {
+      localUserInfo.value.modifyNameChance -= 1
+      userInfo.modifyNameChance = localUserInfo.value.modifyNameChance
+    }
+
     window.$message.success('修改成功')
-  })
+  } catch (error) {
+    console.error('[EditProfile] 保存失败:', error)
+    const message = error instanceof AppException ? error.message : error instanceof Error ? error.message : '保存失败'
+    window.$message.error(message)
+  } finally {
+    saving.value = false
+  }
 }
 
+watch(
+  () => route.name,
+  (name) => {
+    if (name !== 'mobileEditProfile') return
+    refreshBirthdayFromStore()
+    localUserInfo.value.resume = userStore.userInfo?.resume ?? localUserInfo.value.resume
+  }
+)
+
+onBeforeRouteUpdate((to, from) => {
+  if (to.name === 'mobileEditProfile' && from.name === 'mobileEditBirthday') {
+    refreshBirthdayFromStore()
+  }
+  if (to.name === 'mobileEditProfile' && from.name === 'mobileEditBio') {
+    localUserInfo.value.resume = userStore.userInfo?.resume ?? localUserInfo.value.resume
+  }
+})
+
 onMounted(async () => {
-  localUserInfo.value = { ...userStore.userInfo! }
+  loadProfileFields(true)
   try {
     enterprise.value = await fetchEnterpriseProfile()
   } catch {
@@ -390,11 +453,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @use '@/styles/scss/form-item.scss';
-
-.custom-border-b-1 {
-  border-bottom: 1px solid;
-  border-color: #d9d9d9;
-}
 
 .avatar-pick-input {
   position: absolute;

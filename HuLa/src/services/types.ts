@@ -291,6 +291,10 @@ export type UserInfoType = {
   client: string
   /** 个人简介 */
   resume: string
+  /** 地区 */
+  region?: string
+  /** 生日 yyyy-MM-dd */
+  birthday?: string
   /** 是否绑定 Gitee */
   linkedGitee?: boolean
   /** 是否绑定 GitHub */
@@ -723,6 +727,10 @@ export type ModifyUserInfoType = {
   sex?: number
   phone?: string
   resume?: string
+  /** 地区 */
+  region?: string
+  /** 生日 yyyy-MM-dd */
+  birthday?: string
   /** 昵称修改次数 */
   modifyNameChance: number
 }

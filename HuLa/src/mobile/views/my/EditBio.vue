@@ -34,20 +34,49 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user.ts'
+import { useLoginHistoriesStore } from '@/stores/loginHistory'
+import { ModifyUserInfo } from '@/utils/ImRequestUtils'
+import { getProfileExtension } from '@/utils/profileExtension'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const userStore = useUserStore()
+const loginHistoriesStore = useLoginHistoriesStore()
 const bioAutosize = { minRows: 5, maxRows: 20 }
 
 const router = useRouter()
 const localBio = ref(userStore.userInfo?.resume || '')
 
 // 保存个人简介
-const handleSave = () => {
-  userStore.userInfo!.resume = localBio.value
+const handleSave = async () => {
+  const userInfo = userStore.userInfo
+  if (!userInfo) {
+    window.$message.error('用户信息缺失')
+    return
+  }
 
-  router.back()
+  const extension = getProfileExtension(userInfo.uid)
+  const avatar = userInfo.avatar?.trim() || '/logoD.png'
+
+  try {
+    await ModifyUserInfo({
+      name: userInfo.name,
+      sex: userInfo.sex,
+      phone: userInfo.phone ?? extension.phone ?? '',
+      avatar,
+      resume: localBio.value,
+      region: userInfo.region ?? extension.region ?? '',
+      birthday: userInfo.birthday ?? extension.birthday ?? '',
+      modifyNameChance: userInfo.modifyNameChance
+    })
+    userInfo.resume = localBio.value
+    loginHistoriesStore.updateLoginHistory(userInfo)
+    window.$message.success('简介已保存')
+    router.back()
+  } catch (error) {
+    console.error('[EditBio] 保存失败:', error)
+    window.$message.error('保存失败')
+  }
 }
 
 onMounted(() => {

@@ -63,6 +63,15 @@ public class SummeryInfoDTO {
 	@Schema(description = "gitcode用户标识")
 	private String gitcodeId;
 
+	@Schema(description = "手机号")
+	private String phone;
+
+	@Schema(description = "地区")
+	private String region;
+
+	@Schema(description = "生日")
+	private String birthday;
+
 	@Schema(description = "是否绑定gitee")
 	private Boolean linkedGitee;
 

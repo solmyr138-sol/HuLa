@@ -7,38 +7,16 @@
     <template #container>
       <div class="flex flex-col overflow-auto h-full">
         <div class="flex flex-col flex-1 gap-20px py-15px px-20px">
-          <n-date-picker panel type="date" block class="m-auto rounded-16px" />
-
-          <n-list class="px-15px flex flex-col w-full box-border rounded-16px">
-            <n-list-item>
-              <div class="flex w-full justify-between items-center">
-                <n-text class="text-14px shrink-0">{{ t('mobile_edit_brithday.options.display_birthday_tag') }}</n-text>
-                <n-switch class="shrink-0" />
-              </div>
-            </n-list-item>
-          </n-list>
-
-          <n-list class="px-15px flex flex-col w-full box-border rounded-10px">
-            <n-list-item>
-              <div class="flex w-full justify-between items-center">
-                <n-text class="text-14px shrink-0">{{ t('mobile_edit_brithday.options.displsy_age') }}</n-text>
-                <n-switch class="shrink-0" />
-              </div>
-            </n-list-item>
-
-            <n-divider class="m-0! p-0!" />
-            <n-list-item>
-              <div class="flex w-full justify-between items-center">
-                <n-text class="text-14px shrink-0">
-                  {{ t('mobile_edit_brithday.options.display_constellation') }}
-                </n-text>
-                <n-switch class="shrink-0" />
-              </div>
-            </n-list-item>
-          </n-list>
+          <n-date-picker
+            v-model:value="birthdayTimestamp"
+            panel
+            type="date"
+            block
+            class="m-auto rounded-16px"
+            :is-date-disabled="disableFutureDate" />
 
           <div class="flex justify-center mt-20px">
-            <n-button strong secondary round type="primary" block>
+            <n-button strong secondary round type="primary" block @click="handleSave">
               {{ t('mobile_edit_brithday.save_btn') }}
             </n-button>
           </div>
@@ -49,9 +27,52 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/stores/user.ts'
+import { getProfileExtension, patchProfileExtension } from '@/utils/profileExtension'
 
 const { t } = useI18n()
+const router = useRouter()
+const userStore = useUserStore()
+
+const birthdayTimestamp = ref<number | null>(null)
+
+const disableFutureDate = (timestamp: number) => timestamp > Date.now()
+
+const handleSave = () => {
+  const uid = userStore.userInfo?.uid
+  if (!uid) {
+    window.$message.error('用户信息缺失')
+    return
+  }
+  if (!birthdayTimestamp.value) {
+    window.$message.warning(t('mobile_edit_profile.placeholder.brithday'))
+    return
+  }
+
+  const birthdayStr = dayjs(birthdayTimestamp.value).format('YYYY-MM-DD')
+  patchProfileExtension(uid, { birthday: birthdayStr })
+  if (userStore.userInfo) {
+    userStore.userInfo.birthday = birthdayStr
+  }
+
+  window.$message.success('生日已保存')
+  router.back()
+}
+
+onMounted(() => {
+  const uid = userStore.userInfo?.uid
+  if (!uid) return
+  const saved = getProfileExtension(uid).birthday
+  if (saved) {
+    const parsed = dayjs(saved)
+    if (parsed.isValid()) {
+      birthdayTimestamp.value = parsed.valueOf()
+    }
+  }
+})
 </script>
 
 <style lang="scss" scoped></style>

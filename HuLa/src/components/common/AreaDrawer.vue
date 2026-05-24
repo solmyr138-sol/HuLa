@@ -30,34 +30,41 @@
 
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
-import { areaList as list } from '@vant/area-data'
+import { areaList as defaultAreaList } from '@vant/area-data'
 import { NDrawer } from 'naive-ui'
-// The exported props from vant cannot be used with defineProps.
 import { AreaList, Area as VantArea } from 'vant'
 import { useI18n } from 'vue-i18n'
-
-interface AreaProps {
-  areaList?: AreaList
-}
-
-interface Events {
-  onChange?: ((...args: any[]) => any) | undefined
-  'onUpdate:modelValue'?: ((...args: any[]) => any) | undefined
-  onCancel?: ((...args: any[]) => any) | undefined
-  onConfirm?: ((...args: any[]) => any) | undefined
-}
-
-type Props = AreaProps & Events
 
 const showModel = defineModel<boolean>('show')
 const valueModel = defineModel<string>('value')
 
-const { areaList = list } = defineProps<Props>()
+const { areaList = defaultAreaList } = defineProps<{
+  areaList?: AreaList
+}>()
+
+const emit = defineEmits<{
+  confirm: [payload: { selectedOptions?: Array<{ text?: string; name?: string }> }]
+  cancel: []
+  change: [payload: unknown]
+}>()
 
 const { t } = useI18n()
 
 const onScrollInto = () => {
-  console.log('into')
-  invoke('trigger_haptic_feedback')
+  invoke('trigger_haptic_feedback').catch(() => undefined)
+}
+
+const onConfirm = (payload: { selectedOptions?: Array<{ text?: string; name?: string }> }) => {
+  emit('confirm', payload)
+  showModel.value = false
+}
+
+const onCancel = () => {
+  emit('cancel')
+  showModel.value = false
+}
+
+const onChange = (payload: unknown) => {
+  emit('change', payload)
 }
 </script>

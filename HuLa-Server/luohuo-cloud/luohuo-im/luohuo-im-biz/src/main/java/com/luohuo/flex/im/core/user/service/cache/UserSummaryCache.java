@@ -97,6 +97,12 @@ public class UserSummaryCache extends AbstractRedisStringCache<Long, SummeryInfo
             summeryInfoDTO.setLinkedGitee(StrUtil.isNotBlank(user.getGiteeId()));
             summeryInfoDTO.setLinkedGithub(StrUtil.isNotBlank(user.getGithubId()));
             summeryInfoDTO.setLinkedGitcode(StrUtil.isNotBlank(user.getGitcodeId()));
+			IpInfo ipInfo = user.getIpInfo();
+			if (ipInfo != null) {
+				summeryInfoDTO.setRegion(ipInfo.getProfileRegion());
+				summeryInfoDTO.setBirthday(ipInfo.getProfileBirthday());
+				summeryInfoDTO.setPhone(ipInfo.getProfilePhone());
+			}
             if (Objects.equals(user.getUserType(), UserTypeEnum.BOT.getValue())) {
                 summeryInfoDTO.setWearingItemId(null);
                 summeryInfoDTO.setItemIds(Collections.emptyList());

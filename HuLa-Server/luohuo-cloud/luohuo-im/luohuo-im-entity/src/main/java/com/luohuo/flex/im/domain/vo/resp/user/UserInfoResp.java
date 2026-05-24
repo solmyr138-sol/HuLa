@@ -49,6 +49,15 @@ public class UserInfoResp implements Serializable {
     @Schema(description = "头像更换时间")
     private LocalDateTime avatarUpdateTime;
 
+	@Schema(description = "手机号")
+	private String phone;
+
+	@Schema(description = "地区")
+	private String region;
+
+	@Schema(description = "生日")
+	private String birthday;
+
 	@Schema(description = "是否开启上下文[AI模块]")
 	private Boolean context;
 

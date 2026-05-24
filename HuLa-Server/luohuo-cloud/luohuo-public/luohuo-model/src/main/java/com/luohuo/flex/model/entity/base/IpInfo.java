@@ -23,6 +23,12 @@ public class IpInfo implements Serializable {
     private String updateIp;
     //最新登录的ip详情
     private IpDetail updateIpDetail;
+    /** 用户资料：地区 */
+    private String profileRegion;
+    /** 用户资料：生日 */
+    private String profileBirthday;
+    /** 用户资料：手机号（展示用，与 def_user.mobile 同步） */
+    private String profilePhone;
 
     public void refreshIp(String ip) {
         if (StrUtil.isEmpty(ip)) {

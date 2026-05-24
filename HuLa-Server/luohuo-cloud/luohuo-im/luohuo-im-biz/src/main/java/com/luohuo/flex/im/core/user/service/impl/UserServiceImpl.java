@@ -53,6 +53,8 @@ import com.luohuo.flex.im.core.user.service.UserService;
 import com.luohuo.flex.im.core.user.service.FeedService;
 import com.luohuo.flex.im.core.user.service.adapter.UserAdapter;
 import com.luohuo.flex.im.core.user.service.cache.UserSummaryCache;
+import com.luohuo.flex.base.entity.tenant.DefUser;
+import com.luohuo.flex.base.service.tenant.DefUserService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -82,6 +84,7 @@ public class UserServiceImpl implements UserService {
     private final UserSummaryCache userSummaryCache;
     private final SensitiveWordBs sensitiveWordBs;
     private final FeedService feedService;
+	private final DefUserService defUserService;
 
 	@Override
 	public Boolean refreshIpInfo(Long uid, IpInfo ipInfo) {
@@ -152,7 +155,29 @@ public class UserServiceImpl implements UserService {
 			update.setAvatarUpdateTime(LocalDateTime.now());
 		}
 
+		IpInfo ipInfo = user.getIpInfo();
+		if (ipInfo == null) {
+			ipInfo = new IpInfo();
+		}
+		if (req.getRegion() != null) {
+			ipInfo.setProfileRegion(StrUtil.trim(req.getRegion()));
+		}
+		if (req.getBirthday() != null) {
+			ipInfo.setProfileBirthday(StrUtil.trim(req.getBirthday()));
+		}
+		if (req.getPhone() != null) {
+			ipInfo.setProfilePhone(StrUtil.trim(req.getPhone()));
+		}
+		update.setIpInfo(ipInfo);
+
 		userDao.updateById(update);
+
+		if (StrUtil.isNotBlank(req.getPhone()) && user.getUserId() != null) {
+			DefUser defUser = new DefUser();
+			defUser.setId(user.getUserId());
+			defUser.setMobile(StrUtil.trim(req.getPhone()));
+			defUserService.getSuperManager().updateById(defUser);
+		}
 		// 删除缓存
 		userCache.delete(uid);
 		userSummaryCache.delete(uid);

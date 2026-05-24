@@ -38,7 +38,7 @@ const bgmURL = computed(() => {
 
 // 检查当前组件是否被嵌套在另一个 MobileScaffold 内部
 const useNestedSelfCheck = () => {
-  const selfIsParent = inject('removeSafeArea')
+  const selfIsParent = inject('removeSafeArea', undefined)
   return selfIsParent !== void 0
 }
 

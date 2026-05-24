@@ -38,4 +38,10 @@ public class ModifyNameReq implements Serializable {
 
 	@Schema(description = "个人简介")
 	private String resume;
+
+	@Schema(description = "地区")
+	private String region;
+
+	@Schema(description = "生日，格式 yyyy-MM-dd")
+	private String birthday;
 }
