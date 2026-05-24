@@ -53,6 +53,7 @@
   "group_note_updated": "Group note updated successfully",
   "remark_updated": "{n} remark update successful",
   "group_name_updated": "Group name updated successfully",
+  "group_avatar_updated": "Group avatar updated successfully",
   "setting_failed": "Setting failed",
   "messages_muted": "Messages muted",
   "messages_unmuted": "Messages unmuted",

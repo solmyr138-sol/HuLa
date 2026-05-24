@@ -302,7 +302,7 @@ const sessionList = computed(() => {
           ...item,
           avatar: latestAvatar,
           name: displayName,
-          lastMsg: displayMsg || '欢迎使用HuLa',
+          lastMsg: displayMsg || t('message.message_list.default_last_msg'),
           lastMsgTime: formatTimestamp(item?.activeTime),
           isAtMe
         }

@@ -1,4 +1,8 @@
+import { open } from '@tauri-apps/plugin-dialog'
+import { readFile } from '@tauri-apps/plugin-fs'
 import { UploadSceneEnum } from '@/enums'
+import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
+import { isMobile } from '@/utils/PlatformConstants'
 import { UploadProviderEnum, useUpload } from './useUpload'
 
 export interface AvatarUploadOptions {
@@ -24,31 +28,61 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
 
   // 打开文件选择器
   const openFileSelector = () => {
-    fileInput.value?.click()
+    void openAvatarCropper()
+  }
+
+  const previewImageFile = (file: File) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      localImageUrl.value = url
+      nextTick(() => {
+        showCropper.value = true
+      })
+    }
+    img.onerror = () => {
+      window.$message.error('图片加载失败')
+      URL.revokeObjectURL(url)
+    }
+    img.src = url
+  }
+
+  const loadImageFromPath = async (path: string) => {
+    const fileData = await readFile(path)
+    const fileName = extractFileName(path)
+    const mimeType = getMimeTypeFromExtension(fileName)
+    const blob = new Blob([new Uint8Array(fileData)], { type: mimeType })
+    previewImageFile(new File([blob], fileName, { type: mimeType }))
   }
 
   // 处理文件选择
   const handleFileChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) {
-      const img = new Image()
-      const url = URL.createObjectURL(file)
-      img.onload = () => {
-        localImageUrl.value = url
-        nextTick(() => {
-          showCropper.value = true
-        })
-      }
-      img.onerror = () => {
-        window.$message.error('图片加载失败')
-        URL.revokeObjectURL(url)
-      }
-      img.src = url
+      previewImageFile(file)
     }
   }
 
-  // 校验头像更改条件
-  const openAvatarCropper = () => {
+  const openAvatarCropper = async () => {
+    if (isMobile()) {
+      try {
+        const selected = await open({
+          multiple: false,
+          filters: [
+            {
+              name: 'Images',
+              extensions: ['jpeg', 'jpg', 'png', 'webp']
+            }
+          ]
+        })
+        if (!selected || Array.isArray(selected)) return
+        await loadImageFromPath(selected)
+      } catch (error) {
+        console.error('[useAvatarUpload] 打开图片失败:', error)
+        window.$message.error('打开图片失败')
+      }
+      return
+    }
     fileInput.value?.click()
   }
 

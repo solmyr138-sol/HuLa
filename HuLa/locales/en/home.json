@@ -297,7 +297,7 @@
     "modal": {
       "add_friend": "Add friend request"
     },
-    "developer_badge": "HuLa Developer"
+    "developer_badge": "Enterprise KuaiShu Developer"
   },
   "profile_edit": {
     "title": "Edit profile",
@@ -348,7 +348,7 @@
   "about": {
     "version": "Version: {version} ({arch})",
     "device": "Device: {type}{version}",
-    "copyright": "Copyright © {start}-{end} HuLaSpark",
+    "copyright": "Copyright © {start}-{end} Enterprise KuaiShu",
     "rights": "All Rights Reserved."
   },
   "apply_list": {

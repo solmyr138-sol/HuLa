@@ -339,7 +339,7 @@ const sessionList = computed(() => {
           ...item,
           avatar: latestAvatar,
           name: displayName, // 使用可能修改过的显示名称
-          lastMsg: displayMsg || '欢迎使用HuLa',
+          lastMsg: displayMsg || t('message.message_list.default_last_msg'),
           lastMsgTime: formatTimestamp(item?.activeTime),
           isAtMe
         }

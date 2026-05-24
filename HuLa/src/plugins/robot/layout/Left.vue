@@ -9,7 +9,7 @@
       <n-flex justify="space-between" align="center" :size="0">
         <n-flex :size="4" vertical>
           <n-flex :size="0" align="center">
-            <p class="text-(20px [--chat-text-color]) font-semibold select-none">HuLa-</p>
+            <p class="text-(20px [--chat-text-color]) font-semibold select-none">企业快书</p>
             <p class="gpt-subtitle">ChatBot</p>
             <div class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-8px text-(12px [--bate-color] center)">
               Beta

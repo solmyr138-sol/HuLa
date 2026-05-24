@@ -81,7 +81,7 @@
       </n-flex>
     </n-flex>
 
-    <p class="text-12px text-#909090 text-center pb-12px pointer-events-none">© {{ currentYear }} HuLa</p>
+    <p class="text-12px text-#909090 text-center pb-12px pointer-events-none">© {{ currentYear }} 企业快书</p>
   </n-config-provider>
 </template>
 

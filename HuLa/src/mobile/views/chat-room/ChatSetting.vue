@@ -329,6 +329,14 @@ const {
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
     avatarValue.value = downloadUrl
+    const session = activeItem.value
+    if (!session || !currentSessionRoomId.value) return
+    await updateRoomInfo({
+      id: currentSessionRoomId.value,
+      avatar: downloadUrl
+    })
+    session.avatar = downloadUrl
+    window.$message.success(t('mobile_chat_setting.group_avatar_updated'))
   }
 })
 
@@ -442,7 +450,7 @@ const hasBadge6 = computed(() => {
 })
 
 const clickInfo = () => {
-  if (isGroup) {
+  if (isGroup.value) {
     openAvatarCropper()
   } else {
     const detailId = activeItem.value?.detailId

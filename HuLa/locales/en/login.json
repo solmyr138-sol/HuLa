@@ -10,10 +10,10 @@
   },
   "input": {
     "account": {
-      "placeholder": "Email / HuLa Account"
+      "placeholder": "Email / Enterprise KuaiShu Account"
     },
     "pass": {
-      "placeholder": "Enter HuLa Password"
+      "placeholder": "Enter Enterprise KuaiShu Password"
     }
   },
   "option": {
@@ -28,7 +28,7 @@
       "text1": "I accept the",
       "text2": " Terms ",
       "text3": " & ",
-      "text4": "Privacy Policy"
+      "text4": "Enterprise KuaiShu Privacy Guidelines"
     }
   },
   "auth_way": {
@@ -43,7 +43,7 @@
   },
   "qr_code_expired": "QR code expired",
   "qr_code_expired_hint": "Please try again later",
-  "qr_code_scan_hint": "Please use HuLa App to scan the QR code",
+  "qr_code_scan_hint": "Please use the Enterprise KuaiShu app to scan the QR code",
   "qr_code_gen_fail_hint": "Failed to generate QR code",
   "qr_code_scan_success_hint": "Scan successful, waiting for authorization",
   "wait_auth_hint": "Waiting for authorization...",
@@ -71,7 +71,7 @@
     "load_text": {
       "loading": "Loading...",
       "refreshing": "Refreshing...",
-      "scan_hint": "Scan with the HuLa App",
+      "scan_hint": "Scan with the Enterprise KuaiShu app",
       "login": "Signing in...",
       "retry": "Please try again later",
       "auth_pending": "Waiting for authorization..."
@@ -84,20 +84,20 @@
   },
   "guide": {
     "welcome": {
-      "title": "🎉 Welcome to HuLa",
-      "desc": "HuLa is built with Tauri and supports Windows, macOS, Linux, iOS, Android"
+      "title": "🎉 Welcome to Enterprise KuaiShu",
+      "desc": "Enterprise KuaiShu provides secure messaging and collaboration for organizations across multiple platforms"
     },
     "privacy": {
       "title": "🤔 Privacy & Service Terms",
-      "desc": "Please review HuLa's privacy policy and terms first"
+      "desc": "Please review Enterprise KuaiShu's privacy guidelines and service agreement first"
     },
     "network": {
       "title": "⚙️ Network Settings",
-      "desc": "HuLa allows custom service endpoints to replace the official one"
+      "desc": "Enterprise KuaiShu supports custom service endpoints for your organization"
     },
     "register": {
       "title": "🤓 How to sign in",
-      "desc": "Register an account and complete your profile before using HuLa"
+      "desc": "Register an account and complete your profile before using Enterprise KuaiShu"
     },
     "actions": {
       "next": "Next",
@@ -159,7 +159,7 @@
       "login": "Login"
     },
     "input": {
-      "account_placeholder": "Enter HuLa account",
+      "account_placeholder": "Enter Enterprise KuaiShu account",
       "code_placeholder": "Enter password"
     },
     "register": {

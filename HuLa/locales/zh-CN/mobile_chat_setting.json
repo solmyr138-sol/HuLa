@@ -53,6 +53,7 @@
   "group_note_updated": "群备注更新成功",
   "remark_updated": "{n} 备注更新成功",
   "group_name_updated": "群名称更新成功",
+  "group_avatar_updated": "群头像更新成功",
   "setting_failed": "设置失败",
   "messages_muted": "已屏蔽消息",
   "messages_unmuted": "已取消屏蔽",
