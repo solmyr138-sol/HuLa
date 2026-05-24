@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import bgImg from '@/assets/mobile/chat-home/background.webp'
 
-const { background = true, safeArea = true } = defineProps<{
+const { background = false, safeArea = true } = defineProps<{
   showFooter?: boolean
   background?: string | boolean
   safeArea?: boolean

@@ -1,6 +1,6 @@
 <template>
   <MobileLayout>
-    <MobileScaffold :background="'/login_bg.png'" :safe-area="false">
+    <MobileScaffold :background="false" :safe-area="false">
       <template #container>
         <div class="h-full flex-col-center gap-40px">
           <div class="flex-center absolute top-13vh left-36px">
@@ -31,7 +31,7 @@
               <div
                 style="border-radius: 24px 42px 4px 24px"
                 :class="[
-                  'z-10 absolute bottom--4px h-6px w-34px bg-#13987f transition-all duration-300 ease-out',
+                  'z-10 absolute bottom--4px h-6px w-34px bg-[--mobile-brand-primary] transition-all duration-300 ease-out',
                   activeTab === 'login' ? 'left-[33px]' : 'left-[133px]'
                 ]"></div>
             </div>
@@ -104,7 +104,7 @@
               clearable />
 
             <n-flex justify="flex-end" :size="6">
-              <n-button text color="#13987f" @click="handleForgetPassword">
+              <n-button text color="#4a90e2" @click="handleForgetPassword">
                 {{ t('login.mobile.forget_code') }}
               </n-button>
             </n-flex>
@@ -124,11 +124,11 @@
               <n-checkbox v-model:checked="protocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>{{ t('login.term.checkout.text1') }}</span>
-                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
+                <span @click.stop="toServiceAgreement" class="color-#4a90e2 cursor-pointer">
                   {{ t('login.term.checkout.text2') }}
                 </span>
                 <span>{{ t('login.term.checkout.text3') }}</span>
-                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
+                <span @click.stop="toPrivacyAgreement" class="color-#4a90e2 cursor-pointer">
                   {{ t('login.term.checkout.text4') }}
                 </span>
               </div>
@@ -144,7 +144,7 @@
               :placeholder="t('auth.register.placeholders.enterprise_code')"
               clearable
               @blur="resolveEnterpriseOnMobile" />
-            <p v-if="resolvedTenantName" class="text-12px text-#13987f w-full text-left">
+            <p v-if="resolvedTenantName" class="text-12px text-[--mobile-brand-primary] w-full text-left">
               {{ t('auth.register.labels.enterprise_name') }}：{{ resolvedTenantName }}
             </p>
             <n-button
@@ -208,9 +208,9 @@
               <n-checkbox v-model:checked="registerProtocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>{{ t('login.term.checkout.text1') }}</span>
-                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">{{ t('login.term.checkout.text2') }}</span>
+                <span @click.stop="toServiceAgreement" class="color-#4a90e2 cursor-pointer">{{ t('login.term.checkout.text2') }}</span>
                 <span>{{ t('login.term.checkout.text3') }}</span>
-                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">{{ t('login.term.checkout.text4') }}</span>
+                <span @click.stop="toPrivacyAgreement" class="color-#4a90e2 cursor-pointer">{{ t('login.term.checkout.text4') }}</span>
               </div>
             </n-flex>
 
@@ -576,4 +576,17 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/login';
+
+.gradient-button {
+  background: linear-gradient(to left, #4a90e2, #357abd);
+  box-shadow:
+    inset 0px 3px 16px 0px rgba(255, 255, 255, 0.5),
+    inset 0px -2px 27px 0px rgba(53, 122, 189, 0.76),
+    inset 0px 2px 6px 0px rgba(254, 254, 254, 0.5);
+}
+
+[data-theme='dark'] .gradient-button {
+  background: linear-gradient(to left, #3a7bc8, #2d6aa8);
+  box-shadow: 0 0 8px rgba(45, 106, 168, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
 </style>

@@ -17,7 +17,7 @@
           <n-text class="font-bold text-20px">{{ userDetailInfo!.name }}</n-text>
           <div
             v-show="hasUserOnlineState"
-            class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
+            class="bg-[--mobile-brand-muted-bg] flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
             <span class="w-12px h-12px rounded-15px flex items-center">
               <img
                 :src="friendUserState.url ? friendUserState.url : currentState?.url"
@@ -202,7 +202,7 @@ const toChatRoom = async () => {
       await chatStore.getSessionList(true)
     }
     await preloadChatRoom(res.roomId)
-    router.push(`/mobile/chatRoom/chatMain`)
+    router.push({ path: '/mobile/chatRoom/chatMain', query: { from: 'friends' } })
   } catch (error) {
     console.error('私聊尝试进入聊天室失败:', error)
   }

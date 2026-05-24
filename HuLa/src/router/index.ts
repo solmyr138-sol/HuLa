@@ -1,11 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { type } from '@tauri-apps/plugin-os'
-import {
-  createRouter,
-  createWebHistory,
-  type NavigationGuardNext,
-  type RouteLocationNormalized
-} from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 
 import { commonRoutes } from '@/router/common.routes'
 import { desktopRoutes } from '@/router/desktop.routes'
@@ -30,9 +25,9 @@ const router: any = createRouter({
   routes: getAllRoutes()
 })
 
-router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+router.beforeEach(async (to: RouteLocationNormalized) => {
   if (!isMobileApp) {
-    return next()
+    return true
   }
 
   try {
@@ -44,23 +39,23 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
     const isAgreementPage = to.path === '/mobile/serviceAgreement' || to.path === '/mobile/privacyAgreement'
 
     if (isSplashPage || isForgetPage || isAgreementPage) {
-      return next()
+      return true
     }
 
     const tokens = await invoke<{ token: string | null; refreshToken: string | null }>(TauriCommand.GET_USER_TOKENS)
     const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
     if (!isLoggedIn && !isLoginPage) {
-      return next('/mobile/login')
+      return '/mobile/login'
     }
 
-    return next()
+    return true
   } catch (error) {
     console.error('[守卫] 获取token错误:', error)
     if (to.path !== '/mobile/login') {
-      return next('/mobile/login')
+      return '/mobile/login'
     }
-    return next()
+    return true
   }
 })
 

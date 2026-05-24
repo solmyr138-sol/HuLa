@@ -23,6 +23,26 @@
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
+
+  /* Mobile brand blue (aligned with MobileMyHome profile card) */
+  --mobile-brand-primary: #4a90e2;
+  --mobile-brand-primary-dark: #357abd;
+  --mobile-brand-light: rgba(74, 144, 226, 0.09);
+  --mobile-brand-muted-bg: #e8f0fa;
+  --mobile-brand-accent: rgba(74, 144, 226, 0.56);
+  --tab-bar-icon-color: #4a90e2;
+
+  caret-color: var(--mobile-brand-primary) !important;
+}
+
+html[data-theme='dark'] {
+  --tab-bar-icon-color: rgba(74, 144, 226, 0.75);
+  --mobile-brand-muted-bg: rgba(74, 144, 226, 0.15);
+  --mobile-brand-accent: rgba(74, 144, 226, 0.55);
+}
+
+::selection {
+  background: rgba(74, 144, 226, 0.3);
 }
 
 /* 移动端特定样式 */
@@ -33,4 +53,22 @@
 
 .chat-bot-message-gap {
   gap: 4px;
+}
+
+/** 移动端登录/找回密码按钮渐变 */
+.gradient-button {
+  background: linear-gradient(to left, #4a90e2, #357abd);
+  box-shadow:
+    inset 0px 3px 16px 0px rgba(255, 255, 255, 0.5),
+    inset 0px -2px 27px 0px rgba(53, 122, 189, 0.76),
+    inset 0px 2px 6px 0px rgba(254, 254, 254, 0.5);
+}
+
+[data-theme='dark'] .gradient-button {
+  background: linear-gradient(to left, #3a7bc8, #2d6aa8);
+  box-shadow: 0 0 8px rgba(45, 106, 168, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.agreement-container {
+  --agreement-accent-color: var(--mobile-brand-accent);
 }

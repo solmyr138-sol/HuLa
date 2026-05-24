@@ -1,9 +1,5 @@
 <template>
-  <div class="flex flex-col overflow-auto h-full relative">
-    <img
-      src="@/assets/mobile/chat-home/background.webp"
-      class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
-
+  <div class="flex flex-col overflow-auto h-full relative bg-[var(--center-bg-color)]">
     <HeaderBar
       :isOfficial="false"
       :hidden-right="true"
@@ -32,7 +28,7 @@
               :size="250"
               class="rounded-12px"
               :value="qrCodeValue"
-              color="#14997E"
+              color="#4a90e2"
               :bg-color="qrCodeBgColor"
               :type="qrCodeType"
               :icon-src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar || '')"

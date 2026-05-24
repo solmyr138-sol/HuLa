@@ -89,7 +89,7 @@ function restartApp() {
 <style scoped lang="scss">
 .my-home {
   padding: 16px;
-  background: #f5f5f5;
+  background: var(--center-bg-color);
   min-height: 100%;
 }
 .header-row {

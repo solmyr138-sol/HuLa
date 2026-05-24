@@ -62,7 +62,7 @@
                         {{ groupStore.getUserInfo(item.uid)?.name }}
                       </span>
                       <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
-                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#4a90e2' : '#909090'" dot />
                         {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
                       </div>
                     </div>

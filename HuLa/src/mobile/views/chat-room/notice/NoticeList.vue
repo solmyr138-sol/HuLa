@@ -21,8 +21,8 @@
                       </span>
                       <span
                         v-if="item.isTop"
-                        class="text-#13987F rounded-15px px-7px py-5px text-12px"
-                        style="border: 1px solid; border-color: #13987f">
+                        class="text-[--mobile-brand-primary] rounded-15px px-7px py-5px text-12px"
+                        style="border: 1px solid; border-color: var(--mobile-brand-primary)">
                         置顶
                       </span>
                     </div>
@@ -33,7 +33,7 @@
 
                     <div class="flex items-center justify-between text-12px">
                       <span class="flex gap-5px text-#717171">{{ formatTimestamp(item.createTime) }}</span>
-                      <span class="text-#13987F">128人已读</span>
+                      <span class="text-[--mobile-brand-primary]">128人已读</span>
                     </div>
                   </div>
                 </div>

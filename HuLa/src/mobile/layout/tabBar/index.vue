@@ -1,6 +1,6 @@
 <template>
   <n-divider class="p-0! m-0!" />
-  <div class="tab-bar flex justify-around items-end pt-3">
+  <div class="tab-bar flex justify-around items-end pt-3 bg-[var(--center-bg-color)]">
     <RouterLink
       v-for="item in navItems"
       :key="item.path"

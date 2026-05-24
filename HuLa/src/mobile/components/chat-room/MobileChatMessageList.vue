@@ -9,57 +9,48 @@
       {{ networkBanner.text }}
     </div>
 
-    <div ref="scrollWrapRef" class="flex-1 min-h-0 mobile-chat-scroller-wrap">
+    <div
+      ref="scrollWrapRef"
+      class="flex-1 min-h-0 overflow-y-auto mobile-chat-scroller-wrap"
+      @scroll="handleVirtualScroll">
       <div
         v-show="chatStore.shouldShowNoMoreMessage"
         class="flex-center gap-6px h-32px flex-shrink-0 cursor-default select-none">
         <p class="text-(12px #909090)">{{ t('home.chat_main.no_more') }}</p>
       </div>
 
-      <DynamicScroller
-        ref="scrollerRef"
-        :items="chatStore.chatMessageList"
-        :min-item-size="72"
-        key-field="message.id"
-        class="mobile-dynamic-scroller"
-        @scroll="handleVirtualScroll"
-        @resize="onScrollerResize">
-        <template #default="{ item, index, active }">
-          <DynamicScrollerItem
-            :item="item"
-            :active="active"
-            :data-index="index"
+      <div class="flex flex-col">
+        <template v-for="(item, index) in scrollerItems" :key="resolveMessageScrollerKey(item, index)">
+          <span v-if="item.timeBlock" class="text-(12px #909090) select-none p-4px block text-center" @click.stop>
+            {{ timeToStr(item.message.sendTime) }}
+          </span>
+          <div
+            :data-message-index="index"
             :data-message-id="item.message.id"
-            class="mobile-msg-row">
-            <span v-if="item.timeBlock" class="text-(12px #909090) select-none p-4px block text-center" @click.stop>
-              {{ timeToStr(item.message.sendTime) }}
-            </span>
-            <div
-              :class="[
-                'msg-container select-none',
-                item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
-                isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
-                { 'active-reply': activeReply === item.message.id },
-                { 'bg-#90909020': computeMsgHover(item) }
-              ]"
-              @click="onMessageClick(item)">
-              <RenderMessage
-                :message="item"
-                :is-group="isGroup"
-                :from-user="{ uid: item.fromUser.uid }"
-                :upload-progress="item.uploadProgress"
-                @jump2-reply="jumpToReplyMsg" />
-            </div>
-          </DynamicScrollerItem>
+            :class="[
+              'mobile-msg-row msg-container select-none',
+              item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
+              isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
+              { 'active-reply': activeReply === item.message.id },
+              { 'bg-#90909020': computeMsgHover(item) }
+            ]"
+            @click="onMessageClick(item)">
+            <RenderMessage
+              :message="item"
+              :is-group="isGroup"
+              :from-user="{ uid: item.fromUser.uid }"
+              :upload-progress="item.uploadProgress"
+              @jump2-reply="jumpToReplyMsg" />
+          </div>
         </template>
-      </DynamicScroller>
+      </div>
     </div>
 
     <footer
       v-if="shouldShowFloatFooter && currentNewMsgCount"
       class="absolute bottom-16px right-16px z-10"
       @click="scrollToBottom">
-      <div class="float-box text-(12px #13987f) px-12px py-6px rounded-full bg-[--bg-popover] shadow-md">
+      <div class="float-box text-(12px [--mobile-brand-primary]) px-12px py-6px rounded-full bg-[--bg-popover] shadow-md">
         {{ t('home.chat_main.new_messages', { count: newMsgCountLabel }) }}
       </div>
     </footer>
@@ -69,10 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-
 import { useDebounceFn } from '@vueuse/core'
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { useI18n } from 'vue-i18n'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
 import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain'
@@ -84,6 +72,7 @@ import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
 import { timeToStr } from '@/utils/ComputedTime'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
+import { resolveMessageScrollerKey } from '@/utils/messageScrollerKey'
 import RenderMessage from '@/components/rightBox/renderMessage/index.vue'
 import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 
@@ -98,8 +87,8 @@ const chatMainContext = useChatMain(false, { enableGroupNicknameModal: false })
 provide(chatMainInjectionKey, chatMainContext)
 
 const isGroup = computed(() => chatStore.isGroup)
+const scrollerItems = computed(() => chatStore.chatMessageList.filter((msg) => Boolean(msg?.message)))
 
-const scrollerApi = computed(() => scrollerRef.value as { scrollToItem?: (index: number) => void } | null)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
 const newMsgCountLabel = computed(() => {
   if (!currentNewMsgCount.value?.count || currentNewMsgCount.value.count <= 0) return '0'
@@ -119,7 +108,6 @@ const networkBanner = computed(() => {
   return null
 })
 
-const scrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null)
 const scrollWrapRef = ref<HTMLElement | null>(null)
 const activeReply = ref('')
 const hoverId = ref('')
@@ -144,9 +132,11 @@ const shouldShowFloatFooter = computed(() => {
   return !!(currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0 && !isAtBottom.value)
 })
 
-const getScrollerEl = (): HTMLElement | null => {
-  const scroller = scrollerRef.value as { $el?: HTMLElement } | null
-  return scroller?.$el ?? scrollWrapRef.value
+const scrollToMessageIndex = (index: number) => {
+  nextTick(() => {
+    const target = scrollWrapRef.value?.querySelector(`[data-message-index="${index}"]`)
+    target?.scrollIntoView({ block: 'center' })
+  })
 }
 
 const scrollToBottom = () => {
@@ -154,10 +144,12 @@ const scrollToBottom = () => {
   chatStore.clearNewMsgCount()
   isAtBottom.value = true
   enableAutoScroll(500)
-  const list = chatStore.chatMessageList
-  if (list.length > 0) {
-    scrollerApi.value?.scrollToItem?.(list.length - 1)
-  }
+  nextTick(() => {
+    const container = scrollWrapRef.value
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
   setTimeout(() => {
     suppressTopLoadMore.value = false
   }, 32)
@@ -165,7 +157,7 @@ const scrollToBottom = () => {
 
 const handleVirtualScroll = (event: Event) => {
   emit('scroll', event)
-  const container = getScrollerEl()
+  const container = scrollWrapRef.value
   if (!container) return
   const { scrollTop, scrollHeight, clientHeight } = container
   if (isAutoScrolling.value) {
@@ -195,15 +187,14 @@ const handleLoadMore = async (container: HTMLElement) => {
   const oldScrollHeight = container.scrollHeight
   await chatStore.loadMore()
   await nextTick()
-  const newScrollHeight = container.scrollHeight
-  container.scrollTop += newScrollHeight - oldScrollHeight
+  container.scrollTop += container.scrollHeight - oldScrollHeight
   isLoadingMore.value = false
 }
 
 const jumpToReplyMsg = async (key: string) => {
   const index = chatStore.chatMessageList.findIndex((msg) => msg.message.id === String(key))
   if (index !== -1) {
-    scrollerApi.value?.scrollToItem?.(index)
+    scrollToMessageIndex(index)
     activeReply.value = String(key)
     return
   }
@@ -214,8 +205,7 @@ const jumpToReplyMsg = async (key: string) => {
     await chatStore.loadMore()
     const idx = chatStore.chatMessageList.findIndex((msg) => msg.message.id === key)
     if (idx !== -1) {
-      await nextTick()
-      scrollerApi.value?.scrollToItem?.(idx)
+      scrollToMessageIndex(idx)
       activeReply.value = key
       found = true
     }
@@ -236,12 +226,6 @@ const onMessageClick = (item: MessageType) => {
 const handleChatAreaClick = () => {
   if (activeReply.value) {
     activeReply.value = ''
-  }
-}
-
-const onScrollerResize = () => {
-  if (isAtBottom.value) {
-    nextTick(() => scrollToBottom())
   }
 }
 
@@ -268,10 +252,8 @@ watch(scrollIntent, (intent) => {
 watch(
   () => chatStore.chatMessageList.length,
   (len, oldLen) => {
-    if (len > oldLen && !isLoadingMore.value) {
-      if (isAtBottom.value) {
-        scrollIntent.value = ScrollIntentEnum.NEW_MESSAGE
-      }
+    if (len > oldLen && !isLoadingMore.value && isAtBottom.value) {
+      scrollIntent.value = ScrollIntentEnum.NEW_MESSAGE
     }
   }
 )
@@ -297,14 +279,9 @@ onMounted(() => {
 <style lang="scss" scoped>
 @use '@/styles/scss/render-message';
 
-.mobile-dynamic-scroller {
-  height: 100%;
-}
-
 .mobile-chat-scroller-wrap {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .mobile-msg-row {

@@ -83,7 +83,7 @@
                 v-for="i in groupMemberListSliced"
                 :key="i.uid"
                 class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full relative bg-#E5EFEE w-36px h-36px flex items-center justify-center">
+                <div class="rounded-full relative bg-[--mobile-brand-muted-bg] w-36px h-36px flex items-center justify-center">
                   <!-- 蒙板 -->
                   <div
                     v-if="i.activeStatus !== OnlineEnum.ONLINE"

@@ -69,7 +69,7 @@
                         <n-text>{{ getUserState(item.uid)?.title }}</n-text>
                       </template>
                       <template v-else>
-                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#4a90e2' : '#909090'" dot />
                         <n-text>{{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</n-text>
                       </template>
                     </div>

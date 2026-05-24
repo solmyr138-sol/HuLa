@@ -48,7 +48,7 @@ import HuLaAssistant from '@/components/rightBox/chatBox/HuLaAssistant.vue'
 import { useAssistantModelPresets, type AssistantModelPreset } from '@/hooks/useAssistantModelPresets'
 
 defineOptions({
-  name: 'mobileChatRoomDefault'
+  name: 'mobileChatMain'
 })
 
 const globalStore = useGlobalStore()
@@ -241,8 +241,8 @@ const handleAssistantImport = async () => {
   border: 1px solid #e3e3e3;
 
   &.active {
-    color: #13987f;
-    background: rgba(19, 152, 127, 0.15);
+    color: var(--mobile-brand-primary);
+    background: rgba(74, 144, 226, 0.15);
   }
 }
 

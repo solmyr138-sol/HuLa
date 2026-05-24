@@ -111,7 +111,7 @@
                                 </template>
                                 <template v-else>
                                   <n-badge
-                                    :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'"
+                                    :color="item.activeStatus === OnlineEnum.ONLINE ? '#4a90e2' : '#909090'"
                                     dot />
                                   {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
                                 </template>
@@ -296,7 +296,7 @@ const handleClick = async (id: string, type: number) => {
   if (type === 1) {
     try {
       await preloadChatRoom(id)
-      router.push(`/mobile/chatRoom/chatMain`)
+      router.push({ path: '/mobile/chatRoom/chatMain', query: { from: 'friends' } })
     } catch (error) {
       console.error(error)
     }

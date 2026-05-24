@@ -67,8 +67,13 @@ const formattedMsgCount = computed(() => {
   return props.msgCount > 100 ? '99+' : `${props.msgCount}`
 })
 
-const handleBack = async () => {
-  router.back()
+const route = useRoute()
+
+const handleBack = () => {
+  const from = route.query.from
+  const fallback =
+    from === 'friends' ? '/mobile/friends' : from === 'my' ? '/mobile/my' : '/mobile/message'
+  void router.replace(fallback)
 }
 
 const handleMoreClick = () => {

@@ -35,6 +35,11 @@ import {
 import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isMobile } from '@/utils/PlatformConstants'
+
+const brandPrimary = isMobile() ? '#4a90e2' : '#13987f'
+const brandPrimarySoft = isMobile() ? '74, 144, 226' : '19, 152, 127'
+const brandPrimaryProcess = isMobile() ? '#5a9ee8' : '#52aea3'
 
 const { notificMax, messageMax } = defineProps<{
   notificMax?: number
@@ -141,10 +146,10 @@ const commonTheme: GlobalThemeOverrides = {
     boxShadowFocus: '0'
   },
   Checkbox: {
-    colorChecked: '#13987f',
-    borderChecked: '1px solid #13987f',
-    borderFocus: '1px solid #13987f',
-    boxShadowFocus: '0 0 0 2px rgba(19, 152, 127, 0.3)'
+    colorChecked: brandPrimary,
+    borderChecked: `1px solid ${brandPrimary}`,
+    borderFocus: `1px solid ${brandPrimary}`,
+    boxShadowFocus: `0 0 0 2px rgba(${brandPrimarySoft}, 0.3)`
   },
   Tag: {
     borderRadius: '4px'
@@ -152,16 +157,16 @@ const commonTheme: GlobalThemeOverrides = {
   Button: {
     borderRadiusMedium: '10px',
     borderRadiusSmall: '6px',
-    colorPrimary: '#13987f'
+    colorPrimary: brandPrimary
   },
   Tabs: {
     tabTextColorSegment: '#707070',
     tabPaddingMediumSegment: '4px',
-    tabTextColorActiveLine: '#13987f',
-    tabTextColorHoverLine: '#13987f',
-    tabTextColorActiveBar: '#13987f',
-    tabTextColorHoverBar: '#13987f',
-    barColor: '#13987f'
+    tabTextColorActiveLine: brandPrimary,
+    tabTextColorHoverLine: brandPrimary,
+    tabTextColorActiveBar: brandPrimary,
+    tabTextColorHoverBar: brandPrimary,
+    barColor: brandPrimary
   },
   Popover: {
     padding: '5px',
@@ -174,39 +179,39 @@ const commonTheme: GlobalThemeOverrides = {
     border: '1px solid #fff'
   },
   Switch: {
-    railColorActive: '#13987f',
-    loadingColor: '#13987f',
-    boxShadowFocus: '0 0 0 2px rgba(19, 152, 127, 0.3)'
+    railColorActive: brandPrimary,
+    loadingColor: brandPrimary,
+    boxShadowFocus: `0 0 0 2px rgba(${brandPrimarySoft}, 0.3)`
   },
   Radio: {
-    boxShadowActive: 'inset 0 0 0 1px #13987f',
-    boxShadowFocus: 'inset 0 0 0 1px #13987f,0 0 0 2px rgba(19, 152, 127, 0.3)',
-    boxShadowHover: 'inset 0 0 0 1px #13987f',
-    dotColorActive: '#13987f'
+    boxShadowActive: `inset 0 0 0 1px ${brandPrimary}`,
+    boxShadowFocus: `inset 0 0 0 1px ${brandPrimary},0 0 0 2px rgba(${brandPrimarySoft}, 0.3)`,
+    boxShadowHover: `inset 0 0 0 1px ${brandPrimary}`,
+    dotColorActive: brandPrimary
   },
   Message: {
-    iconColorSuccess: '#13987f',
-    iconColorLoading: '#13987f',
-    loadingColor: '#13987f',
+    iconColorSuccess: brandPrimary,
+    iconColorLoading: brandPrimary,
+    loadingColor: brandPrimary,
     borderRadius: '8px'
   },
   Slider: {
     handleSize: '12px',
     fontSize: '10px',
     markFontSize: '8px',
-    fillColor: '#13987f',
-    fillColorHover: '#13987f',
+    fillColor: brandPrimary,
+    fillColorHover: brandPrimary,
     indicatorBorderRadius: '8px'
   },
   Notification: {
     borderRadius: '8px'
   },
   Steps: {
-    indicatorBorderColorProcess: '#13987f',
-    indicatorColorProcess: '#52aea3'
+    indicatorBorderColorProcess: brandPrimary,
+    indicatorColorProcess: brandPrimaryProcess
   },
   LoadingBar: {
-    colorLoading: '#13987f'
+    colorLoading: brandPrimary
   }
 }
 

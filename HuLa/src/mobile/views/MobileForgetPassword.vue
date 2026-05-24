@@ -45,7 +45,7 @@
                 autoCapitalize="off"
                 maxlength="6" />
               <n-button
-                color="#13987f"
+                color="#4a90e2"
                 ghost
                 :disabled="sendBtnDisabled"
                 :loading="sendingEmailCode"
@@ -452,4 +452,17 @@ onBeforeUnmount(() => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/login';
+
+.gradient-button {
+  background: linear-gradient(to left, #4a90e2, #357abd);
+  box-shadow:
+    inset 0px 3px 16px 0px rgba(255, 255, 255, 0.5),
+    inset 0px -2px 27px 0px rgba(53, 122, 189, 0.76),
+    inset 0px 2px 6px 0px rgba(254, 254, 254, 0.5);
+}
+
+[data-theme='dark'] .gradient-button {
+  background: linear-gradient(to left, #3a7bc8, #2d6aa8);
+  box-shadow: 0 0 8px rgba(45, 106, 168, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
 </style>

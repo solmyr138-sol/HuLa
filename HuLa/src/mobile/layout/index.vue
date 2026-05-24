@@ -1,6 +1,6 @@
 <template>
   <MobileLayout>
-    <MobileScaffold :safe-area="false">
+    <MobileScaffold :background="false" :safe-area="false">
       <template #container>
         <RouterView v-slot="{ Component }">
           <Transition name="slide" appear mode="out-in">

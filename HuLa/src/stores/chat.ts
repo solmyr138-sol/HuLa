@@ -245,6 +245,28 @@ export const useChatStore = defineStore(
       return msg?.message?.status ? transientStatuses.has(msg.message.status) : false
     }
 
+    /** 保证消息具备稳定 id，避免虚拟列表 keyField 报错 */
+    const ensureMessageId = (msg: MessageType): string => {
+      if (!msg?.message) return ''
+      if (!msg.message.id) {
+        msg.message.id = `${msg.message.roomId}_${msg.message.sendTime}_${msg.fromUser?.uid ?? 'unknown'}`
+      }
+      return String(msg.message.id)
+    }
+
+    const normalizeRoomMessageKeys = (roomId: string) => {
+      const room = messageMap[roomId]
+      if (!room) return
+
+      const normalized: Record<string, MessageType> = {}
+      for (const msg of Object.values(room)) {
+        const messageId = ensureMessageId(msg)
+        if (!messageId) continue
+        normalized[messageId] = msg
+      }
+      messageMap[roomId] = normalized
+    }
+
     // 回复消息的映射关系
     const replyMapping = reactive<Record<string, Record<string, string[]>>>({})
     // 存储撤回的消息内容和时间
@@ -389,6 +411,7 @@ export const useChatStore = defineStore(
 
       // 1. 清空当前房间的旧消息数据
       clearRoomMessagesExceptTransient(roomId)
+      normalizeRoomMessageKeys(roomId)
 
       // 2. 重置消息加载状态
       currentMessageOptions.value = {
@@ -432,14 +455,17 @@ export const useChatStore = defineStore(
     const chatMessageList = computed(() => {
       if (!currentMessageMap.value || Object.keys(currentMessageMap.value).length === 0) return []
 
-      // 直接使用 Rust 后端计算的 timeBlock，不做前端计算
-      return Object.values(currentMessageMap.value).sort((a, b) => Number(a.message.id) - Number(b.message.id))
+      return Object.values(currentMessageMap.value)
+        .filter((msg) => Boolean(msg?.message?.id))
+        .sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
       if (!messageMap[roomId] || Object.keys(messageMap[roomId]).length === 0) return []
 
-      return Object.values(messageMap[roomId]).sort((a, b) => Number(a.message.id) - Number(b.message.id))
+      return Object.values(messageMap[roomId])
+        .filter((msg) => Boolean(msg?.message?.id))
+        .sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const findRoomIdByMsgId = (msgId: string) => {
@@ -535,7 +561,9 @@ export const useChatStore = defineStore(
 
       const roomBatch = { ...(messageMap[roomId] ?? {}) }
       for (const msg of data.list) {
-        roomBatch[msg.message.id] = msg
+        const messageId = ensureMessageId(msg)
+        if (!messageId) continue
+        roomBatch[messageId] = msg
       }
       messageMap[roomId] = roomBatch
     }
@@ -713,10 +741,8 @@ export const useChatStore = defineStore(
 
     // 推送消息
     const pushMsg = async (msg: MessageType, options: { isActiveChatView?: boolean; activeRoomId?: string } = {}) => {
-      if (!msg.message.id) {
-        msg.message.id = `${msg.message.roomId}_${msg.message.sendTime}_${msg.fromUser.uid}`
-      }
-      const messageKey = msg.message.id
+      const messageKey = ensureMessageId(msg)
+      if (!messageKey) return
 
       let roomMessages = messageMap[msg.message.roomId]
       if (!roomMessages) {
