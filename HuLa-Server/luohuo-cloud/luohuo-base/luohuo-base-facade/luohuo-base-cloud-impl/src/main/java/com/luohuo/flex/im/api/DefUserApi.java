@@ -1,7 +1,9 @@
 package com.luohuo.flex.im.api;
 
+import com.luohuo.flex.base.vo.update.tenant.DefUserPasswordResetVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.luohuo.basic.base.R;
@@ -54,4 +56,10 @@ public interface DefUserApi {
     @PostMapping("/defUser/onlineUsers/logout")
     R<Boolean> logout(@RequestParam(value = "userId", required = false) Long userId,
                       @RequestParam(value = "token", required = false) String token);
+
+    @PutMapping("/defUser/resetPassword")
+    R<Boolean> resetPassword(@RequestBody DefUserPasswordResetVO data);
+
+    @PutMapping("/defUser/updateState")
+    R<Boolean> updateState(@RequestParam("id") Long id, @RequestParam("state") Boolean state);
 }

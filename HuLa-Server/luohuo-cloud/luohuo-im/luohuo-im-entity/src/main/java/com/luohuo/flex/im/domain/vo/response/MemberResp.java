@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * @author nyh
@@ -38,4 +39,8 @@ public class MemberResp implements Serializable {
 	private String myName;
 	@Schema(description = "是否允许扫码直接进群")
 	private Boolean allowScanEnter;
+	@Schema(description = "群主昵称（管理端列表）")
+	private String ownerName;
+	@Schema(description = "创建时间（管理端列表）")
+	private LocalDateTime createTime;
 }

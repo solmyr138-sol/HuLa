@@ -41,17 +41,30 @@ $env:GRADLE_OPTS = "-Dorg.gradle.jvmargs=-Xmx8192m -XX:MaxMetaspaceSize=2048m -D
 $env:TAURI_ENV_PLATFORM = "android"
 $env:ANDROID_SERIAL = $serial
 
-Write-Host ""
-Write-Host "Phone dev | ANDROID_SERIAL=$serial | --host $wlanIp | API from local.yaml"
-Write-Host "Ensure backend http://${wlanIp}:18760/api is reachable on phone browser."
-Write-Host "If install fails with INSTALL_FAILED_UPDATE_INCOMPATIBLE, run: .\scripts\adb-uninstall-hula.ps1"
-Write-Host ""
-
 # Do NOT pass adb serial as [DEVICE]: Tauri matches device *name*, fails, then opens Android Studio.
 $hostIp = $wlanIp
 if ($args.Count -gt 0 -and $args[0] -match '^\d+\.\d+\.\d+\.\d+$') {
     $hostIp = $args[0]
 }
+$env:TAURI_DEV_HOST = $hostIp
+
+$localYaml = Join-Path $root "src-tauri\configuration\local.yaml"
+if (Test-Path $localYaml) {
+    $yamlText = Get-Content $localYaml -Raw
+    if ($yamlText -notmatch [regex]::Escape($hostIp)) {
+        Write-Host "WARN: local.yaml does not contain PC WLAN IP $hostIp — update backend.base_url / ws_url or API calls will fail."
+    }
+}
+
+Write-Host ""
+Write-Host "Phone dev | ANDROID_SERIAL=$serial | --host $hostIp | API from local.yaml"
+Write-Host "Phone browser check (required): http://${hostIp}:5210/ and http://${hostIp}:18760/api"
+Write-Host "If install fails with INSTALL_FAILED_UPDATE_INCOMPATIBLE, run: .\scripts\adb-uninstall-hula.ps1"
+Write-Host ""
+
+Write-Host "Pre-warming Vite dependency cache (prevents first-load white screen)..."
+& (Join-Path $PSScriptRoot "vite-android-warmup.ps1") -HostIp $hostIp
+
 $tauriArgs = @("android", "dev", "--host", $hostIp)
 if ($args.Count -gt 0 -and $args[0] -notmatch '^\d+\.\d+\.\d+\.\d+$') {
     $tauriArgs += $args

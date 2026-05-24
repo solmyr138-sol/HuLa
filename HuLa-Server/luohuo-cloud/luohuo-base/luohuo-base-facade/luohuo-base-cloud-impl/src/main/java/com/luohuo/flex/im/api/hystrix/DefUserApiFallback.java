@@ -1,5 +1,7 @@
 package com.luohuo.flex.im.api.hystrix;
 
+import com.luohuo.basic.exception.BizException;
+import com.luohuo.flex.base.vo.update.tenant.DefUserPasswordResetVO;
 import org.springframework.stereotype.Component;
 import com.luohuo.basic.base.R;
 import com.luohuo.flex.model.entity.system.SysUser;
@@ -37,5 +39,15 @@ public class DefUserApiFallback implements DefUserApi {
     @Override
     public R<Boolean> logout(Long userId, String token) {
         return R.timeout();
+    }
+
+    @Override
+    public R<Boolean> resetPassword(DefUserPasswordResetVO data) {
+        throw BizException.wrap("重置密码失败，base 服务不可用");
+    }
+
+    @Override
+    public R<Boolean> updateState(Long id, Boolean state) {
+        throw BizException.wrap("更新用户状态失败，base 服务不可用");
     }
 }

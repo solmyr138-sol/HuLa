@@ -60,14 +60,15 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
         if (policy != null) {
             return policy;
         }
-        return TenantPolicy.builder()
-                .tenantId(tenantId)
+        TenantPolicy defaultPolicy = TenantPolicy.builder()
                 .allowCrossTenantFriend(false)
                 .allowCrossTenantGroupInvite(false)
                 .forbidCreateGroup(false)
                 .forbidBroadcast(false)
                 .forbidMemberAddFriend(false)
                 .build();
+        defaultPolicy.setTenantId(tenantId);
+        return defaultPolicy;
     }
 
     @Override
@@ -85,8 +86,8 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
                 .allowMemberDm(true)
                 .allowMemberChangeNickname(true)
                 .speakIntervalSec(SpeakIntervalSecEnum.UNLIMITED.getSeconds())
-                .tenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L))
                 .build();
+        created.setTenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L));
         groupPolicyDao.save(created);
         return created;
     }
@@ -220,6 +221,10 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
     @Override
     public void assertCanEditMessage(Long uid, Message msg) {
         AssertUtil.isNotEmpty(msg, "消息有误");
+        User user = userDao.getById(uid);
+        if (user != null && isPolicyWhitelisted(user.getTenantId(), uid)) {
+            return;
+        }
         GroupMemberAcl acl = getMemberAcl(msg.getRoomId(), uid);
         if (acl != null && Boolean.TRUE.equals(acl.getCanEditAnyMessage())) {
             return;
@@ -231,6 +236,10 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
     public void assertCanRecallMessage(Long uid, Message msg) {
         AssertUtil.isNotEmpty(msg, "消息有误");
         AssertUtil.notEqual(msg.getType(), MessageTypeEnum.RECALL.getType(), "消息无法撤回");
+        User user = userDao.getById(uid);
+        if (user != null && isPolicyWhitelisted(user.getTenantId(), uid)) {
+            return;
+        }
         GroupMemberAcl acl = getMemberAcl(msg.getRoomId(), uid);
         if (acl != null && Boolean.TRUE.equals(acl.getCanRecallAnyMessage())) {
             return;

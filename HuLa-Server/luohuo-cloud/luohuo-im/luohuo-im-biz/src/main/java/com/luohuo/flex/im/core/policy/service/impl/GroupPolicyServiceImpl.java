@@ -80,8 +80,8 @@ public class GroupPolicyServiceImpl implements GroupPolicyService {
                     .canEditAnyMessage(false)
                     .canRecallAnyMessage(false)
                     .mutedUntil(req.getMutedUntil())
-                    .tenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L))
                     .build();
+            acl.setTenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L));
             acl.setCreateBy(operatorUid);
             groupMemberAclDao.save(acl);
             return acl;
@@ -102,8 +102,8 @@ public class GroupPolicyServiceImpl implements GroupPolicyService {
                     .uid(req.getUid())
                     .canEditAnyMessage(ObjectUtil.defaultIfNull(req.getCanEditAnyMessage(), false))
                     .canRecallAnyMessage(ObjectUtil.defaultIfNull(req.getCanRecallAnyMessage(), false))
-                    .tenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L))
                     .build();
+            acl.setTenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), 1L));
             acl.setCreateBy(operatorUid);
             groupMemberAclDao.save(acl);
             return acl;

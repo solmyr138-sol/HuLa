@@ -344,11 +344,34 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 
 		Map<Long, Long> onlineMap = onlineService.getBatchGroupOnlineCounts(roomIdList);
 
+		List<Long> groupIds = pageResp.getList().stream().map(MemberResp::getGroupId).collect(Collectors.toList());
+		Map<Long, Long> groupLordUid = Collections.emptyMap();
+		if (CollUtil.isNotEmpty(groupIds)) {
+			groupLordUid = groupMemberDao.lambdaQuery()
+					.in(GroupMember::getGroupId, groupIds)
+					.eq(GroupMember::getRoleId, GroupRoleEnum.LEADER.getType())
+					.list()
+					.stream()
+					.collect(Collectors.toMap(GroupMember::getGroupId, GroupMember::getUid, (a, b) -> a));
+		}
+		List<Long> lordUids = groupLordUid.values().stream().distinct().collect(Collectors.toList());
+		Map<Long, String> lordNameByUid = Collections.emptyMap();
+		if (CollUtil.isNotEmpty(lordUids)) {
+			lordNameByUid = userDao.listByIds(lordUids).stream()
+					.collect(Collectors.toMap(User::getId, User::getName, (a, b) -> a));
+		}
+		final Map<Long, Long> lordUidByGroup = groupLordUid;
+		final Map<Long, String> lordNameByUidFinal = lordNameByUid;
+
 		// 渲染群信息（管理员查看，不需要个人备注和群昵称）
 		pageResp.getList().forEach(item -> {
 			Long memberNum = (long) groupMemberCache.getMemberUidList(item.getRoomId()).size();
 			item.setOnlineNum(onlineMap.get(item.getRoomId()));
 			item.setMemberNum(memberNum);
+			Long lordUid = lordUidByGroup.get(item.getGroupId());
+			if (lordUid != null) {
+				item.setOwnerName(lordNameByUidFinal.get(lordUid));
+			}
 		});
 		return pageResp;
 	}
@@ -519,8 +542,10 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 		}
 		RoomGroup roomGroup = permissionCheck.getLeft();
 
-		// 2.修改群信息
-		roomGroup.setAvatar(request.getAvatar());
+		// 2.修改群信息（头像可选，空则保留原值）
+		if (StrUtil.isNotBlank(request.getAvatar())) {
+			roomGroup.setAvatar(request.getAvatar());
+		}
 		roomGroup.setName(request.getName());
 		roomGroup.setAllowScanEnter(request.getAllowScanEnter());
 

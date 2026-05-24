@@ -1,11 +1,13 @@
 <template>
   <n-card :title="title">
     <n-space class="mb-12px" wrap>
-      <n-input v-model:value="keyword" placeholder="账号 / 昵称 / 邮箱" clearable style="width: 220px" />
+      <n-input v-model:value="keyword" placeholder="账号 / 昵称 / 手机号" clearable style="width: 220px" />
       <n-button type="primary" @click="load">搜索</n-button>
       <n-button @click="reset">重置</n-button>
-      <n-button type="error" ghost :disabled="!selected.length" @click="ban">封禁</n-button>
-      <n-button ghost :disabled="!selected.length" @click="unban">解封</n-button>
+      <template v-if="!deletedOnly">
+        <n-button type="error" ghost :disabled="!selected.length" @click="ban">封禁</n-button>
+        <n-button ghost :disabled="!selected.length" @click="unban">解封</n-button>
+      </template>
     </n-space>
     <n-data-table
       :columns="columns"
@@ -14,21 +16,27 @@
       :pagination="pagination"
       :row-key="(r: ImUserRow) => r.uid"
       @update:checked-row-keys="onSelect" />
+    <UserEditModal v-model:show="editVisible" :user="editing" @saved="load" />
   </n-card>
 </template>
 
 <script setup lang="ts">
-import { h, onMounted, reactive, ref } from 'vue'
+import { h, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { NButton, useMessage, type DataTableColumns } from 'naive-ui'
-import { api, type ImUserRow, type PageResp } from '../../api'
+import UserEditModal from '../../components/UserEditModal.vue'
+import { api, listImUsers, type ImUserRow } from '../../api'
 
 const props = defineProps<{ title: string; deletedOnly?: boolean }>()
+const route = useRoute()
 const message = useMessage()
 
 const keyword = ref('')
 const loading = ref(false)
 const rows = ref<ImUserRow[]>([])
 const selected = ref<number[]>([])
+const editVisible = ref(false)
+const editing = ref<ImUserRow | null>(null)
 
 const pagination = reactive({
   page: 1,
@@ -47,34 +55,71 @@ const pagination = reactive({
   }
 })
 
+function formatTime(v?: string | number) {
+  if (v == null || v === '') return '—'
+  const n = Number(v)
+  if (Number.isNaN(n)) return String(v)
+  const ms = n > 1e12 ? n : n * 1000
+  return new Date(ms).toLocaleString('zh-CN')
+}
+
+function stateLabel(row: ImUserRow) {
+  if (props.deletedOnly || row.state === -1) return '已注销'
+  if (row.state === 1) return '封禁'
+  return '正常'
+}
+
 const columns: DataTableColumns<ImUserRow> = [
   { type: 'selection' },
   { title: '账号', key: 'account' },
-  { title: '手机号码', key: 'mobile', render: (r) => r.mobile || '—' },
+  { title: '手机号', key: 'mobile', render: (r) => r.mobile || '—' },
   { title: '昵称', key: 'nickname' },
+  { title: '登录IP', key: 'lastLoginIp', render: (r) => r.lastLoginIp || '—' },
   {
     title: '状态',
     key: 'state',
-    render: (r) => (r.state === 1 ? '封禁' : props.deletedOnly ? '已注销' : '正常')
+    render: (r) => stateLabel(r)
   },
-  { title: '注册时间', key: 'registerTime', render: (r) => r.registerTime || '—' },
-  ...(props.deletedOnly
-    ? [{ title: '注销时间', key: 'deletedTime', render: (r: ImUserRow) => r.deletedTime || '—' }]
+  {
+    title: props.deletedOnly ? '注销时间' : '注册时间',
+    key: 'time',
+    render: (r) => formatTime(props.deletedOnly ? r.deletedTime : r.registerTime)
+  },
+  ...(!props.deletedOnly
+    ? [
+        {
+          title: '操作',
+          key: 'actions',
+          render: (r: ImUserRow) =>
+            h(
+              NButton,
+              { text: true, type: 'primary', onClick: () => openEdit(r) },
+              { default: () => '编辑' }
+            )
+        }
+      ]
     : [])
 ]
+
+function openEdit(row: ImUserRow) {
+  editing.value = row
+  editVisible.value = true
+}
 
 async function load() {
   loading.value = true
   try {
-    const q = new URLSearchParams({
-      pageNo: String(pagination.page),
-      pageSize: String(pagination.pageSize),
+    const res = await listImUsers({
+      pageNo: pagination.page,
+      pageSize: pagination.pageSize,
       keyword: keyword.value,
-      deletedOnly: String(!!props.deletedOnly)
+      deletedOnly: props.deletedOnly
     })
-    const res = await api<PageResp<ImUserRow>>(`/im/admin/user/page?${q}`)
     rows.value = res.list ?? []
-    pagination.itemCount = res.totalRecords ?? 0
+    pagination.itemCount = Number(res.totalRecords) || 0
+    if (props.deletedOnly && pagination.itemCount === 0 && !keyword.value) {
+      message.info('暂无注销记录；注销用户来自客户端注销审计，与注册用户列表互斥')
+    }
   } catch (e) {
     rows.value = []
     pagination.itemCount = 0
@@ -110,6 +155,14 @@ async function unban() {
   load()
 }
 
+watch(
+  () => [props.deletedOnly, route.path] as const,
+  () => {
+    selected.value = []
+    pagination.page = 1
+    load()
+  }
+)
+
 onMounted(load)
 </script>
-

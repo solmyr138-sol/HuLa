@@ -14,6 +14,7 @@ import { getComponentsDirs, getComponentsDtsPath, isMobilePlatform } from './bui
 import { createManualChunks } from './build/config/chunks'
 import { createMobileBuildAliases, isMobileBuildTarget } from './build/config/mobile-build'
 import { atStartup } from './build/config/console'
+import { ANDROID_OPTIMIZE_DEPS } from './build/config/android-optimize-deps'
 import { androidDevHostPlugin } from './build/plugins/androidDevHost'
 import packageJson from './package.json'
 
@@ -58,6 +59,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   // Tauri CLI on Windows sets this to your LAN IP (e.g. 192.168.1.154) before starting Vite
   const tauriDevHost = process.env.TAURI_DEV_HOST
   const viteListenHost = isAndroid ? (tauriDevHost || '0.0.0.0') : '0.0.0.0'
+  // Physical phone: HMR WebSocket must target PC LAN IP. Emulator: adb reverse -> 127.0.0.1
+  const androidHmrHost =
+    isAndroid && tauriDevHost && tauriDevHost !== '127.0.0.1' ? tauriDevHost : isAndroid ? '127.0.0.1' : undefined
 
   // 根据平台决定 host（HMR / 日志展示）
   const host = (() => {
@@ -146,15 +150,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           optimizeDeps: {
             // Only scan app entry — avoid picking up Gradle problems-report.html under src-tauri/gen
             entries: [fileURLToPath(new URL('./index.html', import.meta.url))],
-            include: [
-              'vue',
-              'vue-router',
-              'pinia',
-              'vant',
-              '@vant/area-data',
-              '@breezystack/lamejs',
-              'tauri-plugin-mic-recorder-api'
-            ]
+            include: [...ANDROID_OPTIMIZE_DEPS],
+            // Wait until crawl finishes before serving — prevents reload while WebView is loading
+            holdUntilCrawlEnd: true
           }
         }
       : {}),
@@ -187,10 +185,24 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     server: {
       // Same origin as WebView so Workers/modules load via tauri.localhost proxy (not 10.0.2.2 / 192.168.x.x)
       ...(isAndroid ? { origin: androidDevOrigin } : {}),
+      ...(isAndroid
+        ? {
+            warmup: {
+              clientFiles: [
+                './index.html',
+                './src/main.ts',
+                './src/App.vue',
+                './src/router/index.ts',
+                './src/mobile/login.vue',
+                './src/mobile/views/Splashscreen.vue'
+              ]
+            }
+          }
+        : {}),
       hmr: isAndroid
         ? {
-            // Do not bind HMR to 10.0.2.2 on the PC — that IP only exists inside the emulator.
             protocol: 'ws',
+            host: androidHmrHost,
             port: serverPort,
             clientPort: serverPort
           }

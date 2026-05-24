@@ -43,7 +43,7 @@
         </n-tag>
       </div>
       <n-layout-content class="main-content">
-        <router-view />
+        <router-view :key="$route.fullPath" />
       </n-layout-content>
     </n-layout>
   </n-layout>
@@ -53,7 +53,7 @@
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { MenuOption } from 'naive-ui'
-import { api, type TenantInfo } from '../api'
+import { getTenantInfo, type TenantInfo } from '../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -145,12 +145,18 @@ watch(
 
 onMounted(async () => {
   try {
-    tenantInfo.value = await api<TenantInfo>('/im/admin/tenant/info')
+    tenantInfo.value = await getTenantInfo()
     if (tenantInfo.value?.tenantId) {
       localStorage.setItem('tenantId', String(tenantInfo.value.tenantId))
     }
   } catch {
-    tenantInfo.value = { tenantId: 1, inviteCode: 'DEFAULT', tenantName: '默认企业', registeredCount: 0, accountLimit: 0 }
+    tenantInfo.value = {
+      tenantId: 1,
+      inviteCode: 'DEFAULT',
+      tenantName: '淘东美科技有限公司',
+      registeredCount: 0,
+      accountLimit: 0
+    }
   }
 })
 </script>
@@ -197,4 +203,4 @@ onMounted(async () => {
   min-height: calc(100vh - 120px);
 }
 </style>
-
+

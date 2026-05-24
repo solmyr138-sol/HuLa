@@ -31,6 +31,7 @@ $ErrorActionPreference = $prevEap
 $env:GRADLE_OPTS = "-Dorg.gradle.jvmargs=-Xmx8192m -XX:MaxMetaspaceSize=2048m -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -Dorg.gradle.daemon=true"
 $env:KOTLIN_DAEMON_JVM_OPTIONS = "-Xmx3072m -XX:MaxMetaspaceSize=1536m"
 $env:TAURI_ENV_PLATFORM = "android"
+$env:TAURI_DEV_HOST = "127.0.0.1"
 $env:CARGO_BUILD_JOBS = "6"
 $env:CARGO_INCREMENTAL = "1"
 

@@ -135,6 +135,7 @@ public class RoomServiceImpl implements RoomService {
 						resp.setAccount(roomGroup.getAccount());
 						resp.setAvatar(roomGroup.getAvatar());
 						resp.setAllowScanEnter(roomGroup.getAllowScanEnter());
+						resp.setCreateTime(roomGroup.getCreateTime());
 						return resp;
 					})
 					.collect(Collectors.toList());
@@ -152,6 +153,7 @@ public class RoomServiceImpl implements RoomService {
 					resp.setAccount(roomGroup.getAccount());
 					resp.setAvatar(roomGroup.getAvatar());
 					resp.setAllowScanEnter(roomGroup.getAllowScanEnter());
+					resp.setCreateTime(roomGroup.getCreateTime());
 					return resp;
 				})
 				.filter(resp -> {

@@ -11,6 +11,7 @@ import com.luohuo.flex.base.service.tenant.DefTenantService;
 import com.luohuo.flex.base.vo.query.tenant.DefTenantPageQuery;
 import com.luohuo.flex.base.vo.result.user.DefTenantResultVO;
 import com.luohuo.flex.base.vo.save.tenant.DefTenantSaveVO;
+import com.luohuo.flex.base.vo.update.tenant.DefTenantLogoUpdateVO;
 import com.luohuo.flex.base.vo.update.tenant.DefTenantUpdateVO;
 import com.luohuo.flex.model.enumeration.system.DefTenantStatusEnum;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,6 +78,17 @@ public class DefTenantController extends SuperCacheController<DefTenantService, 
     @WebLog("修改租户审核状态")
     public R<Boolean> updateStatus(@NotNull(message = "请修改正确的企业") @RequestParam Long id, @RequestParam @NotNull(message = "请传递状态值") Integer status, @RequestParam(required = false) String reviewComments) {
         return success(superService.updateStatus(id, status, reviewComments));
+    }
+
+    @Operation(summary = "更新企业LOGO")
+    @PutMapping("/{id}/logo")
+    @WebLog("更新企业LOGO")
+    public R<Boolean> updateLogo(@PathVariable Long id, @RequestBody DefTenantLogoUpdateVO vo) {
+        DefTenant patch = new DefTenant();
+        patch.setId(id);
+        patch.setLogo(vo != null ? vo.getLogo() : null);
+        superService.updateById(patch);
+        return R.success(true);
     }
 
     @Operation(summary = "修改租户状态", description = "修改租户状态")

@@ -34,6 +34,9 @@ public class DefTenant extends Entity<Long> {
 	@Schema(description = "租户名 | 企业名称")
 	private String name;
 
+	@Schema(description = "企业LOGO URL")
+	private String logo;
+
 	@Schema(description = "企业邀请码(一码一租户)")
 	@TableField("invite_code")
 	private String inviteCode;

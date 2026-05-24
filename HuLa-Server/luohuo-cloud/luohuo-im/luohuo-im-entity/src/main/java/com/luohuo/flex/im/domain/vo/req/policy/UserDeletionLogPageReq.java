@@ -9,4 +9,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "用户注销日志分页")
 public class UserDeletionLogPageReq extends PageBaseReq {
+
+    @Schema(description = "账号关键字")
+    private String keyword;
 }

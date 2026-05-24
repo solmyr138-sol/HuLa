@@ -88,6 +88,7 @@ export type TenantInfo = {
   tenantId: number
   inviteCode: string
   tenantName: string
+  logo?: string
   creditCode?: string
   registeredCount: number
   accountLimit: number
@@ -114,11 +115,162 @@ export type WhitelistUser = {
 
 export type ImUserRow = {
   uid: number
+  defUserId?: number
   account?: string
   mobile?: string
   nickname?: string
   state?: number
   registerTime?: string
   deletedTime?: string
+  lastLoginIp?: string
+}
+
+type UserSearchRow = {
+  uid: string
+  name: string
+  account: string
+  avatar?: string
+}
+
+/** 企业信息：优先 IM 管理端；旧版 IM 服务无该接口时走 OAuth */
+export async function getTenantInfo(): Promise<TenantInfo> {
+  try {
+    return await api<TenantInfo>('/im/admin/tenant/info')
+  } catch {
+    const ent = await api<{ tenantId: number | string; inviteCode: string; tenantName: string }>(
+      '/oauth/anyone/enterprise'
+    )
+    let registeredCount = 0
+    try {
+      const users = await api<PageResp<UserSearchRow>>('/im/user/search?pageNo=1&pageSize=1')
+      registeredCount = Number(users.totalRecords) || 0
+    } catch {
+      /* ignore */
+    }
+    return {
+      tenantId: Number(ent.tenantId),
+      inviteCode: ent.inviteCode,
+      tenantName: ent.tenantName,
+      registeredCount,
+      accountLimit: 0
+    }
+  }
+}
+
+/** 注册用户 / 注销用户分页（deletedOnly=true 仅查注销审计表） */
+export async function listImUsers(params: {
+  pageNo: number
+  pageSize: number
+  keyword?: string
+  deletedOnly?: boolean
+}): Promise<PageResp<ImUserRow>> {
+  const q = new URLSearchParams({
+    pageNo: String(params.pageNo),
+    pageSize: String(params.pageSize),
+    keyword: params.keyword?.trim() ?? '',
+    deletedOnly: String(!!params.deletedOnly)
+  })
+  const res = await api<PageResp<ImUserRow>>(`/im/admin/user/page?${q}`)
+  return {
+    ...res,
+    pageNo: Number(res.pageNo),
+    pageSize: Number(res.pageSize),
+    totalRecords: Number(res.totalRecords),
+    list: (res.list ?? []).map((row) => ({
+      ...row,
+      uid: Number(row.uid),
+      defUserId: row.defUserId != null ? Number(row.defUserId) : undefined
+    }))
+  }
+}
+
+export async function updateImUser(body: {
+  uid: number
+  nickname?: string
+  email?: string
+  state?: number
+}) {
+  return api<void>('/im/admin/user/update', {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  })
+}
+
+type OssToken = { uploadUrl: string; downloadUrl: string }
+
+/** 上传企业 LOGO（MinIO/七牛预签名，与客户端一致） */
+export async function uploadTenantLogoFile(file: File): Promise<string> {
+  const q = new URLSearchParams({
+    scene: 'avatar',
+    fileName: file.name
+  })
+  const cred = await api<OssToken>(`/system/anyTenant/ossToken?${q}`)
+  const res = await fetch(cred.uploadUrl, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type || 'application/octet-stream' }
+  })
+  if (!res.ok) {
+    throw new Error('上传图片失败')
+  }
+  return cred.downloadUrl
+}
+
+export async function updateTenantLogo(logo: string) {
+  return api<void>('/im/admin/tenant/logo', {
+    method: 'PUT',
+    body: JSON.stringify({ logo })
+  })
+}
+
+export async function resetImUserPassword(body: {
+  uid: number
+  password: string
+  confirmPassword: string
+}) {
+  return api<void>('/im/admin/user/reset-password', {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  })
+}
+
+export type GroupChatRow = {
+  groupId: number
+  roomId: number
+  groupName?: string
+  account?: string
+  avatar?: string
+  memberNum?: number
+  onlineNum?: number
+  ownerName?: string
+  createTime?: string | number
+}
+
+/** 租户群聊分页（IM 管理端 /room/group/page） */
+export async function listGroupChats(params: {
+  pageNo: number
+  pageSize: number
+  groupNameKeyword?: string
+}): Promise<PageResp<GroupChatRow>> {
+  const q = new URLSearchParams({
+    pageNo: String(params.pageNo),
+    pageSize: String(params.pageSize)
+  })
+  const kw = params.groupNameKeyword?.trim()
+  if (kw) q.set('groupNameKeyword', kw)
+  const res = await api<PageResp<GroupChatRow>>(`/im/room/group/page?${q}`)
+  return {
+    ...res,
+    pageNo: Number(res.pageNo),
+    pageSize: Number(res.pageSize),
+    totalRecords: Number(res.totalRecords),
+    list: (res.list ?? []).map((row) => ({
+      ...row,
+      groupId: Number(row.groupId),
+      roomId: Number(row.roomId),
+      memberNum: row.memberNum != null ? Number(row.memberNum) : undefined,
+      onlineNum: row.onlineNum != null ? Number(row.onlineNum) : undefined
+    }))
+  }
 }
 

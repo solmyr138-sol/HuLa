@@ -215,7 +215,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 		ArgumentAssert.notNull(tenantId, "未绑定企业");
 		DefTenant tenant = defTenantService.getById(tenantId);
 		ArgumentAssert.notNull(tenant, "企业不存在");
-		return new EnterpriseProfileResp(tenant.getId(), tenant.getInviteCode(), tenant.getName());
+		return new EnterpriseProfileResp(tenant.getId(), tenant.getInviteCode(), tenant.getName(), tenant.getLogo());
 	}
 
 	private Long resolveTenantId(String enterpriseCode) {

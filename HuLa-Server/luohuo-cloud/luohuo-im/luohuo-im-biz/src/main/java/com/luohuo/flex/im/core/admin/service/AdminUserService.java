@@ -2,7 +2,9 @@ package com.luohuo.flex.im.core.admin.service;
 
 import com.luohuo.flex.im.domain.vo.req.policy.AdminImUserPageReq;
 import com.luohuo.flex.im.domain.vo.req.policy.AdminUserBanReq;
+import com.luohuo.flex.im.domain.vo.req.policy.AdminUserResetPasswordReq;
 import com.luohuo.flex.im.domain.vo.req.policy.AdminUserUnbanReq;
+import com.luohuo.flex.im.domain.vo.req.policy.AdminUserUpdateReq;
 import com.luohuo.flex.im.domain.vo.req.policy.UserDeletionLogPageReq;
 import com.luohuo.flex.im.domain.vo.res.PageBaseResp;
 import com.luohuo.flex.im.domain.vo.resp.policy.AdminImUserResp;
@@ -20,4 +22,8 @@ public interface AdminUserService {
     PageBaseResp<UserDeletionLogResp> listDeletionLogs(UserDeletionLogPageReq req);
 
     PageBaseResp<AdminImUserResp> pageImUsers(AdminImUserPageReq req);
+
+    void updateUser(Long operatorId, AdminUserUpdateReq req);
+
+    void resetPassword(Long operatorId, AdminUserResetPasswordReq req);
 }

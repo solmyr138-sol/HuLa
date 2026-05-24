@@ -15,8 +15,7 @@
                  inner join im_group_member m on g.id = m.group_id and m.is_del = 0
         where m.uid = #{uid}
           and g.is_del = 0
-        order by r.update_time,
-                 g.id
+        order by g.id
     </select>
 
     <select id="getAllGroupList" resultType="com.luohuo.flex.im.domain.vo.response.MemberResp">

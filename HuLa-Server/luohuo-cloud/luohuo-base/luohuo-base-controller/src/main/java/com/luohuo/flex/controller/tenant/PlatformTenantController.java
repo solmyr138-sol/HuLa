@@ -93,8 +93,8 @@ public class PlatformTenantController {
     @GetMapping("/stats")
     @Operation(summary = "平台概览统计")
     public R<PlatformStatsResp> stats() {
-        long total = defTenantService.count(Wraps.<DefTenant>lbQ());
-        long active = defTenantService.count(Wraps.<DefTenant>lbQ().eq(DefTenant::getState, true));
+        long total = defTenantService.list(Wraps.<DefTenant>lbQ()).size();
+        long active = defTenantService.list(Wraps.<DefTenant>lbQ().eq(DefTenant::getState, true)).size();
         PlatformStatsResp resp = new PlatformStatsResp();
         resp.setTenantTotal(total);
         resp.setTenantActive(active);

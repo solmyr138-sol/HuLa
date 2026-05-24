@@ -81,8 +81,8 @@ public class ChatServiceImpl implements ChatService {
 
 		// 临时会话单独处理一下消息计数器
 		if (request.isTemp()) {
-			Room room = roomCache.get(request.getRoomId());
-			if(room != null && room.isRoomFriend() && !request.isPushMessage()){
+			Room tempRoom = roomCache.get(request.getRoomId());
+			if(tempRoom != null && tempRoom.isRoomFriend() && !request.isPushMessage()){
 				UserFriend userFriend = userFriendDao.getByRoomId(request.getRoomId(), uid);
 				if (userFriend != null && userFriend.getIsTemp()) {
 					userFriend.setTempMsgCount(userFriend.getTempMsgCount() + 1);

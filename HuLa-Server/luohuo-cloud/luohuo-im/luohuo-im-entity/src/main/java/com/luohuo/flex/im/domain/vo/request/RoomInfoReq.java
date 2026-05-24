@@ -21,8 +21,7 @@ public class RoomInfoReq {
 	@Schema(description ="群名称")
 	private String name;
 
-	@NotEmpty(message = "群头像不能为空")
-	@Schema(description ="群头像")
+	@Schema(description ="群头像（可选，不传则保留原头像）")
 	private String avatar;
 
 	@Schema(description ="是否允许扫码直接进群")
