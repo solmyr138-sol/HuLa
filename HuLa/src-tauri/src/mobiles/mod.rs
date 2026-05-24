@@ -1,3 +1,4 @@
+pub mod hula_permissions;
 pub mod init;
 pub mod ios;
 pub mod keyboard;

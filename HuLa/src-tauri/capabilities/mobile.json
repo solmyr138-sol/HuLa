@@ -49,6 +49,7 @@
     "barcode-scanner:allow-request-permissions",
     "barcode-scanner:allow-open-app-settings",
     "barcode-scanner:allow-vibrate",
+    "hula-permissions:default",
     "mic-recorder:allow-start-recording",
     "mic-recorder:allow-stop-recording",
     "core:app:allow-set-app-theme",

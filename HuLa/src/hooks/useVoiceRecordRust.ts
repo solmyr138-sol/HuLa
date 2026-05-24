@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 import { calculateCompressionRatio, compressAudioToMp3, getAudioInfo } from '@/utils/AudioCompression'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { isMobile } from '@/utils/PlatformConstants'
+import { ensureMicrophonePermission } from '@/utils/mobileRuntimePermissions'
 import { UploadSceneEnum } from '../enums'
 import { useUpload } from './useUpload'
 import { removeTempFile } from '@/utils/TempFileManager'
@@ -34,6 +35,14 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       // 如果有录音正在进行，先停止再开始新录音
       if (isRecording.value) {
         await stopRecordingAudio()
+      }
+
+      if (isMobile()) {
+        const micGranted = await ensureMicrophonePermission()
+        if (!micGranted) {
+          options.onError?.('麦克风权限未开启')
+          return
+        }
       }
 
       // 调用Rust后端开始录音

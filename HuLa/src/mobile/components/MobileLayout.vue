@@ -17,6 +17,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
+import { requestEssentialMobilePermissions } from '@/utils/mobileRuntimePermissions'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
@@ -28,6 +29,17 @@ const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
 const userUid = computed(() => userStore.userInfo!.uid)
+
+watch(
+  () => userStore.userInfo?.uid,
+  (uid) => {
+    if (uid && isMobile()) {
+      void requestEssentialMobilePermissions()
+    }
+  },
+  { immediate: true }
+)
+
 const playMessageSound = async () => {
   // 检查是否开启了消息提示音
   if (!settingStore.notification?.messageSound) {

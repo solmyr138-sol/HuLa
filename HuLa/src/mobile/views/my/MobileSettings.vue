@@ -7,16 +7,18 @@
     <template #container>
       <div class="flex flex-col overflow-auto h-full">
         <div class="flex flex-col p-20px gap-20px">
-          <!-- 设置项 -->
+          <div class="flex justify-between items-center bg-card text-card-foreground ring-1 p-12px rounded-lg shadow-sm">
+            <div class="text-base">{{ t('mobile_setting.silent_label') }}</div>
+            <n-switch v-model:value="messageSoundEnabled" />
+          </div>
+
           <div
             v-for="item in settings"
             :key="item.key"
             class="flex justify-between items-center bg-card text-card-foreground ring-1 p-12px rounded-lg shadow-sm">
             <div class="text-base">{{ item.label }}</div>
             <div>
-              <!-- 根据 type 渲染对应组件 -->
-              <n-switch v-if="item.type === 'switch'" v-model:value="item.value" />
-              <n-input v-else-if="item.type === 'input'" v-model:value="item.value" placeholder="请输入" class="w-40" />
+              <n-input v-if="item.type === 'input'" v-model:value="item.value" placeholder="请输入" class="w-40" />
               <n-select
                 v-else-if="item.type === 'select'"
                 v-model:value="item.value"
@@ -26,7 +28,6 @@
             </div>
           </div>
 
-          <!-- 退出登录按钮 -->
           <div class="mt-auto flex justify-center mb-20px">
             <n-button type="error" @click="handleLogout" :disabled="isLoggingOut" :loading="isLoggingOut">
               {{ t('mobile_setting.button.logout') }}
@@ -40,6 +41,7 @@
 
 <script setup lang="ts">
 import { info } from '@tauri-apps/plugin-log'
+import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import { ThemeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -56,19 +58,28 @@ const { isTrayMenuShow } = storeToRefs(globalStore)
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 
-// 定义设置项
-const settings = reactive([
-  {
-    key: 'notifications',
-    label: computed(() => t('mobile_setting.silent_label')),
-    type: 'switch',
-    value: computed({
-      get: () => true,
-      set: () => {
-        /* 更新通知设置 */
+const messageSoundEnabled = computed({
+  get: () => settingStore.notification?.messageSound ?? true,
+  set: async (enabled: boolean) => {
+    if (enabled) {
+      try {
+        const granted = await isPermissionGranted()
+        if (!granted) {
+          const permission = await requestPermission()
+          if (permission !== 'granted') {
+            window.$message.warning('请在系统设置中允许通知权限')
+            return
+          }
+        }
+      } catch (error) {
+        console.warn('[MobileSettings] 检查通知权限失败:', error)
       }
-    })
-  },
+    }
+    settingStore.setMessageSoundEnabled(enabled)
+  }
+})
+
+const settings = reactive([
   {
     key: 'username',
     label: computed(() => t('mobile_setting.nickname')),
@@ -120,12 +131,9 @@ const settings = reactive([
 
 const { logout, resetLoginState } = useLogin()
 
-// 登出处理状态标志
 const isLoggingOut = ref(false)
 
-// 退出登录逻辑
 async function handleLogout() {
-  // 防止重复点击
   if (isLoggingOut.value) return
   isLoggingOut.value = true
 
@@ -146,11 +154,8 @@ async function handleLogout() {
         console.error('服务器登出失败：', error)
       }
 
-      // 无论服务器登出是否成功，都执行本地状态清理
       try {
-        // 2. 重置登录状态
         await resetLoginState()
-        // 3. 最后调用登出方法(这会创建登录窗口或发送登出事件)
         await logout()
 
         settingStore.toggleLogin(false, false)
@@ -170,12 +175,9 @@ async function handleLogout() {
       info('用户点击取消')
     })
     .finally(() => {
-      // 无论成功还是失败，都重置标志
       isLoggingOut.value = false
     })
 }
-
-// 你可以根据需要导出或操作 settings 数据
 </script>
 
 <style lang="scss" scoped></style>

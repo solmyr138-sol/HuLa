@@ -50,8 +50,7 @@ class MainActivity : TauriActivity() {
             }
             insets
         }
-        // Do NOT request permissions here — batch dialogs freeze emulator UI for 10s+.
-        // Use scripts/android-grant-permissions.ps1 for dev, or request when a feature needs them.
+        // 登录后按需申请运行时权限（逐组弹窗，避免批量卡顿）；开发机可用 scripts/android-grant-permissions.ps1
     }
 
     override fun onWebViewCreate(webView: WebView) {

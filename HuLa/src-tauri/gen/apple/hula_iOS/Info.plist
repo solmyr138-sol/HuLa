@@ -23,9 +23,11 @@
 	<key>NSAccessibilityUsageDescription</key>
 	<string>HuLa needs accessibility permission to capture screen content</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Request camera access for WebRTC</string>
+	<string>用于扫码、拍摄头像与发送图片</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Request microphone access for WebRTC</string>
+	<string>用于语音消息与音视频通话</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>用于选择并发送相册中的图片与视频</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>HuLa needs screen recording permission to enable screenshot functionality</string>
 	<key>UILaunchStoryboardName</key>

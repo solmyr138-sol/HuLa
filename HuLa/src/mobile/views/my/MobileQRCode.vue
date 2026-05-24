@@ -21,12 +21,20 @@ import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
 import { MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import router from '@/router'
+import { ensureCameraPermission } from '@/utils/mobileRuntimePermissions'
 
 const result = ref<string | null>(null)
 const isActive = ref(true)
 
 const startScan = async () => {
   try {
+    const cameraGranted = await ensureCameraPermission()
+    if (!cameraGranted) {
+      window.$message?.warning('需要相机权限才能扫码')
+      router.back()
+      return
+    }
+
     const scanTask = scan({
       windowed: true,
       formats: [Format.QRCode, Format.EAN13]

@@ -33,7 +33,7 @@
           <div class="menu-item" @click="router.push('/mobile/mobileMy/settings')">
             <span class="menu-icon notify">🔔</span>
             <span class="flex-1">{{ t('enterprise.notify_settings') }}</span>
-            <span class="warn">{{ t('enterprise.notify_partial') }}</span>
+            <span :class="notifyFullyEnabled ? 'ok' : 'warn'">{{ notifyStatusText }}</span>
             <svg class="w-14px h-14px"><use href="#right"></use></svg>
           </div>
           <div class="menu-item">
@@ -61,24 +61,49 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onActivated, onMounted, ref } from 'vue'
+import { isPermissionGranted } from '@tauri-apps/plugin-notification'
 import { useI18n } from 'vue-i18n'
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
+import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { fetchEnterpriseProfile, type EnterpriseProfile } from '@/services/enterprise'
 
 const { t } = useI18n()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
 const enterprise = ref<EnterpriseProfile | null>(null)
+const systemNotifyGranted = ref(true)
+
+const notifyFullyEnabled = computed(
+  () => settingStore.notification?.messageSound !== false && systemNotifyGranted.value
+)
+
+const notifyStatusText = computed(() =>
+  notifyFullyEnabled.value ? t('enterprise.notify_enabled') : t('enterprise.notify_partial')
+)
+
+const refreshNotifyStatus = async () => {
+  try {
+    systemNotifyGranted.value = await isPermissionGranted()
+  } catch {
+    systemNotifyGranted.value = true
+  }
+}
 
 onMounted(async () => {
   userStore.getUserDetailAction()
+  await refreshNotifyStatus()
   try {
     enterprise.value = await fetchEnterpriseProfile()
   } catch {
     enterprise.value = null
   }
+})
+
+onActivated(() => {
+  void refreshNotifyStatus()
 })
 
 function restartApp() {
@@ -169,6 +194,10 @@ function restartApp() {
 }
 .warn {
   color: #c14053;
+  font-size: 12px;
+}
+.ok {
+  color: #079669;
   font-size: 12px;
 }
 .muted {

@@ -1,5 +1,7 @@
 import { UploadSceneEnum } from '@/enums'
 import { uploadImageWithStorageFallback } from '@/utils/storageUpload'
+import { ensureMediaPermission } from '@/utils/mobileRuntimePermissions'
+import { isMobile } from '@/utils/PlatformConstants'
 
 export interface AvatarUploadOptions {
   onSuccess?: (downloadUrl: string) => void | Promise<void>
@@ -34,7 +36,15 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
     img.src = url
   }
 
-  const handleFileChange = (e: Event) => {
+  const handleFileChange = async (e: Event) => {
+    if (isMobile()) {
+      const granted = await ensureMediaPermission()
+      if (!granted) {
+        window.$message.warning('需要相册/媒体访问权限才能选择图片')
+        if (fileInput.value) fileInput.value.value = ''
+        return
+      }
+    }
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) previewImageFile(file)
     if (fileInput.value) fileInput.value.value = ''

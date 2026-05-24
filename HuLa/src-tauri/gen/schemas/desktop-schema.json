@@ -6603,6 +6603,36 @@
           "markdownDescription": "Denies the fetch_send command without any pre-configured scope."
         },
         {
+          "description": "Runtime permissions for camera, microphone and media on Android.\n#### This default permission set includes:\n\n- `allow-check-permissions`\n- `allow-request-permissions`",
+          "type": "string",
+          "const": "hula-permissions:default",
+          "markdownDescription": "Runtime permissions for camera, microphone and media on Android.\n#### This default permission set includes:\n\n- `allow-check-permissions`\n- `allow-request-permissions`"
+        },
+        {
+          "description": "Enables the check_permissions command for hula-permissions mobile plugin.",
+          "type": "string",
+          "const": "hula-permissions:allow-check-permissions",
+          "markdownDescription": "Enables the check_permissions command for hula-permissions mobile plugin."
+        },
+        {
+          "description": "Enables the request_permissions command for hula-permissions mobile plugin.",
+          "type": "string",
+          "const": "hula-permissions:allow-request-permissions",
+          "markdownDescription": "Enables the request_permissions command for hula-permissions mobile plugin."
+        },
+        {
+          "description": "Denies the check_permissions command for hula-permissions mobile plugin.",
+          "type": "string",
+          "const": "hula-permissions:deny-check-permissions",
+          "markdownDescription": "Denies the check_permissions command for hula-permissions mobile plugin."
+        },
+        {
+          "description": "Denies the request_permissions command for hula-permissions mobile plugin.",
+          "type": "string",
+          "const": "hula-permissions:deny-request-permissions",
+          "markdownDescription": "Denies the request_permissions command for hula-permissions mobile plugin."
+        },
+        {
           "description": "Allows the log command\n#### This default permission set includes:\n\n- `allow-log`",
           "type": "string",
           "const": "log:default",

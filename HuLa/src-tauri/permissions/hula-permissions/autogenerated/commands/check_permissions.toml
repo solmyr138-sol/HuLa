@@ -1,0 +1,11 @@
+"$schema" = "../../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-check-permissions"
+description = "Enables the check_permissions command for hula-permissions mobile plugin."
+commands.allow = ["check_permissions"]
+
+[[permission]]
+identifier = "deny-check-permissions"
+description = "Denies the check_permissions command for hula-permissions mobile plugin."
+commands.deny = ["check_permissions"]

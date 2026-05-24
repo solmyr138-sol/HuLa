@@ -8,7 +8,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ios_build_support::compile_ios_splash();
     ensure_frontend_dist()?;
     add_android_cxx_link();
-    tauri_build::build();
+    println!("cargo:rerun-if-changed=permissions");
+    tauri_build::try_build(
+        tauri_build::Attributes::new().plugin(
+            "hula-permissions",
+            tauri_build::InlinedPlugin::new().default_permission(
+                tauri_build::DefaultPermissionRule::Allow(vec![
+                    "allow-check-permissions".to_string(),
+                    "allow-request-permissions".to_string(),
+                ]),
+            ),
+        ),
+    )?;
 
     Ok(())
 }

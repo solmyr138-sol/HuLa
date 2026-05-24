@@ -9,6 +9,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
         // 移动端特有的插件
         #[cfg(mobile)]
         let builder = builder
+            .plugin(crate::mobiles::hula_permissions::init())
             .plugin(tauri_plugin_safe_area_insets::init())
             .plugin(tauri_plugin_hula::init())
             .plugin(tauri_plugin_barcode_scanner::init());
