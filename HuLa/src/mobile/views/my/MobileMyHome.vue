@@ -145,11 +145,12 @@ function restartApp() {
   color: #333;
 }
 .profile-card {
-  background: linear-gradient(145deg, #4a90e2, #357abd);
+  background: #fff;
   border-radius: 12px;
-  color: #fff;
+  color: #333;
   padding: 16px;
   margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 .card-top {
   display: flex;
@@ -162,12 +163,12 @@ function restartApp() {
 }
 .account {
   font-size: 12px;
-  opacity: 0.9;
+  color: #999;
   margin-top: 4px;
 }
 .card-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: #f0f0f0;
   margin: 12px 0;
 }
 .card-bottom {
@@ -175,6 +176,7 @@ function restartApp() {
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
+  color: #666;
 }
 .menu-list {
   background: #fff;

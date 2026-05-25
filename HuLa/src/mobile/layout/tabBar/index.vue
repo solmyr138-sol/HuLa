@@ -69,12 +69,13 @@ const navItems: NavItem[] = [
     icon: 'avatar',
     actionIcon: 'avatar-action'
   },
-  {
-    label: t('mobile_tabbar.items.community'),
-    path: '/mobile/community',
-    icon: 'fire',
-    actionIcon: 'fire-action'
-  },
+  // 社区暂时隐藏，功能代码保留
+  // {
+  //   label: t('mobile_tabbar.items.community'),
+  //   path: '/mobile/community',
+  //   icon: 'fire',
+  //   actionIcon: 'fire-action'
+  // },
   {
     label: t('mobile_tabbar.items.me'),
     path: '/mobile/my',
