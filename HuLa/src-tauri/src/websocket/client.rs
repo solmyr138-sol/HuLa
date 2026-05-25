@@ -694,15 +694,15 @@ impl WebSocketClient {
                 let client_guard = client_container.read().await;
 
                 if let Some(data_obj) = data {
-                    if let Some(message_id) = data_obj
+                    let message_id = data_obj
                         .get("message")
                         .and_then(|m| m.get("id"))
-                        .and_then(|id| id.as_str())
-                    {
+                        .and_then(|id| id.as_str().map(String::from).or_else(|| id.as_u64().map(|n| n.to_string())));
+                    if let Some(message_id) = message_id {
                         info!("回执 ACK: {}", message_id);
 
                         if let Some(client) = client_guard.as_ref() {
-                            match client.send_ack(message_id).await {
+                            match client.send_ack(&message_id).await {
                                 Ok(_) => {
                                     info!("ACK sent successfully for message {}", message_id);
                                 }

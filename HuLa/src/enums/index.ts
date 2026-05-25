@@ -781,6 +781,8 @@ export enum ImUrlEnum {
   MARK_MSG = 'markMsg',
   /** 获取消息列表 */
   GET_MSG_LIST = 'getMsgList',
+  /** 获取单房间消息分页 */
+  GET_MSG_PAGE = 'getMsgPage',
   /** 获取成员统计 */
   GET_MEMBER_STATISTIC = 'getMemberStatistic',
 

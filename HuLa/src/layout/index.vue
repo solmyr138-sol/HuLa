@@ -341,6 +341,13 @@ const addFileToStore = (data: MessageType) => {
 }
 
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  // 服务端 WebSocket 可能将 id/roomId/uid 序列化为数字，统一转为字符串以避免类型不匹配
+  if (data.message) {
+    if (data.message.id != null) data.message.id = String(data.message.id)
+    if (data.message.roomId != null) data.message.roomId = String(data.message.roomId)
+  }
+  if (data.fromUser?.uid != null) data.fromUser.uid = String(data.fromUser.uid)
+
   if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
     return
   }
@@ -365,7 +372,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   // 不是自己发的消息才通知
   if (!currentUid || data.fromUser.uid !== currentUid) {
     // 获取该消息的会话信息
-    const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
+    const session = chatStore.sessionList.find((s) => String(s.roomId) === data.message.roomId)
 
     // 只有非免打扰的会话才发送通知和触发图标闪烁
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {

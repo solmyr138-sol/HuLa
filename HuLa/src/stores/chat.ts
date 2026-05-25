@@ -6,15 +6,15 @@ import pLimit from 'p-limit'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { MittEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { ImUrlEnum, MittEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useFeedStore } from '@/stores/feed.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { getSessionDetail, markMsgRead } from '@/utils/ImRequestUtils'
+import { getSessionDetail, markMsgRead, imRequestSilent } from '@/utils/ImRequestUtils'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useSessionUnreadStore } from '@/stores/sessionUnread'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import { useMitt } from '@/hooks/useMitt'
@@ -428,7 +428,7 @@ export const useChatStore = defineStore(
       }
 
       try {
-        // 从服务器加载消息
+        // 从本地数据库加载消息
         await getPageMsg(pageSize, roomId, '')
       } catch (error) {
         console.error('无法加载消息:', error)
@@ -436,6 +436,18 @@ export const useChatStore = defineStore(
           isLast: false,
           isLoading: false,
           cursor: ''
+        }
+      }
+
+      // 兜底：本地消息不足一页时从服务端补全（初次同步失败、网络中断等场景）
+      // 使用 roomServerFetchDone 避免同一会话内对同一房间重复请求
+      const localMsgCount = messageMap[roomId] ? Object.keys(messageMap[roomId]).length : 0
+      if (localMsgCount < pageSize && !roomServerFetchDone.has(roomId)) {
+        roomServerFetchDone.add(roomId)
+        const fetched = await fetchRoomMessagesFromServer(roomId)
+        if (fetched) {
+          currentMessageOptions.value = { isLast: false, isLoading: false, cursor: '' }
+          await getPageMsg(pageSize, roomId, '')
         }
       }
 
@@ -568,6 +580,9 @@ export const useChatStore = defineStore(
       messageMap[roomId] = roomBatch
     }
 
+    // 记录当前会话期间已从服务端补全过消息的房间，避免重复请求
+    const roomServerFetchDone = new Set<string>()
+
     const remoteSyncLocks = new Set<string>()
     const fetchCurrentRoomRemoteOnce = async (size = pageSize) => {
       const roomId = globalStore.currentSessionRoomId
@@ -581,6 +596,35 @@ export const useChatStore = defineStore(
         await getPageMsg(size, roomId, '')
       } finally {
         remoteSyncLocks.delete(roomId)
+      }
+    }
+
+    /**
+     * 当本地数据库无消息时，从服务端拉取该房间的消息并写入本地
+     * 仅作为 changeRoom 的兜底逻辑，避免初次同步失败导致空聊天室
+     */
+    const fetchRoomMessagesFromServer = async (roomId: string): Promise<boolean> => {
+      try {
+        const resp: any = await imRequestSilent({
+          url: ImUrlEnum.GET_MSG_PAGE,
+          params: { roomId, pageSize: pageSize }
+        })
+        const list = resp?.list
+        if (!Array.isArray(list) || list.length === 0) return false
+
+        for (const msg of list) {
+          if (msg.message) {
+            if (msg.message.id != null) msg.message.id = String(msg.message.id)
+            if (msg.message.roomId != null) msg.message.roomId = String(msg.message.roomId)
+            if (msg.message.sendTime != null) msg.message.sendTime = new Date(msg.message.sendTime).getTime()
+          }
+          if (msg.fromUser?.uid != null) msg.fromUser.uid = String(msg.fromUser.uid)
+          await invokeSilently(TauriCommand.SAVE_MSG, { data: msg })
+        }
+        return true
+      } catch (error) {
+        console.error('[chat] 从服务端拉取房间消息失败:', error)
+        return false
       }
     }
 

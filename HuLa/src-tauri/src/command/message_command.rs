@@ -28,6 +28,36 @@ use tracing::{debug, error, info, warn};
 const WRITE_RETRY_LIMIT: usize = 3; // 写操作最多重试 3 次
 const WRITE_RETRY_DELAY_MS: u64 = 80; // 重试基础延迟 80ms
 
+mod flexible_deser {
+    use serde::{self, Deserialize, Deserializer};
+
+    pub fn string_from_any<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v: serde_json::Value = Deserialize::deserialize(deserializer)?;
+        Ok(match v {
+            serde_json::Value::String(s) => s,
+            serde_json::Value::Number(n) => n.to_string(),
+            serde_json::Value::Null => String::new(),
+            other => other.to_string(),
+        })
+    }
+
+    pub fn opt_string_from_any<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v: Option<serde_json::Value> = Option::deserialize(deserializer)?;
+        Ok(v.and_then(|v| match v {
+            serde_json::Value::String(s) => Some(s),
+            serde_json::Value::Number(n) => Some(n.to_string()),
+            serde_json::Value::Null => None,
+            other => Some(other.to_string()),
+        }))
+    }
+}
+
 async fn run_with_write_lock<T, F, Fut>(
     lock: Arc<Mutex<()>>, // 传入全局写锁，保证串行执行
     op_name: &str,        // 当前操作名用于日志
@@ -75,12 +105,15 @@ where
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageResp {
+    #[serde(default, deserialize_with = "flexible_deser::opt_string_from_any")]
     pub create_id: Option<String>,
     pub create_time: Option<i64>,
+    #[serde(default, deserialize_with = "flexible_deser::opt_string_from_any")]
     pub update_id: Option<String>,
     pub update_time: Option<i64>,
     pub from_user: FromUser,
     pub message: Message,
+    #[serde(default, deserialize_with = "flexible_deser::opt_string_from_any")]
     pub old_msg_id: Option<String>,
     pub time_block: Option<i64>,
 }
@@ -88,6 +121,7 @@ pub struct MessageResp {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FromUser {
+    #[serde(deserialize_with = "flexible_deser::string_from_any")]
     pub uid: String,
     pub nickname: Option<String>,
 }
@@ -95,7 +129,9 @@ pub struct FromUser {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
+    #[serde(default, deserialize_with = "flexible_deser::opt_string_from_any")]
     pub id: Option<String>,
+    #[serde(default, deserialize_with = "flexible_deser::opt_string_from_any")]
     pub room_id: Option<String>,
     #[serde(rename = "type")]
     pub message_type: Option<u8>,
