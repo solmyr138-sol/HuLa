@@ -2,14 +2,16 @@
   <MobileLayout>
     <MobileScaffold :background="false" :safe-area="false">
       <template #container>
-        <div class="h-full flex-col-center gap-40px">
-          <div class="flex-center absolute top-13vh left-36px">
-            <p class="text-(20px #333) dark:text-gray-400">{{ t('login.mobile.welcome_title') }}</p>
-            <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
+        <div class="h-full flex flex-col items-center overflow-y-auto">
+          <!-- 上部弹性留白，将内容推向视觉中心 -->
+          <div class="flex-1 min-h-30px"></div>
+
+          <div class="shrink-0 w-80% mb-20px">
+            <p class="text-(20px #333) dark:text-gray-400 font-bold">{{ t('login.mobile.welcome_title') }}</p>
           </div>
 
           <!-- 选项卡导航 -->
-          <div class="w-80% h-40px absolute top-20vh flex-center">
+          <div class="w-80% h-40px shrink-0 flex-center">
             <div class="flex w-200px relative">
               <div
                 @click="activeTab = 'login'"
@@ -38,7 +40,7 @@
           </div>
 
           <!-- 登录表单 -->
-          <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
+          <n-flex v-if="activeTab === 'login'" class="text-center w-80% shrink-0 mt-16px" vertical :size="16">
             <n-input
               :class="{ 'pl-22px': loginHistories.length > 0 }"
               size="large"
@@ -111,29 +113,14 @@
               :disabled="loginDisabled"
               tertiary
               style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
+              class="w-full mt-8px gradient-button"
               @click="normalLogin('MOBILE', true, false)">
               <span>{{ loginText }}</span>
             </n-button>
-
-            <!-- 协议 -->
-            <n-flex align="center" justify="center" :style="agreementStyle" :size="6" class="absolute bottom-0 w-[80%]">
-              <n-checkbox v-model:checked="protocol" />
-              <div class="text-12px color-#909090 cursor-default lh-14px">
-                <span>{{ t('login.term.checkout.text1') }}</span>
-                <span @click.stop="toServiceAgreement" class="color-#4a90e2 cursor-pointer">
-                  {{ t('login.term.checkout.text2') }}
-                </span>
-                <span>{{ t('login.term.checkout.text3') }}</span>
-                <span @click.stop="toPrivacyAgreement" class="color-#4a90e2 cursor-pointer">
-                  {{ t('login.term.checkout.text4') }}
-                </span>
-              </div>
-            </n-flex>
           </n-flex>
 
           <!-- 注册：第一步企业号 -->
-          <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80%" vertical :size="16">
+          <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80% shrink-0 mt-16px" vertical :size="16">
             <n-input
               size="large"
               v-model:value="registerInfo.enterpriseCode"
@@ -147,7 +134,7 @@
             <n-button
               tertiary
               style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
+              class="w-full mt-8px gradient-button"
               :disabled="!registerInfo.enterpriseCode?.trim() || !resolvedTenantName"
               @click="handleRegisterStep">
               <span>{{ t('auth.register.actions.next') }}</span>
@@ -155,7 +142,7 @@
           </n-flex>
 
           <!-- 注册：第二步手机号+密码 -->
-          <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
+          <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80% shrink-0 mt-16px" vertical :size="16">
             <n-input
               size="large"
               v-model:value="registerInfo.mobile"
@@ -223,6 +210,30 @@
                 <span>{{ t('auth.register.actions.submit') }}</span>
               </n-button>
             </n-flex>
+          </n-flex>
+
+          <!-- 下部弹性留白 -->
+          <div class="flex-1 min-h-20px"></div>
+
+          <!-- 协议（登录选项卡） -->
+          <n-flex
+            v-if="activeTab === 'login'"
+            align="center"
+            justify="center"
+            :style="agreementStyle"
+            :size="6"
+            class="shrink-0 w-80%">
+            <n-checkbox v-model:checked="protocol" />
+            <div class="text-12px color-#909090 cursor-default lh-14px">
+              <span>{{ t('login.term.checkout.text1') }}</span>
+              <span @click.stop="toServiceAgreement" class="color-#4a90e2 cursor-pointer">
+                {{ t('login.term.checkout.text2') }}
+              </span>
+              <span>{{ t('login.term.checkout.text3') }}</span>
+              <span @click.stop="toPrivacyAgreement" class="color-#4a90e2 cursor-pointer">
+                {{ t('login.term.checkout.text4') }}
+              </span>
+            </div>
           </n-flex>
         </div>
       </template>
@@ -297,12 +308,12 @@ const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLo
 const agreementStyle = computed(() => {
   const inset = safeArea.value.bottom || 0
   if (isAndroid()) {
-    return { bottom: `${inset + 10}px` }
+    return { paddingBottom: `${inset + 10}px` }
   }
   if (inset > 0) {
-    return { bottom: `${inset}px` }
+    return { paddingBottom: `${inset}px` }
   }
-  return { bottom: 'var(--safe-area-inset-bottom)' }
+  return { paddingBottom: 'var(--safe-area-inset-bottom)' }
 })
 
 /** 不允许输入空格 */

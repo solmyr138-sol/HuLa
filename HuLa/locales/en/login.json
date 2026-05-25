@@ -149,7 +149,7 @@
     }
   },
   "mobile": {
-    "welcome_title": "HI, Welcome",
+    "welcome_title": "Welcome to Enterprise KuaiShu",
     "tabs": {
       "login": "Login",
       "register": "Register"

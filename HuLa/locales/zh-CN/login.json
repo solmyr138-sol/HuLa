@@ -149,7 +149,7 @@
     }
   },
   "mobile": {
-    "welcome_title": "HI, 欢迎",
+    "welcome_title": "欢迎使用企业快书",
     "tabs": {
       "login": "登录",
       "register": "注册"
