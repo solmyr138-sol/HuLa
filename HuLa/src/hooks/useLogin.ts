@@ -47,7 +47,8 @@ export const useLogin = () => {
   const initialSyncStore = useInitialSyncStore()
   const { createWebviewWindow } = useWindow()
 
-  const { t } = useI18nGlobal()
+  const i18nGlobal = useI18nGlobal()
+  const { t } = i18nGlobal
 
   /**
    * 清空 localStorage 中用户相关的持久化数据
@@ -96,6 +97,16 @@ export const useLogin = () => {
   /** 登录按钮的文本内容 */
   const loginText = ref(isOnline.value ? t('login.button.login.default') : t('login.button.login.network_error'))
   const loginDisabled = ref(!isOnline.value)
+
+  // i18n 语言包异步加载，locale 变更后刷新按钮文本（仅在非登录流程中）
+  watch(
+    () => i18nGlobal.locale.value,
+    () => {
+      if (!loading.value) {
+        loginText.value = isOnline.value ? t('login.button.login.default') : t('login.button.login.network_error')
+      }
+    }
+  )
   /** 账号信息 */
   const info = ref({
     account: '',

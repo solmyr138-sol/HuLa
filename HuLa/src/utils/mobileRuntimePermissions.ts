@@ -32,10 +32,10 @@ async function requestHulaPermissions(permissions: RuntimePermissionAlias[]): Pr
 
 async function requestCameraViaScanner() {
   const state = await checkCameraPermissions()
-  if (state.camera === 'granted') return true
-  if (needsPrompt(state.camera)) {
+  if (state === 'granted') return true
+  if (needsPrompt(state)) {
     const next = await requestCameraPermissions()
-    return next.camera === 'granted'
+    return next === 'granted'
   }
   return false
 }

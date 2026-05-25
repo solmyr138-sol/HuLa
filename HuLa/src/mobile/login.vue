@@ -37,9 +37,6 @@
             </div>
           </div>
 
-          <!-- 头像 -->
-          <img v-if="activeTab === 'login'" :src="userInfo.avatar" alt="logo" class="size-86px rounded-full" />
-
           <!-- 登录表单 -->
           <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
             <n-input
@@ -51,9 +48,9 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              :placeholder="accountPH"
-              @focus="accountPH = ''"
-              @blur="accountPH = t('login.mobile.input.account_placeholder')"
+              :placeholder="accountFocused ? '' : t('login.mobile.input.account_placeholder')"
+              @focus="accountFocused = true"
+              @blur="accountFocused = false"
               clearable>
               <template #suffix>
                 <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
@@ -98,9 +95,9 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              :placeholder="passwordPH"
-              @focus="passwordPH = ''"
-              @blur="passwordPH = t('login.mobile.input.code_placeholder')"
+              :placeholder="passwordFocused ? '' : t('login.mobile.input.code_placeholder')"
+              @focus="passwordFocused = true"
+              @blur="passwordFocused = false"
               clearable />
 
             <n-flex justify="flex-end" :size="6">
@@ -175,7 +172,7 @@
               v-model:value="registerInfo.password"
               type="password"
               :allow-input="noSideSpace"
-              :placeholder="registerPasswordPH"
+              :placeholder="t('login.mobile.register.input.password')"
               clearable />
 
             <n-input
@@ -186,7 +183,7 @@
               v-model:value="registerInfo.confirmPassword"
               type="password"
               :allow-input="noSideSpace"
-              :placeholder="confirmPasswordPH"
+              :placeholder="t('login.mobile.register.input.confirm_password')"
               clearable />
 
             <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
@@ -286,15 +283,13 @@ const registerInfo = ref<LocalRegisterInfo>({
 const resolvedTenantName = ref('')
 const mobilePattern = /^1[3-9]\d{9}$/
 
-// 登录相关的占位符和状态
-const accountPH = ref(t('login.mobile.input.account_placeholder'))
-const passwordPH = ref(t('login.mobile.input.code_placeholder'))
+// 登录相关的焦点状态
+const accountFocused = ref(false)
+const passwordFocused = ref(false)
 const protocol = ref(true)
 const arrowStatus = ref(false)
 
-// 注册相关的占位符和状态
-const registerPasswordPH = ref(t('login.mobile.register.input.password'))
-const confirmPasswordPH = ref(t('login.mobile.register.input.confirm_password'))
+// 注册相关状态
 const registerProtocol = ref(true)
 const registerLoading = ref(false)
 const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLogin()
@@ -388,8 +383,8 @@ const resetLoginForm = () => {
     uid: '',
     name: ''
   }
-  accountPH.value = t('login.mobile.input.account_placeholder')
-  passwordPH.value = t('login.mobile.input.code_placeholder')
+  accountFocused.value = false
+  passwordFocused.value = false
   arrowStatus.value = false
 }
 
@@ -403,8 +398,6 @@ const resetRegisterForm = () => {
   }
   resolvedTenantName.value = ''
   currentStep.value = 1
-  registerPasswordPH.value = t('login.mobile.register.input.password')
-  confirmPasswordPH.value = t('login.mobile.register.input.confirm_password')
 }
 
 /** 处理注册步骤 */

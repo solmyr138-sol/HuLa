@@ -652,6 +652,14 @@ impl WebSocketClient {
         Err(anyhow::anyhow!("Failed to send ACK after all retries"))
     }
 
+    /// Emit an event to the main application window.
+    /// Desktop uses label "home"; mobile uses "mobile-home".
+    /// Emitting to a non-existent label is silently ignored by Tauri.
+    fn emit_to_main<S: Serialize + Clone>(app_handle: &AppHandle, event: &str, payload: S) {
+        let _ = app_handle.emit_to("home", event, payload.clone());
+        let _ = app_handle.emit_to("mobile-home", event, payload);
+    }
+
     /// 处理业务消息类型
     async fn process_business_message(message: &serde_json::Value, app_handle: &AppHandle) {
         // 提取消息类型
@@ -675,7 +683,7 @@ impl WebSocketClient {
             }
             "loginSuccess" => {
                 info!("Login successful");
-                let _ = app_handle.emit_to("home", "ws-login-success", data);
+                Self::emit_to_main(app_handle, "ws-login-success", data);
             }
 
             // 消息相关 TODO 暂时只实现聊天消息的ack
@@ -708,72 +716,72 @@ impl WebSocketClient {
                     }
                 }
 
-                let _ = app_handle.emit_to("home", "ws-receive-message", data);
+                Self::emit_to_main(app_handle, "ws-receive-message", data);
             }
             "msgRecall" => {
                 info!("Message recalled");
-                let _ = app_handle.emit_to("home", "ws-msg-recall", data);
+                Self::emit_to_main(app_handle, "ws-msg-recall", data);
             }
             "msgMarkItem" => {
                 info!("Message liked/disliked");
-                let _ = app_handle.emit_to("home", "ws-msg-mark-item", data);
+                Self::emit_to_main(app_handle, "ws-msg-mark-item", data);
             }
 
             // 用户状态相关
             "online" => {
                 info!("User online");
-                let _ = app_handle.emit_to("home", "ws-online", data);
+                Self::emit_to_main(app_handle, "ws-online", data);
             }
             "offline" => {
                 info!("User offline");
-                let _ = app_handle.emit_to("home", "ws-offline", data);
+                Self::emit_to_main(app_handle, "ws-offline", data);
             }
             "userStateChange" => {
                 info!("User state changed");
-                let _ = app_handle.emit_to("home", "ws-user-state-change", data);
+                Self::emit_to_main(app_handle, "ws-user-state-change", data);
             }
             // 通知总线
             "notifyEvent" => {
                 info!("新的notifyEvent");
-                let _ = app_handle.emit_to("home", "ws-request-notify-event", data);
+                Self::emit_to_main(app_handle, "ws-request-notify-event", data);
             }
             "groupSetAdmin" => {
-                let _ = app_handle.emit_to("home", "ws-group-set-admin-success", data);
+                Self::emit_to_main(app_handle, "ws-group-set-admin-success", data);
             }
             // 好友相关
             "newApply" => {
                 info!("New apply request");
-                let _ = app_handle.emit_to("home", "ws-request-new-apply", data);
+                Self::emit_to_main(app_handle, "ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
                 info!("Friend request approved");
-                let _ = app_handle.emit_to("home", "ws-request-approval-friend", data);
+                Self::emit_to_main(app_handle, "ws-request-approval-friend", data);
             }
             "memberChange" => {
                 info!("Member change");
-                let _ = app_handle.emit_to("home", "ws-member-change", data);
+                Self::emit_to_main(app_handle, "ws-member-change", data);
             }
 
             // 房间/群聊相关
             "roomInfoChange" => {
                 info!("Room info changed");
-                let _ = app_handle.emit_to("home", "ws-room-info-change", data);
+                Self::emit_to_main(app_handle, "ws-room-info-change", data);
             }
             "myRoomInfoChange" => {
                 info!("My room info changed");
-                let _ = app_handle.emit_to("home", "ws-my-room-info-change", data);
+                Self::emit_to_main(app_handle, "ws-my-room-info-change", data);
             }
             "roomGroupNoticeMsg" => {
                 info!("Group notice published");
-                let _ = app_handle.emit_to("home", "ws-room-group-notice-msg", data);
+                Self::emit_to_main(app_handle, "ws-room-group-notice-msg", data);
             }
             "roomEditGroupNoticeMsg" => {
                 info!("✏️ Group notice edited");
-                let _ = app_handle.emit_to("home", "ws-room-edit-group-notice-msg", data);
+                Self::emit_to_main(app_handle, "ws-room-edit-group-notice-msg", data);
             }
             "roomDissolution" => {
                 info!("Room dissolved");
-                let _ = app_handle.emit_to("home", "ws-room-dissolution", data);
+                Self::emit_to_main(app_handle, "ws-room-dissolution", data);
             }
 
             // 视频通话相关
@@ -838,11 +846,11 @@ impl WebSocketClient {
             // 朋友圈相关
             "feedSendMsg" => {
                 info!("Feed message received");
-                let _ = app_handle.emit_to("home", "ws-feed-send-msg", data);
+                Self::emit_to_main(app_handle, "ws-feed-send-msg", data);
             }
             "feedNotify" => {
                 info!("Feed notification received (like/comment)");
-                let _ = app_handle.emit_to("home", "ws-feed-notify", data);
+                Self::emit_to_main(app_handle, "ws-feed-notify", data);
             }
 
             // 未知消息类型

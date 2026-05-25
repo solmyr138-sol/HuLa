@@ -106,7 +106,7 @@
               <n-form-item :label="t('mobile_edit_profile.phone')">
                 <n-input
                   v-model:value="editPhone"
-                  type="tel"
+                  type="text"
                   inputmode="numeric"
                   :maxlength="11"
                   spellcheck="false"
