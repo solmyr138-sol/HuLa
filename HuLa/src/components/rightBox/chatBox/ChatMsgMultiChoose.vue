@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <n-modal v-model:show="showModal" class="w-70% rounded-8px">
+  <n-modal v-model:show="showModal" :class="isMobile() ? 'w-95% rounded-8px' : 'w-70% rounded-8px'">
     <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
       <div
         v-if="isMac()"
@@ -30,7 +30,7 @@
         </svg>
       </div>
 
-      <svg v-if="isWindows()" @click="showModal = false" class="size-12px ml-a cursor-pointer select-none">
+      <svg v-if="isWindows() || isMobile()" @click="showModal = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
       <div class="pt-8px flex flex-col select-none">
@@ -154,7 +154,7 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg, checkCanBroadcast } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
-import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { sendMessageWithChannel } from '@/utils/MessageSender'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useI18n } from 'vue-i18n'
@@ -284,6 +284,7 @@ const toolOptions = computed(() => [
     click: () => {
       mergeMessageType = MergeMessageType.SINGLE
       chatStore.resetSessionSelection()
+      fetchBroadcastPermission()
       showModal.value = true
     }
   },
@@ -294,6 +295,7 @@ const toolOptions = computed(() => [
     click: () => {
       mergeMessageType = MergeMessageType.MERGE
       chatStore.resetSessionSelection()
+      fetchBroadcastPermission()
       showModal.value = true
     }
   },

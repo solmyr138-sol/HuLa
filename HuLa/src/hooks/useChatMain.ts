@@ -36,6 +36,7 @@ import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { recallMsg, removeGroupMember, updateMyRoomInfo } from '@/utils/ImRequestUtils'
+import { muteGroupMember } from '@/services/groupPolicy'
 import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
@@ -213,10 +214,6 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: () => t('menu.forward'),
       icon: 'share',
       click: (item: MessageType) => {
-        if (isMobile()) {
-          window.$message.warning(t('home.chat_main.feature.coming_soon'))
-          return
-        }
         handleForward(item)
       },
       visible: (item: MessageType) => !isNoticeMessage(item)
@@ -861,6 +858,42 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
       },
       visible: (item: any) => !checkFriendRelation(item.uid || item.fromUser.uid, 'all')
+    },
+    {
+      label: () => t('menu.mute_member'),
+      icon: 'forbid',
+      click: async (item: any) => {
+        const targetUid = item.uid || item.fromUser.uid
+        const roomId = globalStore.currentSessionRoomId
+        if (!roomId) return
+
+        try {
+          const mutedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          await muteGroupMember({ roomId: Number(roomId), uid: Number(targetUid), mutedUntil })
+          window.$message.success(t('menu.mute_member_success'))
+        } catch (_error) {
+          window.$message.error(t('menu.mute_member_fail'))
+        }
+      },
+      visible: (item: any) => {
+        const isInGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        if (!isInGroup) return false
+        const roomId = globalStore.currentSessionRoomId
+        if (!roomId || roomId === '1') return false
+        const targetUid = item.uid || item.fromUser?.uid
+        if (!targetUid || targetUid === userUid.value) return false
+        let targetRoleId = item.roleId
+        if (targetRoleId === void 0) {
+          const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
+          targetRoleId = targetUser?.roleId
+        }
+        if (targetRoleId === RoleEnum.LORD) return false
+        const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
+        const isLord = currentUser?.roleId === RoleEnum.LORD
+        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
+        if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false
+        return isLord || isAdmin
+      }
     },
     {
       label: () => t('menu.set_admin'),

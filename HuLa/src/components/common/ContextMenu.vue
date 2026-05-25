@@ -89,18 +89,28 @@
           <div
             v-resize="handleSize"
             v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
-            class="max-w-70vw grid grid-cols-5 gap-5px h-auto!">
-            <div
-              @click="handleClick(item)"
-              v-for="(item, index) in visibleMenu"
-              :key="index"
-              class="w-45px h-45px flex justify-center items-center">
-              <div class="flex w-45px flex-col active:bg-gray-200 justify-center items-center max-h-45px">
-                <svg class="w-18px w-18px"><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
-                <p class="h-24px text-12px">{{ getMenuItemProp(item, 'label') }}</p>
-                <svg v-if="shouldShowArrow(item)" class="arrow-icon w-18px w-18px">
-                  <use href="#right"></use>
-                </svg>
+            class="menu-list">
+            <div v-for="(item, index) in visibleMenu" :key="index">
+              <div
+                class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
+                @click="handleClick(item)">
+                <div class="menu-item-content">
+                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  <p class="h-24px">{{ getMenuItemProp(item, 'label') }}</p>
+                </div>
+              </div>
+            </div>
+            <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
+              <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px bg-[--line-color] m-[2px_8px]"></div>
+              <div
+                @click="handleClick(item)"
+                class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
+                v-for="item in visibleSpecialMenu"
+                :key="item.label">
+                <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                <p class="h-24px">{{ getMenuItemProp(item, 'label') }}</p>
               </div>
             </div>
           </div>
