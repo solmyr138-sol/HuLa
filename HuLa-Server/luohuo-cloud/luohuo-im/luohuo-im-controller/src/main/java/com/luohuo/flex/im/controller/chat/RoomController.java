@@ -199,6 +199,12 @@ public class RoomController {
 		return R.success();
 	}
 
+	@Operation(summary = "检查当前用户是否可转发给多人")
+	@GetMapping("canBroadcast")
+	public R<Boolean> canBroadcast() {
+		return R.success(roomService.canBroadcast(ContextUtil.getUid()));
+	}
+
 	@PostMapping("/group/member/nickname")
 	@Operation(summary ="修改群成员昵称（后台专用）")
 	public R<Void> updateMemberNickname(@Valid @RequestBody UpdateMemberNicknameReq request) {

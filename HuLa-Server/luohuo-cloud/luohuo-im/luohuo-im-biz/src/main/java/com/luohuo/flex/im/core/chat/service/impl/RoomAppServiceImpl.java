@@ -822,7 +822,9 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 
 	@Override
 	public void mergeMessage(Long uid, MergeMessageReq req) {
-		policyGuardService.assertCanBroadcast(uid);
+		if (req.getRoomIds() != null && req.getRoomIds().size() > 1) {
+			policyGuardService.assertCanBroadcast(uid);
+		}
 		// 1. 校验人员是否在群里、或者有没有对方的好友
 		Room room = roomCache.get(req.getFromRoomId());
 		if (ObjectUtil.isNull(room)) {
@@ -859,6 +861,16 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 			} else {
 				chatService.sendMsg(MessageAdapter.buildMergeMsg(roomId, messagess), uid);
 			}
+		}
+	}
+
+	@Override
+	public boolean canBroadcast(Long uid) {
+		try {
+			policyGuardService.assertCanBroadcast(uid);
+			return true;
+		} catch (Exception e) {
+			return false;
 		}
 	}
 

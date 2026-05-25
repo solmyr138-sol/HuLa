@@ -1,6 +1,5 @@
 package com.luohuo.flex.im.core.policy.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.luohuo.basic.context.ContextUtil;
@@ -18,7 +17,7 @@ import com.luohuo.flex.im.domain.entity.GroupPolicy;
 import com.luohuo.flex.im.domain.entity.Message;
 import com.luohuo.flex.im.domain.entity.TenantPolicy;
 import com.luohuo.flex.im.domain.entity.User;
-import com.luohuo.flex.im.domain.entity.msg.TextMsgReq;
+
 import com.luohuo.flex.im.domain.enums.GroupJoinModeEnum;
 import com.luohuo.flex.im.domain.enums.GroupRoleEnum;
 import com.luohuo.flex.im.domain.enums.MessageTypeEnum;
@@ -36,7 +35,6 @@ import java.util.Objects;
 @Service
 public class PolicyGuardServiceImpl implements PolicyGuardService {
 
-    private static final Long AT_ALL_UID = 0L;
     private static final String SPEAK_INTERVAL_KEY = "im:group:speak:";
 
     @Resource
@@ -169,9 +167,6 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
             Boolean allowed = redisTemplate.opsForValue().setIfAbsent(key, "1", Duration.ofSeconds(intervalSec));
             AssertUtil.isTrue(Boolean.TRUE.equals(allowed), "发言过于频繁，请稍后再试");
         }
-        if (req != null) {
-            assertCanBroadcast(uid, req);
-        }
     }
 
     @Override
@@ -183,24 +178,6 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
         }
         TenantPolicy policy = getTenantPolicy(user.getTenantId());
         AssertUtil.isFalse(Boolean.TRUE.equals(policy.getForbidBroadcast()), "租户已禁止群发操作");
-    }
-
-    @Override
-    public void assertCanBroadcast(Long uid, ChatMessageReq req) {
-        assertCanBroadcast(uid);
-        if (req == null) {
-            return;
-        }
-        if (req.isPushMessage()) {
-            AssertUtil.isTrue(false, "租户已禁止系统通知类群发");
-        }
-        Integer msgType = req.getMsgType();
-        if (MessageTypeEnum.SYSTEM.getType().equals(msgType) || MessageTypeEnum.NOTICE.getType().equals(msgType)) {
-            AssertUtil.isTrue(false, "租户已禁止系统通知类群发");
-        }
-        if (containsAtAll(req)) {
-            AssertUtil.isTrue(false, "租户已禁止@所有人");
-        }
     }
 
     @Override
@@ -263,15 +240,4 @@ public class PolicyGuardServiceImpl implements PolicyGuardService {
         return member != null;
     }
 
-    private boolean containsAtAll(ChatMessageReq req) {
-        if (MessageTypeEnum.TEXT.getType().equals(req.getMsgType()) && req.getBody() != null) {
-            TextMsgReq text = BeanUtil.toBean(req.getBody(), TextMsgReq.class);
-            return CollUtil.isNotEmpty(text.getAtUidList()) && text.getAtUidList().contains(AT_ALL_UID);
-        }
-        if (MessageTypeEnum.AIT.getType().equals(req.getMsgType()) && req.getBody() != null) {
-            TextMsgReq text = BeanUtil.toBean(req.getBody(), TextMsgReq.class);
-            return CollUtil.isNotEmpty(text.getAtUidList()) && text.getAtUidList().contains(AT_ALL_UID);
-        }
-        return false;
-    }
 }

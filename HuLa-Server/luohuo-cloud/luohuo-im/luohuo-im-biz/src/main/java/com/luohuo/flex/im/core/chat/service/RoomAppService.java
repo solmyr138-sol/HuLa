@@ -198,6 +198,8 @@ public interface RoomAppService {
 	 */
 	void mergeMessage(Long uid, MergeMessageReq req);
 
+	boolean canBroadcast(Long uid);
+
 	/**
 	 * 查询全部群成员
 	 * @param request

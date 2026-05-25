@@ -647,6 +647,12 @@ export async function mergeMsg(body: { fromRoomId: string; type: number; roomIds
   })
 }
 
+export async function checkCanBroadcast(): Promise<boolean> {
+  return await imRequest<boolean>({
+    url: ImUrlEnum.CAN_BROADCAST
+  })
+}
+
 export async function getUserByIds(uidList: string[]): Promise<UserItem[]> {
   return await imRequest({
     url: ImUrlEnum.GET_USER_BY_IDS,

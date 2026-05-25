@@ -29,8 +29,6 @@ public interface PolicyGuardService {
 
     void assertCanBroadcast(Long uid);
 
-    void assertCanBroadcast(Long uid, ChatMessageReq req);
-
     void assertCanCreateGroup(Long uid);
 
     void assertCanEditMessage(Long uid, Message msg);

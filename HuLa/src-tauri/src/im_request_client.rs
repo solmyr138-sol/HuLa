@@ -475,6 +475,7 @@ pub enum ImUrl {
     MarkMsgRead,
     CheckEmail,
     MergeMsg,
+    CanBroadcast,
     GetUserByIds,
     GenerateQRCode,
     CheckQRStatus,
@@ -927,6 +928,7 @@ impl ImUrl {
             ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
 
             ImUrl::MergeMsg => (http::Method::POST, "im/room/mergeMessage"),
+            ImUrl::CanBroadcast => (http::Method::GET, "im/room/canBroadcast"),
             ImUrl::GetUserByIds => (http::Method::POST, "im/user/getUserByIds"),
         }
     }
@@ -1064,6 +1066,7 @@ impl ImUrl {
             "groupListMember" => Ok(ImUrl::GroupListMember),
             "checkEmail" => Ok(ImUrl::CheckEmail),
             "mergeMsg" => Ok(ImUrl::MergeMsg),
+            "canBroadcast" => Ok(ImUrl::CanBroadcast),
             "getUserByIds" => Ok(ImUrl::GetUserByIds),
             "generateQRCode" => Ok(ImUrl::GenerateQRCode),
             "checkQRStatus" => Ok(ImUrl::CheckQRStatus),

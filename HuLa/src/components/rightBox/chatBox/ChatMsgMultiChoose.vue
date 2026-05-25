@@ -55,7 +55,7 @@
             <n-scrollbar class="flex-1">
               <template v-for="session in filteredSessionList" :key="session.roomId">
                 <n-flex align="center" :size="8" class="text-12px text-#303030 dark:text-#fefefe py-8px px-4px">
-                  <n-checkbox v-model:checked="session.isCheck" @click.stop />
+                  <n-checkbox :checked="session.isCheck" @update:checked="(v: boolean) => handleSessionCheck(session, v)" @click.stop />
                   <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
                   <p>{{ session.remark ? session.remark : session.name }}</p>
                   <p class="text-(12px #909090)" v-if="session.type === RoomTypeEnum.GROUP">
@@ -152,7 +152,7 @@ import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { mergeMsg } from '@/utils/ImRequestUtils'
+import { mergeMsg, checkCanBroadcast } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { sendMessageWithChannel } from '@/utils/MessageSender'
@@ -172,6 +172,7 @@ const showDeleteConfirm = ref(false)
 const searchText = ref('')
 const isDeleting = ref(false)
 const isForwarding = ref(false)
+const allowBroadcast = ref(true)
 const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
 const selectedMsgs = computed(() =>
   chatStore.chatMessageList.filter((msg) => msg.isCheck === true && isMessageMultiSelectEnabled(msg.message.type))
@@ -409,11 +410,27 @@ const sendMsg = async () => {
   }
 }
 
+const handleSessionCheck = (session: any, checked: boolean) => {
+  if (!allowBroadcast.value && checked) {
+    chatStore.sessionList.forEach((s) => { s.isCheck = false })
+  }
+  session.isCheck = checked
+}
+
+const fetchBroadcastPermission = async () => {
+  try {
+    allowBroadcast.value = await checkCanBroadcast()
+  } catch {
+    allowBroadcast.value = false
+  }
+}
+
 useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: MergeMessageType }) => {
   if (!payload) return
   if (payload.action === 'open-forward') {
     mergeMessageType = payload.mergeType ?? MergeMessageType.SINGLE
     chatStore.resetSessionSelection()
+    fetchBroadcastPermission()
     showModal.value = true
   }
 })
@@ -428,6 +445,7 @@ watch(
   () => [chatStore.isMsgMultiChoose, chatStore.msgMultiChooseMode] as const,
   ([isMulti, mode]) => {
     if (isMulti && mode === 'forward' && !showModal.value) {
+      fetchBroadcastPermission()
       showModal.value = true
     }
   },
