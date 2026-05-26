@@ -1,5 +1,6 @@
 package com.luohuo.flex.im.domain.vo.req.policy;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class GroupMemberMuteReq implements Serializable {
     @Schema(description = "成员uid")
     private Long uid;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "禁言截止时间，null表示解除禁言")
     private LocalDateTime mutedUntil;
 }

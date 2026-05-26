@@ -164,7 +164,9 @@ const saveMemberAcl = async () => {
 
 const applyMute = async () => {
   if (!aclTargetUid.value || !muteMinutes.value) return
-  const until = new Date(Date.now() + muteMinutes.value * 60_000).toISOString()
+  const d = new Date(Date.now() + muteMinutes.value * 60_000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const until = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
   try {
     await muteGroupMember({
       roomId: Number(groupStore.countInfo?.roomId),

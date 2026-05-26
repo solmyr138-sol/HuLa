@@ -868,9 +868,44 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!roomId) return
 
         try {
-          const mutedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          const mutedUntil = '9999-12-31 23:59:59'
           await muteGroupMember({ roomId: Number(roomId), uid: Number(targetUid), mutedUntil })
           window.$message.success(t('menu.mute_member_success'))
+        } catch (_error) {
+          window.$message.error(t('menu.mute_member_fail'))
+        }
+      },
+      visible: (item: any) => {
+        const isInGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        if (!isInGroup) return false
+        const roomId = globalStore.currentSessionRoomId
+        if (!roomId || roomId === '1') return false
+        const targetUid = item.uid || item.fromUser?.uid
+        if (!targetUid || targetUid === userUid.value) return false
+        let targetRoleId = item.roleId
+        if (targetRoleId === void 0) {
+          const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
+          targetRoleId = targetUser?.roleId
+        }
+        if (targetRoleId === RoleEnum.LORD) return false
+        const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
+        const isLord = currentUser?.roleId === RoleEnum.LORD
+        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
+        if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false
+        return isLord || isAdmin
+      }
+    },
+    {
+      label: () => t('menu.unmute_member'),
+      icon: 'forbid',
+      click: async (item: any) => {
+        const targetUid = item.uid || item.fromUser.uid
+        const roomId = globalStore.currentSessionRoomId
+        if (!roomId) return
+
+        try {
+          await muteGroupMember({ roomId: Number(roomId), uid: Number(targetUid), mutedUntil: null })
+          window.$message.success(t('menu.unmute_member_success'))
         } catch (_error) {
           window.$message.error(t('menu.mute_member_fail'))
         }
