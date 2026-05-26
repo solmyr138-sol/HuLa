@@ -4,13 +4,21 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${base}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
+      Token: localStorage.getItem('token') || '',
       ...(init?.headers || {})
     },
     ...init
   })
   const json = await res.json()
-  if (!json.isSuccess && json.code !== 0) {
+
+  if (json.code === 406 || json.code === 40001 || json.code === 40009) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('nickName')
+    window.location.href = '/login'
+    throw new Error('登录已过期，请重新登录')
+  }
+
+  if (!json.isSuccess && json.code !== 0 && json.code !== 200) {
     throw new Error(json.msg || '请求失败')
   }
   return json.data as T

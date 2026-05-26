@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '../layouts/PlatformLayout.vue'
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: () => import('../views/Login.vue') },
@@ -17,3 +17,11 @@ export default createRouter({
     }
   ]
 })
+
+router.beforeEach((to) => {
+  if (to.path !== '/login' && !localStorage.getItem('token')) {
+    return '/login'
+  }
+})
+
+export default router

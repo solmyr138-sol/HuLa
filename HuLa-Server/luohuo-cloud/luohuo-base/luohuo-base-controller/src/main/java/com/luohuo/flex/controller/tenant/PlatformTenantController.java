@@ -6,17 +6,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.luohuo.basic.annotation.log.WebLog;
 import com.luohuo.basic.base.R;
 import com.luohuo.basic.base.request.PageParams;
-import com.luohuo.basic.context.ContextUtil;
 import com.luohuo.basic.database.mybatis.conditions.Wraps;
 import com.luohuo.basic.database.mybatis.conditions.query.QueryWrap;
 import com.luohuo.basic.tenant.core.aop.TenantIgnore;
 import com.luohuo.basic.utils.ArgumentAssert;
 import com.luohuo.basic.utils.BeanPlusUtil;
 import com.luohuo.flex.base.entity.tenant.DefTenant;
-import com.luohuo.flex.base.enumeration.tenant.DefTenantRegisterTypeEnum;
 import com.luohuo.flex.base.service.tenant.DefTenantService;
 import com.luohuo.flex.base.vo.query.tenant.DefTenantPageQuery;
-import com.luohuo.flex.base.vo.result.user.DefTenantResultVO;
 import com.luohuo.flex.base.vo.save.tenant.DefTenantSaveVO;
 import com.luohuo.flex.base.vo.update.tenant.DefTenantUpdateVO;
 import com.luohuo.flex.model.enumeration.system.DefTenantStatusEnum;
@@ -29,8 +26,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 平台总后台（devOperation）— 跨租户企业管理，忽略租户隔离
@@ -61,12 +56,17 @@ public class PlatformTenantController {
     @Operation(summary = "创建企业")
     @WebLog("平台创建企业")
     public R<DefTenant> create(@RequestBody @Valid DefTenantSaveVO saveVO) {
-        DefTenant tenant = BeanPlusUtil.toBean(saveVO, DefTenant.class);
+        DefTenant tenant = new DefTenant();
+        tenant.setName(saveVO.getName());
+        tenant.setContactName(StrUtil.blankToDefault(saveVO.getContactPerson(), ""));
+        tenant.setContactMobile(saveVO.getContactPhone());
         tenant.setInviteCode(generateInviteCode());
         tenant.setState(true);
         tenant.setStatus(DefTenantStatusEnum.NORMAL.getCode());
-        tenant.setRegisterType(DefTenantRegisterTypeEnum.CREATE);
-        defTenantService.save(tenant);
+        tenant.setPackageId(0L);
+        tenant.setExpireTime(LocalDateTime.of(2099, 12, 31, 23, 59, 59));
+        tenant.setAccountCount(0);
+        defTenantService.getSuperManager().save(tenant);
         return R.success(tenant);
     }
 
