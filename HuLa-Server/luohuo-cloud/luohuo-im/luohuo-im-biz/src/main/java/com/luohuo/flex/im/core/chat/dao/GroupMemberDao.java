@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -237,6 +238,9 @@ public class GroupMemberDao extends ServiceImpl<GroupMemberMapper, GroupMember> 
 	}
 
 	public List<GroupMember> getGroupMemberByGroupIdListAndUid(Long uid, Set<Long> groupIdList) {
+		if (CollectionUtil.isEmpty(groupIdList)) {
+			return Collections.emptyList();
+		}
 		QueryWrapper<GroupMember> wrapper = new QueryWrapper<>();
 		wrapper.in("group_id", groupIdList).eq("uid", uid);
 		return baseMapper.selectList(wrapper);

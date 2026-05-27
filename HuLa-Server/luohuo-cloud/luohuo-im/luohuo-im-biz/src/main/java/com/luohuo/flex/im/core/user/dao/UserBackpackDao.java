@@ -8,6 +8,9 @@ import com.luohuo.flex.im.common.enums.YesOrNoEnum;
 import com.luohuo.flex.im.domain.entity.UserBackpack;
 import com.luohuo.flex.im.core.user.mapper.UserBackpackMapper;
 
+import cn.hutool.core.collection.CollectionUtil;
+
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,6 +52,9 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
 	}
 
 	public List<UserBackpack> getByItemIds(Long uid, List<Long> itemIds) {
+		if (CollectionUtil.isEmpty(itemIds)) {
+			return Collections.emptyList();
+		}
 		return lambdaQuery().eq(UserBackpack::getUid, uid)
 				.in(UserBackpack::getItemId, itemIds)
 				.eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
@@ -56,6 +62,9 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
 	}
 
 	public List<UserBackpack> getByItemIds(List<Long> uids, List<Long> itemIds) {
+		if (CollectionUtil.isEmpty(uids) || CollectionUtil.isEmpty(itemIds)) {
+			return Collections.emptyList();
+		}
 		return lambdaQuery().in(UserBackpack::getUid, uids)
 				.in(UserBackpack::getItemId, itemIds)
 				.eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())

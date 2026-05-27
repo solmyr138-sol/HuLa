@@ -96,6 +96,7 @@ public class TokenContextFilter implements WebFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         ServerHttpRequest.Builder mutate = request.mutate();
 		mutate.header(HEADER_REQUEST_IP, IPUtils.getClientIp(request));
+        log.info("REQ {} {} token={}", request.getMethod(), request.getPath(), request.getHeaders().getFirst(saTokenConfig.getTokenName()));
         ContextUtil.setGrayVersion(getHeader(ContextConstants.GRAY_VERSION, request));
 
         try {
@@ -187,7 +188,7 @@ public class TokenContextFilter implements WebFilter, Ordered {
         R tokenError = R.fail(errCode, errMsg);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         response.setStatusCode(HttpStatus.OK);
-        DataBuffer dataBuffer = response.bufferFactory().wrap(tokenError.toString().getBytes());
+        DataBuffer dataBuffer = response.bufferFactory().wrap(tokenError.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(dataBuffer));
     }
 

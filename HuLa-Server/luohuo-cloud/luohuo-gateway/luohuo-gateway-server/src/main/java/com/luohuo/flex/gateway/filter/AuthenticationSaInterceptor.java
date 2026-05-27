@@ -172,7 +172,7 @@ public class AuthenticationSaInterceptor implements WebFilter, Ordered {
 				R tokenError = R.fail(ResponseEnum.JWT_TOKEN_EXCEED.getCode(), result);
 				response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 				response.setStatusCode(HttpStatus.OK);
-				DataBuffer dataBuffer = response.bufferFactory().wrap(tokenError.toString().getBytes());
+				DataBuffer dataBuffer = response.bufferFactory().wrap(tokenError.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 				return response.writeWith(Mono.just(dataBuffer));
 			} finally {
 				// 清除上下文

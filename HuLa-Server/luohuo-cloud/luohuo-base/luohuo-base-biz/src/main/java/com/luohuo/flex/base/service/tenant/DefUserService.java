@@ -92,6 +92,16 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
     boolean checkMobile(String mobile, Long id);
 
     /**
+     * 检测 手机号 在指定租户内是否已存在
+     *
+     * @param mobile   手机号
+     * @param tenantId 租户ID
+     * @param id       排除的用户id（更新时传当前用户id）
+     * @return true=已存在
+     */
+    boolean checkMobileInTenant(String mobile, Long tenantId, Long id);
+
+    /**
      * 检测 身份证 是否可用
      *
      * @param idCard 身份证

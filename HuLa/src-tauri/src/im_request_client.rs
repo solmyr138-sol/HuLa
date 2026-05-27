@@ -126,10 +126,23 @@ impl ImRequestClient {
                 .send()
                 .await
                 .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
-            let result: ApiResult<T> = response
-                .json()
+            let status = response.status();
+            let response_url = response.url().to_string();
+            let raw_text = response
+                .text()
                 .await
                 .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
+            let result: ApiResult<T> = serde_json::from_str(&raw_text).map_err(|e| {
+                error!(
+                    "JSON parse failed! url={}, status={}, body_len={}, body_preview={}, error={}",
+                    response_url,
+                    status,
+                    raw_text.len(),
+                    &raw_text[..raw_text.len().min(500)],
+                    e
+                );
+                anyhow::anyhow!("network_error: {}", e)
+            })?;
 
             let url = format!("{}/{}", self.base_url, path);
 
@@ -307,10 +320,18 @@ impl ImRequestClient {
             .send()
             .await
             .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
-        let result: ApiResult<serde_json::Value> = response
-            .json()
+        let status = response.status();
+        let raw_text = response
+            .text()
             .await
             .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
+        let result: ApiResult<serde_json::Value> = serde_json::from_str(&raw_text).map_err(|e| {
+            error!(
+                "Refresh token JSON parse failed! url={}, status={}, body={}, error={}",
+                url, status, &raw_text[..raw_text.len().min(500)], e
+            );
+            anyhow::anyhow!("network_error: {}", e)
+        })?;
 
         if !result.success {
             // 服务器明确拒绝 refresh token，需要重新登录

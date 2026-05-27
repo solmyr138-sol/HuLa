@@ -96,6 +96,14 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
     }
 
     @Override
+    public boolean checkMobileInTenant(String mobile, Long tenantId, Long id) {
+        return superManager.count(Wraps.<DefUser>lbQ()
+                .eq(DefUser::getMobile, mobile)
+                .eq(DefUser::getTenantId, tenantId)
+                .ne(DefUser::getId, id)) > 0;
+    }
+
+    @Override
     public boolean checkIdCard(String value, Long id) {
         return superManager.count(Wraps.<DefUser>lbQ().eq(DefUser::getIdCard, value).ne(DefUser::getId, id)) > 0;
     }
@@ -146,7 +154,8 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String register(DefUser defUser) {
-        ArgumentAssert.isFalse(checkMobile(defUser.getMobile(), null), "手机号：{}已经存在", defUser.getMobile());
+        ArgumentAssert.isFalse(checkMobileInTenant(defUser.getMobile(), defUser.getTenantId(), null),
+                "手机号：{}已经存在", defUser.getMobile());
         setDefUser(defUser);
         defUser.setNickName(defUser.getMobile());
 
@@ -167,7 +176,8 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
     @Transactional(rollbackFor = Exception.class)
     @Override
     public DefUser registerImByMobile(DefUser defUser) {
-        ArgumentAssert.isFalse(checkMobile(defUser.getMobile(), null), "手机号：{}已经存在", defUser.getMobile());
+        ArgumentAssert.isFalse(checkMobileInTenant(defUser.getMobile(), defUser.getTenantId(), null),
+                "手机号：{}已经存在", defUser.getMobile());
         if (defUser.getSystemType() == null) {
             defUser.setSystemType(2);
         }

@@ -28,9 +28,9 @@ pub struct RoomMemberResponse {
     #[serde(rename = "roleId")]
     pub group_role: Option<i64>,
     pub loc_place: Option<String>,
-    pub last_opt_time: i64,
+    pub last_opt_time: Option<i64>,
     pub create_time: Option<i64>,
-    pub name: String,
+    pub name: Option<String>,
     pub avatar: Option<String>,
     pub user_state_id: Option<String>,
     #[serde(rename = "wearingItemId")]
@@ -235,8 +235,8 @@ fn sort_room_members(members: &mut Vec<RoomMemberResponse>) {
             return a_status.cmp(&b_status);
         }
 
-        let a_name = a.name.to_lowercase();
-        let b_name = b.name.to_lowercase();
+        let a_name = a.name.as_deref().unwrap_or("").to_lowercase();
+        let b_name = b.name.as_deref().unwrap_or("").to_lowercase();
         a_name.cmp(&b_name)
     });
 }
