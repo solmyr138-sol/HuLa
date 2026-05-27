@@ -138,4 +138,10 @@ public class DefTenantSaveVO implements Serializable {
     @Schema(description = "企业logo")
     private Long logo;
 
+    /**
+     * 注册人数上限（容量）
+     */
+    @Schema(description = "注册人数上限（容量）")
+    private Integer accountLimit;
+
 }

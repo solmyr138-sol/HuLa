@@ -37,7 +37,7 @@ public class ImUserApiFallback implements ImUserApi {
 
     @Override
     public R<Boolean> register(UserRegisterVo userRegisterVo) {
-        throw BizException.wrap("注册失败");
+        return R.fail("IM 用户注册失败");
     }
 
     @Override

@@ -1,0 +1,13 @@
+[luohuo-im-server:18778:] 2026-05-27 17:24:26.746[ WARN] 41988 [] [main:39351] [c.luohuo.basic.database.injector.LuohuoSqlInjector.getMethodList:56] class com.luohuo.flex.im.sensitive.domain.SensitiveWord ,Not found @TableId annotation, Cannot use Mybatis-Plus 'xxById' Method.
+[luohuo-im-server:18778:] 2026-05-27 17:24:27.858[ WARN] 41988 [] [main:40463] [com.luohuo.basic.cache.RedisAutoConfigure.cacheOps:118] 检查到缓存采用了 Redis模式
+[luohuo-im-server:18778:] 2026-05-27 17:25:14.559[ INFO] 41988 [9ace53f778b349b887610f77ec702ef9] [XNIO-2 task-3:87164] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =440, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:25:20.287[ INFO] 41988 [9b4a06d4af104bf1a6d0be18463fa8ab] [XNIO-2 task-3:92892] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =440, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:27:57.727[ INFO] 41988 [eda63d73a314421dae262d58112b1a34] [XNIO-2 task-3:250332] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =440, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:29:50.692[ WARN] 4004 [] [main:39443] [c.luohuo.basic.database.injector.LuohuoSqlInjector.getMethodList:56] class com.luohuo.flex.im.sensitive.domain.SensitiveWord ,Not found @TableId annotation, Cannot use Mybatis-Plus 'xxById' Method.
+[luohuo-im-server:18778:] 2026-05-27 17:29:51.812[ WARN] 4004 [] [main:40563] [com.luohuo.basic.cache.RedisAutoConfigure.cacheOps:118] 检查到缓存采用了 Redis模式
+[luohuo-im-server:18778:] 2026-05-27 17:38:45.708[ INFO] 4004 [ded62fbd91774c8196f89fec6ac06506] [XNIO-2 task-2:574459] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =700, name=XNIO-2 task-2
+[luohuo-im-server:18778:] 2026-05-27 17:38:47.150[ INFO] 4004 [3f5d8b3f64584b528a51560b0adf9438] [XNIO-2 task-2:575901] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =700, name=XNIO-2 task-2
+[luohuo-im-server:18778:] 2026-05-27 17:38:51.065[ INFO] 4004 [eabd48a9e43c4653a220a0d722e5c832] [XNIO-2 task-3:579816] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =854, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:38:56.491[ INFO] 4004 [776129bb0eff47db8d38b4e28877c9eb] [XNIO-2 task-3:585242] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =854, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:40:14.807[ INFO] 4004 [1f002ec902334bcaa6dc538ad616e387] [XNIO-2 task-3:663558] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =854, name=XNIO-2 task-3
+[luohuo-im-server:18778:] 2026-05-27 17:40:16.558[ INFO] 4004 [97b51206e0e341b5815896e878cfbad8] [XNIO-2 task-3:665309] [c.l.b.c.i.FeignAddHeaderRequestInterceptor.apply:64] thread id =854, name=XNIO-2 task-3

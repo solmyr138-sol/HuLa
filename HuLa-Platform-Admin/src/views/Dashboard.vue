@@ -16,8 +16,9 @@ const stats = ref<{ tenantTotal: number; tenantActive: number } | null>(null)
 onMounted(async () => {
   try {
     stats.value = await api('/base/platform/tenant/stats')
-  } catch {
+  } catch (e) {
     stats.value = { tenantTotal: 0, tenantActive: 0 }
+    console.warn('平台概览加载失败', e)
   }
 })
 </script>

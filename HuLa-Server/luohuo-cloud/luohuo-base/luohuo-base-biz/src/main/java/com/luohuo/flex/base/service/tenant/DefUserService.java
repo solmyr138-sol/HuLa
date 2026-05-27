@@ -229,6 +229,15 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
     DefUser registerImByMobile(DefUser defUser);
 
     /**
+     * 平台创建企业时生成 IM 运营后台管理员（systemType=2），用户名 admin_{企业邀请码}
+     *
+     * @param tenantId   租户 ID
+     * @param inviteCode 企业邀请码
+     * @return 明文初始密码（仅创建时展示一次）
+     */
+    String createEnterpriseAdminUser(Long tenantId, String inviteCode);
+
+    /**
      * 分页查询用户
      *
      * @param params 分页参数

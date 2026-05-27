@@ -50,6 +50,8 @@ luohuo:
       ALL:
         - /*/anyone/**
         - /anyone/**
+        - /base/platform/**
+        - /*/platform/**
     anyUser:      # 请求中 需要携带Tenant，但 不需要携带Token(不需要登录) 和 不需要验证uri权限
       ALL:
         - /*/anyUser/**
@@ -243,6 +245,10 @@ feign:
         connectTimeout: 60000
         readTimeout: 60000
         loggerLevel: FULL
+      # 平台创建企业等路径会调 IM；IM 未启动时避免各等满 60s 导致前端长时间转圈
+      luohuo-im-server:
+        connectTimeout: 3000
+        readTimeout: 5000
     #支持压缩的mime types
   compression:  # 请求压缩
     request:

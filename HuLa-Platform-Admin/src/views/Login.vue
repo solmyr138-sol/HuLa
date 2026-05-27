@@ -3,13 +3,14 @@
     <n-card title="企业传书平台总后台" style="width: 400px">
       <n-form ref="formRef" :model="form" :rules="rules">
         <n-form-item label="用户名" path="username">
-          <n-input v-model:value="form.username" placeholder="请输入用户名" @keyup.enter="submit" />
+          <n-input v-model:value="form.username" placeholder="平台管理员账号（systemType=1）" @keyup.enter="submit" />
         </n-form-item>
         <n-form-item label="密码" path="password">
           <n-input v-model:value="form.password" type="password" show-password-on="click" placeholder="请输入密码" @keyup.enter="submit" />
         </n-form-item>
         <n-button type="primary" block :loading="loading" @click="submit">登 录</n-button>
       </n-form>
+      <p class="hint">总后台使用平台管理员账号（非企业后台 IM 手机号）。新建企业的管理员账号为 admin_企业邀请码。</p>
     </n-card>
   </div>
 </template>
@@ -58,5 +59,11 @@ async function submit() {
   align-items: center;
   justify-content: center;
   background: #eef1f5;
+}
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
 }
 </style>

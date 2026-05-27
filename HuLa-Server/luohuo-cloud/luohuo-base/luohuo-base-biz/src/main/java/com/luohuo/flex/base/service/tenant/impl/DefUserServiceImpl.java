@@ -173,6 +173,31 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
         superManager.delUserCache(Collections.singletonList(entity));
     }
 
+    private static final int ENTERPRISE_ADMIN_SYSTEM_TYPE = 2;
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String createEnterpriseAdminUser(Long tenantId, String inviteCode) {
+        ArgumentAssert.notNull(tenantId, "租户ID不能为空");
+        ArgumentAssert.notEmpty(inviteCode, "企业邀请码不能为空");
+        String username = "admin_" + inviteCode.trim();
+        DefUser exists = superManager.getUserByUsername(ENTERPRISE_ADMIN_SYSTEM_TYPE, username);
+        ArgumentAssert.isNull(exists, "管理员用户名 {} 已存在", username);
+        String plainPassword = RandomUtil.randomString(12);
+        DefUser user = new DefUser();
+        user.setSystemType(ENTERPRISE_ADMIN_SYSTEM_TYPE);
+        user.setTenantId(tenantId);
+        user.setUsername(username);
+        user.setNickName("企业管理员");
+        user.setState(true);
+        user.setSalt(RandomUtil.randomString(20));
+        user.setPassword(SecureUtil.sha256(plainPassword + user.getSalt()));
+        user.setPasswordErrorNum(0);
+        superManager.save(user);
+        superManager.delUserCache(Collections.singletonList(user.getId()));
+        return plainPassword;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public DefUser registerImByMobile(DefUser defUser) {

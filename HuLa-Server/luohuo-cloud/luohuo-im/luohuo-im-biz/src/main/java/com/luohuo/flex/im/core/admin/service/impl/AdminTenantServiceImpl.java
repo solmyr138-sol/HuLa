@@ -45,7 +45,7 @@ public class AdminTenantServiceImpl implements AdminTenantService {
                 .logo(StrUtil.blankToDefault(tenant.getLogo(), ""))
                 .creditCode(StrUtil.blankToDefault(tenant.getWebsite(), ""))
                 .registeredCount(registered)
-                .accountLimit(ObjectUtil.defaultIfNull(tenant.getAccountCount(), 0))
+                .accountLimit(ObjectUtil.defaultIfNull(tenant.getAccountLimit(), 0))
                 .expireTime(tenant.getExpireTime())
                 .serverUrl(StrUtil.blankToDefault(serverUrl, tenant.getWebsite()))
                 .appDownloadUrl(appDownloadUrl)

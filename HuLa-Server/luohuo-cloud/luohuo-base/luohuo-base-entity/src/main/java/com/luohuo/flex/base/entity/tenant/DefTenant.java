@@ -85,4 +85,8 @@ public class DefTenant extends Entity<Long> {
 
 	@Schema(description = "账号数量")
 	private Integer accountCount;
+
+	@Schema(description = "账号上限（注册人数上限）")
+	@TableField("account_limit")
+	private Integer accountLimit;
 }
