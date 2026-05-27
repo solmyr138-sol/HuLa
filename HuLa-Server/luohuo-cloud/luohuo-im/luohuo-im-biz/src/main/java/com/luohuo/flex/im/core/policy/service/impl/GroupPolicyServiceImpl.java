@@ -86,6 +86,18 @@ public class GroupPolicyServiceImpl implements GroupPolicyService {
             groupMemberAclDao.save(acl);
             return acl;
         }
+        if (req.getMutedUntil() == null) {
+            // 全局 update-strategy=NOT_NULL 时 updateById 不会把 muted_until 写成 NULL
+            groupMemberAclDao.lambdaUpdate()
+                    .eq(GroupMemberAcl::getGroupId, req.getRoomId())
+                    .eq(GroupMemberAcl::getUid, req.getUid())
+                    .set(GroupMemberAcl::getMutedUntil, null)
+                    .set(GroupMemberAcl::getUpdateBy, operatorUid)
+                    .update();
+            acl.setMutedUntil(null);
+            acl.setUpdateBy(operatorUid);
+            return acl;
+        }
         acl.setMutedUntil(req.getMutedUntil());
         acl.setUpdateBy(operatorUid);
         groupMemberAclDao.updateById(acl);

@@ -41,6 +41,14 @@ public class DefTenant extends Entity<Long> {
 	@TableField("invite_code")
 	private String inviteCode;
 
+	@Schema(description = "企业官方频道房间ID")
+	@TableField("official_room_id")
+	private Long officialRoomId;
+
+	@Schema(description = "企业官方频道群ID(im_room_group.id)")
+	@TableField("official_group_id")
+	private Long officialGroupId;
+
 	@Schema(description = "联系人的用户编号")
 	private Long contactUserId;
 

@@ -13,7 +13,9 @@ import com.luohuo.flex.common.cache.PresenceCacheKeyBuilder;
 import com.luohuo.flex.common.constant.DefValConstants;
 import com.luohuo.flex.im.api.vo.UserRegisterVo;
 import com.luohuo.flex.im.common.event.UserRegisterEvent;
+import com.luohuo.flex.im.api.vo.OfficialChannelResp;
 import com.luohuo.flex.im.core.chat.service.RoomAppService;
+import com.luohuo.flex.im.core.tenant.service.EnterpriseOfficialChannelService;
 import com.luohuo.flex.im.core.user.service.cache.DefUserCache;
 import com.luohuo.flex.im.core.user.service.cache.ItemCache;
 import com.luohuo.flex.im.core.user.service.cache.UserCache;
@@ -85,6 +87,7 @@ public class UserServiceImpl implements UserService {
     private final SensitiveWordBs sensitiveWordBs;
     private final FeedService feedService;
 	private final DefUserService defUserService;
+	private final EnterpriseOfficialChannelService enterpriseOfficialChannelService;
 
 	@Override
 	public Boolean refreshIpInfo(Long uid, IpInfo ipInfo) {
@@ -414,12 +417,16 @@ public class UserServiceImpl implements UserService {
         newUser.setCreateBy(1L);
         userDao.save(newUser);
 
-		// 注入群组信息
-		cachePlusOps.sAdd(PresenceCacheKeyBuilder.groupMembersKey(DefValConstants.DEF_ROOM_ID), newUser.getId());
-		cachePlusOps.sAdd(PresenceCacheKeyBuilder.userGroupsKey(newUser.getId()), DefValConstants.DEF_ROOM_ID);
+		OfficialChannelResp channel = enterpriseOfficialChannelService.resolveChannelForRegister(userRegisterVo.getTenantId());
+		Long officialRoomId = channel.getRoomId();
+		Long officialGroupId = channel.getGroupId();
+
+		// 注入企业官方频道（默认租户仍为全局 Room 1）
+		cachePlusOps.sAdd(PresenceCacheKeyBuilder.groupMembersKey(officialRoomId), newUser.getId());
+		cachePlusOps.sAdd(PresenceCacheKeyBuilder.userGroupsKey(newUser.getId()), officialRoomId);
 
 		// 加上系统机器人好友
-		roomAppService.createSystemFriend(DefValConstants.DEF_ROOM_ID, DefValConstants.DEF_GROUP_ID, newUser.getId());
+		roomAppService.createSystemFriend(officialRoomId, officialGroupId, newUser.getId());
 
         // 发布用户注册消息
         SpringUtils.publishEvent(new UserRegisterEvent(this, newUser));

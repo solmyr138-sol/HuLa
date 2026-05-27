@@ -12,6 +12,9 @@ import com.luohuo.basic.tenant.core.aop.TenantIgnore;
 import com.luohuo.basic.utils.ArgumentAssert;
 import com.luohuo.basic.utils.BeanPlusUtil;
 import com.luohuo.flex.base.entity.tenant.DefTenant;
+import com.luohuo.basic.utils.ArgumentAssert;
+import com.luohuo.flex.im.api.EnterpriseChannelApi;
+import com.luohuo.flex.im.api.vo.OfficialChannelCreateVO;
 import com.luohuo.flex.base.service.tenant.DefTenantService;
 import com.luohuo.flex.base.vo.query.tenant.DefTenantPageQuery;
 import com.luohuo.flex.base.vo.save.tenant.DefTenantSaveVO;
@@ -39,6 +42,7 @@ import java.time.LocalDateTime;
 public class PlatformTenantController {
 
     private final DefTenantService defTenantService;
+    private final EnterpriseChannelApi enterpriseChannelApi;
 
     @PostMapping("/page")
     @Operation(summary = "企业分页列表")
@@ -67,7 +71,14 @@ public class PlatformTenantController {
         tenant.setExpireTime(LocalDateTime.of(2099, 12, 31, 23, 59, 59));
         tenant.setAccountCount(0);
         defTenantService.getSuperManager().save(tenant);
-        return R.success(tenant);
+        if (tenant.getId() != null && tenant.getId() > 1L) {
+            OfficialChannelCreateVO channelReq = new OfficialChannelCreateVO();
+            channelReq.setTenantId(tenant.getId());
+            channelReq.setTenantName(tenant.getName());
+            var channelR = enterpriseChannelApi.createOfficialChannel(channelReq);
+            ArgumentAssert.isTrue(channelR != null && channelR.getData() != null, "创建企业官方频道失败");
+        }
+        return R.success(defTenantService.getById(tenant.getId()));
     }
 
     @PutMapping

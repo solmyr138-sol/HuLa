@@ -87,18 +87,27 @@ public class RoomServiceImpl implements RoomService {
     public RoomGroup createGroupRoom(Long uid, GroupAddReq groupAddReq) {
         List<GroupMember> selfGroup = groupMemberDao.getSelfGroup(uid);
         AssertUtil.isTrue(selfGroup.size() < 20, "每个人只能创建20个群");
+        return doCreateGroupRoom(uid, groupAddReq.getGroupName());
+    }
+
+    @Override
+    public RoomGroup createEnterpriseOfficialGroupRoom(Long uid, String groupName) {
+        return doCreateGroupRoom(uid, groupName);
+    }
+
+    private RoomGroup doCreateGroupRoom(Long uid, String groupName) {
         User user = userCache.get(uid);
         Room room = createRoom(RoomTypeEnum.GROUP);
-        // 插入群
-        RoomGroup roomGroup = ChatAdapter.buildGroupRoom(user, room.getId(), groupAddReq.getGroupName());
-		roomGroup.setAccount(Base62Encoder.createGroup(uidGenerator.getUid()));
+        RoomGroup roomGroup = ChatAdapter.buildGroupRoom(user, room.getId(), groupName);
+        roomGroup.setAccount(Base62Encoder.createGroup(uidGenerator.getUid()));
+        roomGroup.setCreateBy(uid);
         roomGroupDao.save(roomGroup);
-        // 插入群主
         GroupMember leader = GroupMember.builder()
                 .roleId(GroupRoleEnum.LEADER.getType())
                 .groupId(roomGroup.getId())
                 .uid(uid)
                 .build();
+        leader.setCreateBy(uid);
         groupMemberDao.save(leader);
         return roomGroup;
     }

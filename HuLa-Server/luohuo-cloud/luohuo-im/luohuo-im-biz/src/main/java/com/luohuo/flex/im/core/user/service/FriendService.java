@@ -53,7 +53,7 @@ public interface FriendService {
 	 * 系统用户在群内发送欢迎消息
 	 * @param uid 加上系统机器人的uid
 	 */
-	void createSystemFriend(Long uid);
+	void createSystemFriend(Long uid, Long welcomeGroupRoomId);
 
     /**
      * 删除好友

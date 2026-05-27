@@ -12,6 +12,7 @@ import com.luohuo.flex.base.vo.query.tenant.DefTenantPageQuery;
 import com.luohuo.flex.base.vo.result.user.DefTenantResultVO;
 import com.luohuo.flex.base.vo.save.tenant.DefTenantSaveVO;
 import com.luohuo.flex.base.vo.update.tenant.DefTenantLogoUpdateVO;
+import com.luohuo.flex.base.vo.update.tenant.DefTenantOfficialChannelUpdateVO;
 import com.luohuo.flex.base.vo.update.tenant.DefTenantUpdateVO;
 import com.luohuo.flex.model.enumeration.system.DefTenantStatusEnum;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,6 +88,18 @@ public class DefTenantController extends SuperCacheController<DefTenantService, 
         DefTenant patch = new DefTenant();
         patch.setId(id);
         patch.setLogo(vo != null ? vo.getLogo() : null);
+        superService.updateById(patch);
+        return R.success(true);
+    }
+
+    @Operation(summary = "更新企业官方频道ID")
+    @PutMapping("/{id}/official-channel")
+    @WebLog("更新企业官方频道")
+    public R<Boolean> updateOfficialChannel(@PathVariable Long id, @RequestBody DefTenantOfficialChannelUpdateVO vo) {
+        DefTenant patch = new DefTenant();
+        patch.setId(id);
+        patch.setOfficialRoomId(vo.getOfficialRoomId());
+        patch.setOfficialGroupId(vo.getOfficialGroupId());
         superService.updateById(patch);
         return R.success(true);
     }

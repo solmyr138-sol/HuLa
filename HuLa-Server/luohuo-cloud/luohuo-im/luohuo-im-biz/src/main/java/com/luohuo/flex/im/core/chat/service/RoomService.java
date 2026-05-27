@@ -47,6 +47,11 @@ public interface RoomService {
      */
     RoomGroup createGroupRoom(Long uid, GroupAddReq groupAddReq);
 
+    /**
+     * 创建企业官方频道（不校验用户建群数量上限）
+     */
+    RoomGroup createEnterpriseOfficialGroupRoom(Long uid, String groupName);
+
 	/**
 	 * 群聊列表
 	 * @param uid 登录用户id

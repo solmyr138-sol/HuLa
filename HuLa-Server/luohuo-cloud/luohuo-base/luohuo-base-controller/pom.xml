@@ -30,5 +30,10 @@
             <artifactId>luohuo-login-user-resolver</artifactId>
             <version>${luohuo-project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.luohuo.flex</groupId>
+            <artifactId>luohuo-im-cloud-impl</artifactId>
+            <version>${luohuo-project.version}</version>
+        </dependency>
     </dependencies>
 </project>

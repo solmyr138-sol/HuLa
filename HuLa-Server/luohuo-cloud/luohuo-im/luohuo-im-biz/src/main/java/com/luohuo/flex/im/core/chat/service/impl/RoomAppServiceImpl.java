@@ -488,7 +488,7 @@ public class RoomAppServiceImpl implements RoomAppService, InitializingBean {
 		// 创建群成员
 		roomService.createGroupMember(groupId, uid);
 		// 创建系统消息
-		friendService.createSystemFriend(uid);
+		friendService.createSystemFriend(uid, roomId);
 		// 发送进群事件
 		CacheKey gKey = PresenceCacheKeyBuilder.groupMembersKey(roomId);
 		CacheKey onlineGroupMembersKey = PresenceCacheKeyBuilder.onlineGroupMembersKey(roomId);

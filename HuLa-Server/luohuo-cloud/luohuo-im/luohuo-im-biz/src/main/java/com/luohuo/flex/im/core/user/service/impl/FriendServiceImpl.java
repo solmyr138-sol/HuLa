@@ -179,7 +179,7 @@ public class FriendServiceImpl implements FriendService, InitializingBean {
 	}
 
 	@Override
-	public void createSystemFriend(Long uid){
+	public void createSystemFriend(Long uid, Long welcomeGroupRoomId){
 		// 创建一个聊天房间
 		RoomFriend roomFriend = roomService.createFriendRoom(Arrays.asList(uid, DefValConstants.DEF_BOT_ID));
 		// 创建双方好友关系
@@ -189,7 +189,8 @@ public class FriendServiceImpl implements FriendService, InitializingBean {
 		// 系统账号在群内发送一条欢迎消息
 		SummeryInfoDTO user = userSummaryCache.get(uid);
 		Long total = cachePlusOps.inc("luohuo:user:total_count", 0, TimeUnit.DAYS); // 查询系统总注册人员
-		chatService.sendMsg(MessageAdapter.buildAgreeMsg4Group(DefValConstants.DEF_ROOM_ID, total, user.getName()), DefValConstants.DEF_BOT_ID);
+		Long roomId = welcomeGroupRoomId != null ? welcomeGroupRoomId : DefValConstants.DEF_ROOM_ID;
+		chatService.sendMsg(MessageAdapter.buildAgreeMsg4Group(roomId, total, user.getName()), DefValConstants.DEF_BOT_ID);
 	}
 
     /**
