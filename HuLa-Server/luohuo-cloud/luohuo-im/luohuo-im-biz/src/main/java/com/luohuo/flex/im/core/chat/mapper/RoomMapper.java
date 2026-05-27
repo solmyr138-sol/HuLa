@@ -1,6 +1,7 @@
 package com.luohuo.flex.im.core.chat.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import com.luohuo.flex.im.domain.vo.response.MemberResp;
 import org.springframework.stereotype.Repository;
 import com.luohuo.flex.im.domain.entity.Room;
@@ -19,5 +20,5 @@ public interface RoomMapper extends BaseMapper<Room> {
 
     List<MemberResp> groupList(Long uid);
 
-    List<MemberResp> getAllGroupList();
+    List<MemberResp> getAllGroupList(@Param("tenantId") Long tenantId);
 }

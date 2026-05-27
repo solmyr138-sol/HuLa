@@ -19,7 +19,8 @@ export type PageResp<T> = {
 function authHeaders(extra?: HeadersInit): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'tenant-id': localStorage.getItem('tenantId') || '1'
+    'tenant-id': localStorage.getItem('tenantId') || '1',
+    tenantId: localStorage.getItem('tenantId') || '1'
   }
   const token = localStorage.getItem('token')
   // 与 HuLa 客户端 / 网关 Sa-Token 一致：请求头名为 token（非 Authorization: Bearer）

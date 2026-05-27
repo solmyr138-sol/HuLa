@@ -2,6 +2,7 @@ package com.luohuo.flex.im.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.luohuo.basic.base.entity.Entity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -54,5 +55,8 @@ public class RoomGroup extends Entity<Long> {
 	 */
 	@TableField("allow_scan_enter")
 	private Boolean allowScanEnter;
+
+	@Schema(description = "租户id")
+	private Long tenantId;
 
 }

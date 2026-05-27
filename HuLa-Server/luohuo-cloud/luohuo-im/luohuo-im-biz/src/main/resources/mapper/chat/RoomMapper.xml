@@ -29,6 +29,9 @@
         from im_room_group g
                  inner join im_room r on g.room_id = r.id
         where g.is_del = 0
+        <if test="tenantId != null">
+            and g.tenant_id = #{tenantId}
+        </if>
         order by r.update_time desc,
                  g.id
     </select>

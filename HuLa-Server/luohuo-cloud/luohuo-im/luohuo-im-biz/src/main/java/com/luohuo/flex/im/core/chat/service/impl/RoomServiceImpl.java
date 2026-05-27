@@ -1,5 +1,6 @@
 package com.luohuo.flex.im.core.chat.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baidu.fsg.uid.Base62Encoder;
 import com.baidu.fsg.uid.UidGenerator;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luohuo.basic.validator.utils.AssertUtil;
+import com.luohuo.basic.context.ContextUtil;
 import com.luohuo.flex.im.core.chat.dao.AnnouncementsDao;
 import com.luohuo.flex.im.core.chat.dao.AnnouncementsReadRecordDao;
 import com.luohuo.flex.im.core.chat.dao.ContactDao;
@@ -99,6 +101,8 @@ public class RoomServiceImpl implements RoomService {
         User user = userCache.get(uid);
         Room room = createRoom(RoomTypeEnum.GROUP);
         RoomGroup roomGroup = ChatAdapter.buildGroupRoom(user, room.getId(), groupName);
+		// 企业官方频道等场景以 ContextUtil 租户为准（创建人可能是全局 bot，tenant_id=1）
+		roomGroup.setTenantId(ObjectUtil.defaultIfNull(ContextUtil.getTenantId(), user.getTenantId()));
         roomGroup.setAccount(Base62Encoder.createGroup(uidGenerator.getUid()));
         roomGroup.setCreateBy(uid);
         roomGroupDao.save(roomGroup);
@@ -119,7 +123,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<MemberResp> getAllGroupList() {
-        return roomDao.getAllGroupList();
+        return roomDao.getAllGroupList(resolveAdminTenantIdForQuery());
     }
 
 	@Override
@@ -130,6 +134,10 @@ public class RoomServiceImpl implements RoomService {
 
 		// 查询所有群聊
 		LambdaQueryWrapper<RoomGroup> wrapper = new LambdaQueryWrapper<>();
+		Long tenantId = resolveAdminTenantIdForQuery();
+		if (tenantId != null) {
+			wrapper.eq(RoomGroup::getTenantId, tenantId);
+		}
 		wrapper.orderByDesc(RoomGroup::getCreateTime);
 		Page<RoomGroup> page = roomGroupDao.page(req.plusPage(), wrapper);
 
@@ -323,6 +331,16 @@ public class RoomServiceImpl implements RoomService {
 	@Override
 	public boolean removeById(Long roomId) {
 		return roomDao.removeById(roomId);
+	}
+
+	/**
+	 * 企业运营后台（systemType=2）必须按当前登录租户过滤；平台超管（systemType=1）可看全部。
+	 */
+	private Long resolveAdminTenantIdForQuery() {
+		if ("1".equals(ContextUtil.getSystemType())) {
+			return null;
+		}
+		return ContextUtil.getTenantId();
 	}
 
 	@Override

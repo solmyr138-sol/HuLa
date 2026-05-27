@@ -76,8 +76,6 @@ async function enter() {
 
     if (result.uid) localStorage.setItem('adminUid', String(result.uid))
 
-    localStorage.setItem('tenantId', '1')
-
     router.push('/enterprise')
 
   } catch (e) {
