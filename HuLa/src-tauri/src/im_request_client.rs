@@ -462,6 +462,7 @@ pub enum ImUrl {
     DeleteEmoji,
     AddEmoji,
     RecallMsg,
+    EditMsg,
     BlockUser,
     MarkMsg,
     SetUserBadge,
@@ -749,6 +750,7 @@ impl ImUrl {
 
             // 消息相关
             ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
+            ImUrl::EditMsg => (http::Method::PUT, "im/chat/msg/edit"),
             ImUrl::MarkMsg => (http::Method::PUT, "im/chat/msg/mark"),
             ImUrl::GetMsgPage => (http::Method::GET, "im/chat/msg/page"),
             ImUrl::GetMsgList => (http::Method::POST, "im/chat/msg/list"),
@@ -1054,6 +1056,7 @@ impl ImUrl {
 
             // 消息相关
             "recallMsg" => Ok(ImUrl::RecallMsg),
+            "editMsg" => Ok(ImUrl::EditMsg),
             "markMsg" => Ok(ImUrl::MarkMsg),
             "getMsgList" => Ok(ImUrl::GetMsgList),
             "getMsgPage" => Ok(ImUrl::GetMsgPage),

@@ -348,11 +348,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   }
   if (data.fromUser?.uid != null) data.fromUser.uid = String(data.fromUser.uid)
 
-  if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
-    return
-  }
-
-  chatStore.pushMsg(data, {
+  chatStore.upsertMsgFromRemote(data, {
     // 只有当用户在消息页面且正在查看这个会话时才算 isActiveChatView
     isActiveChatView: route.path === '/message' && globalStore.currentSessionRoomId === data.message.roomId,
     activeRoomId: globalStore.currentSessionRoomId || ''

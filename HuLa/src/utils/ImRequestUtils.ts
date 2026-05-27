@@ -280,6 +280,13 @@ export async function recallMsg(body: { msgId: string; roomId: string }) {
   })
 }
 
+export async function editMsg(body: { msgId: string; msgType: number; body: { content: string } }) {
+  return await imRequest<{ message: { id: string; body: { content: string } } }>({
+    url: ImUrlEnum.EDIT_MSG,
+    body
+  })
+}
+
 export async function addEmoji(body: { expressionUrl: string }) {
   return await imRequest({
     url: ImUrlEnum.ADD_EMOJI,

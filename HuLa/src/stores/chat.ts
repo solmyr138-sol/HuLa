@@ -796,8 +796,27 @@ export const useChatStore = defineStore(
 
       const existedMsg = roomMessages[messageKey]
       roomMessages[messageKey] = msg
+      scheduleMessageMapCommit(msg.message.roomId)
 
       if (existedMsg) {
+        const session = resolveSessionByRoomId(msg.message.roomId)
+        if (session) {
+          const lastMsgUserName = groupStore.getUserInfo(msg.fromUser.uid)?.name
+          const formattedText =
+            msg.message.type === MsgEnum.RECALL
+              ? session.type === RoomTypeEnum.GROUP
+                ? `${lastMsgUserName}:撤回了一条消息`
+                : msg.fromUser.uid === userStore.userInfo!.uid
+                  ? '你撤回了一条消息'
+                  : '对方撤回了一条消息'
+              : renderReplyContent(
+                  lastMsgUserName,
+                  msg.message.type,
+                  msg.message.body?.content || msg.message.body,
+                  session.type
+                )
+          updateSession(msg.message.roomId, { text: formattedText!, activeTime: Date.now() })
+        }
         return
       }
 
@@ -884,6 +903,16 @@ export const useChatStore = defineStore(
     const checkMsgExist = (roomId: string, msgId: string) => {
       const current = messageMap[roomId]
       return current && msgId in current
+    }
+
+    /** WebSocket 推送：新消息插入，同 id 则覆盖（编辑后的消息复用发送推送通道） */
+    const upsertMsgFromRemote = (
+      msg: MessageType,
+      options: { isActiveChatView?: boolean; activeRoomId?: string } = {}
+    ) => {
+      const messageKey = ensureMessageId(msg)
+      if (!messageKey) return
+      pushMsg(msg, options)
     }
 
     const clearMsgCheck = () => {
@@ -1540,6 +1569,7 @@ export const useChatStore = defineStore(
       setCustomForwardTask,
       resetSessionSelection,
       checkMsgExist,
+      upsertMsgFromRemote,
       clearRedundantMessages
     }
   },

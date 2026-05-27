@@ -52,6 +52,7 @@ import com.luohuo.flex.model.vo.query.BindEmailReq;
 import com.luohuo.flex.im.domain.vo.resp.user.BadgeResp;
 import com.luohuo.flex.im.domain.vo.resp.user.UserInfoResp;
 import com.luohuo.flex.im.core.user.service.UserService;
+import com.luohuo.flex.im.core.policy.dao.TenantPolicyWhitelistDao;
 import com.luohuo.flex.im.core.user.service.FeedService;
 import com.luohuo.flex.im.core.user.service.adapter.UserAdapter;
 import com.luohuo.flex.im.core.user.service.cache.UserSummaryCache;
@@ -88,6 +89,7 @@ public class UserServiceImpl implements UserService {
     private final FeedService feedService;
 	private final DefUserService defUserService;
 	private final EnterpriseOfficialChannelService enterpriseOfficialChannelService;
+	private final TenantPolicyWhitelistDao tenantPolicyWhitelistDao;
 
 	@Override
 	public Boolean refreshIpInfo(Long uid, IpInfo ipInfo) {
@@ -127,7 +129,12 @@ public class UserServiceImpl implements UserService {
     public UserInfoResp getUserInfo(Long uid) {
         SummeryInfoDTO userInfo = userSummaryCache.get(uid);
         Integer countByValidItemId = userBackpackDao.getCountByValidItemId(uid, ItemEnum.MODIFY_NAME_CARD.getId());
-		return UserAdapter.buildUserInfoResp(userInfo, countByValidItemId);
+		UserInfoResp resp = UserAdapter.buildUserInfoResp(userInfo, countByValidItemId);
+		User user = userDao.getById(uid);
+		if (user != null) {
+			resp.setPolicyWhitelisted(tenantPolicyWhitelistDao.isWhitelisted(user.getTenantId(), uid));
+		}
+		return resp;
     }
 
 	@Override

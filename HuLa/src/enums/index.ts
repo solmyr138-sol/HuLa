@@ -90,6 +90,8 @@ export enum MittEnum {
   AT = 'at',
   /** 重新编辑 */
   RE_EDIT = 'reEdit',
+  /** 编辑已发送消息 */
+  EDIT_MESSAGE = 'editMessage',
   /** 删除会话 */
   DELETE_SESSION = 'deleteSession',
   /** 隐藏会话 */
@@ -777,6 +779,8 @@ export enum ImUrlEnum {
   // 消息相关
   /** 撤回消息 */
   RECALL_MSG = 'recallMsg',
+  /** 编辑消息 */
+  EDIT_MSG = 'editMsg',
   /** 标记消息 */
   MARK_MSG = 'markMsg',
   /** 获取消息列表 */

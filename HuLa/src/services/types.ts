@@ -301,6 +301,8 @@ export type UserInfoType = {
   linkedGithub?: boolean
   /** 是否绑定 GitCode */
   linkedGitcode?: boolean
+  /** 租户策略白名单（可编辑他人历史消息等） */
+  policyWhitelisted?: boolean
   /** 已绑定的 OAuth 提供商 */
   oauthProviders?: ('gitee' | 'github' | 'gitcode')[]
 }

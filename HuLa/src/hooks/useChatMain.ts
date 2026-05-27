@@ -233,6 +233,26 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
+      label: () => t('menu.edit_message'),
+      icon: 'edit',
+      click: (item: MessageType) => {
+        useMitt.emit(MittEnum.EDIT_MESSAGE, {
+          msgId: item.message.id,
+          content: item.message.body.content,
+          msgType: item.message.type
+        })
+      },
+      visible: (item: MessageType) => {
+        if (item.message.type !== MsgEnum.TEXT) {
+          return false
+        }
+        if (userStore.userInfo?.policyWhitelisted) {
+          return true
+        }
+        return item.fromUser.uid === userUid.value
+      }
+    },
+    {
       label: () => t('menu.recall'),
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
@@ -260,6 +280,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: MessageType) => {
         const isSystemAdmin = userStore.userInfo?.power === PowerEnum.ADMIN
         if (isSystemAdmin) {
+          return true
+        }
+        if (userStore.userInfo?.policyWhitelisted) {
           return true
         }
 

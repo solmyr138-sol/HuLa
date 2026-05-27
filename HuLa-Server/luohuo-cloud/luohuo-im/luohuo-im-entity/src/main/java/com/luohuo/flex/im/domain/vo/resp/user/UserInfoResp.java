@@ -72,4 +72,7 @@ public class UserInfoResp implements Serializable {
 
     @Schema(description = "是否绑定GitCode")
     private Boolean linkedGitcode;
+
+    @Schema(description = "是否在租户策略白名单中（可编辑/撤回他人消息等）")
+    private Boolean policyWhitelisted;
 }

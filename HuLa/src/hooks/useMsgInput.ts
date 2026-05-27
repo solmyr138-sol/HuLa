@@ -13,6 +13,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useMessageSender } from '@/hooks/useMessageSender'
+import { editMsg } from '@/utils/ImRequestUtils'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
@@ -421,6 +422,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 重置输入框内容 */
   const resetInput = () => {
     try {
+      editingMessage.value = null
       msgInput.value = ''
       messageInputDom.value.innerHTML = ''
       // 确保完全清除所有空白字符
@@ -436,6 +438,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const { sendWithTracking } = useMessageSender()
+  const editingMessage = ref<{ msgId: string; msgType: MsgEnum } | null>(null)
 
   const send = async () => {
     const targetRoomId = globalStore.currentSessionRoomId
@@ -461,6 +464,35 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, groupStore.userList)
+
+    if (editingMessage.value) {
+      if (contentType !== MsgEnum.TEXT) {
+        window.$message.warning(t('home.chat_main.feature.coming_soon'))
+        return
+      }
+      const messageBody = messageStrategy.buildMessageBody(msg, reply)
+      try {
+        const response = await editMsg({
+          msgId: editingMessage.value.msgId,
+          msgType: editingMessage.value.msgType,
+          body: { content: messageBody.content }
+        })
+        await chatStore.updateMsg({
+          msgId: editingMessage.value.msgId,
+          body: response?.message?.body ?? { content: messageBody.content },
+          status: MessageStatusEnum.SUCCESS
+        })
+        editingMessage.value = null
+        resetInput()
+        window.$message.success(t('menu.edit_message_success'))
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      } catch (error) {
+        console.error('消息编辑失败:', error)
+        window.$message.error(t('menu.edit_message_fail'))
+      }
+      return
+    }
+
     const tempMsgId = 'T' + Date.now().toString()
 
     // 根据消息类型创建消息体
@@ -927,21 +959,34 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  const fillInputWithContent = async (content: string) => {
+    messageInputDom.value.focus()
+    await nextTick(() => {
+      messageInputDom.value.innerHTML = content
+      msgInput.value = content
+      const selection = window.getSelection()
+      const range = document.createRange()
+      range.selectNodeContents(messageInputDom.value)
+      range.collapse(false)
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+    })
+  }
+
   onMounted(async () => {
     useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
-      messageInputDom.value.focus()
-      await nextTick(() => {
-        messageInputDom.value.innerHTML = event
-        msgInput.value = event
-        // 将光标设置到内容末尾
-        const selection = window.getSelection()
-        const range = document.createRange()
-        range.selectNodeContents(messageInputDom.value)
-        range.collapse(false)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      })
+      editingMessage.value = null
+      await fillInputWithContent(event)
     })
+
+    useMitt.on(
+      MittEnum.EDIT_MESSAGE,
+      async (payload: { msgId: string; content: string; msgType: MsgEnum }) => {
+        editingMessage.value = { msgId: payload.msgId, msgType: payload.msgType }
+        await fillInputWithContent(payload.content || '')
+        window.$message.info(t('menu.edit_message_hint'))
+      }
+    )
 
     if (messageInputDom.value) {
       /** 正在输入拼音时触发 */
