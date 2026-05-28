@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public enum RoleTypeEnum {
 
     ADMIN(1L, "超级管理员"),
-    CHAT_MANAGER(2L, "HuLa群聊管理"),
+    CHAT_MANAGER(2L, "企业快书群聊管理"),
     ;
 
     private final Long id;

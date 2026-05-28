@@ -100,7 +100,12 @@ public class EnterpriseOfficialChannelServiceImpl implements EnterpriseOfficialC
         ArgumentAssert.isTrue(tenantR != null && tenantR.getData() != null, "企业不存在");
         DefTenant tenant = tenantR.getData();
         if (tenant.getOfficialRoomId() != null && tenant.getOfficialGroupId() != null) {
-            return new OfficialChannelResp(tenant.getOfficialRoomId(), tenant.getOfficialGroupId());
+            RoomGroup configured = TenantUtils.executeIgnore(() -> roomGroupDao.getById(tenant.getOfficialGroupId()));
+            if (configured != null) {
+                return new OfficialChannelResp(tenant.getOfficialRoomId(), tenant.getOfficialGroupId());
+            }
+            log.warn("租户配置的官方频道已失效 tenantId={} roomId={} groupId={}，将复用或重建",
+                    tenantId, tenant.getOfficialRoomId(), tenant.getOfficialGroupId());
         }
         String name = StrUtil.blankToDefault(tenantName, tenant.getName());
         String channelName = buildChannelName(name);

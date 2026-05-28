@@ -14,7 +14,6 @@
         </p>
         <p v-else-if="part.type === 'number'" class="text-#fbb160">{{ part.text }}</p>
       </div>
-      <img class="size-18px" src="/emoji/party-popper.webp" alt="" />
     </div>
   </main>
 </template>

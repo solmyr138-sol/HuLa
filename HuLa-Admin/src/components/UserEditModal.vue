@@ -13,7 +13,7 @@
       <n-form-item label="状态">
         <n-select v-model:value="form.state" :options="stateOptions" />
       </n-form-item>
-      <n-divider>登录密码（HuLa 客户端）</n-divider>
+      <n-divider>登录密码（企业快书客户端）</n-divider>
       <n-form-item label="新密码">
         <n-input v-model:value="form.password" type="password" show-password-on="click" placeholder="留空则不修改" />
       </n-form-item>

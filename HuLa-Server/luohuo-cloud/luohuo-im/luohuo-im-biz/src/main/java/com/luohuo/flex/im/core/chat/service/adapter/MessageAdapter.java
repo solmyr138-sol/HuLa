@@ -146,13 +146,13 @@ public class MessageAdapter {
 		return chatMessageReq;
 	}
 
-	public static ChatMessageReq buildAgreeMsg4Group(Long roomId, Long count, String userName) {
+	public static ChatMessageReq buildAgreeMsg4Group(Long roomId, String userName) {
 		ChatMessageReq chatMessageReq = new ChatMessageReq();
 		chatMessageReq.setRoomId(roomId);
 		chatMessageReq.setMsgType(MessageTypeEnum.BOT.getType());
 		chatMessageReq.setSkip(true);
 		TextMsgReq textMsgReq = new TextMsgReq();
-		textMsgReq.setContent(String.format("欢迎[%s]第%d位加入HuLa", userName, count));
+		textMsgReq.setContent(String.format("欢迎[%s]", userName));
 		chatMessageReq.setBody(textMsgReq);
 		return chatMessageReq;
 	}

@@ -261,7 +261,7 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
 
         String account = accountGenerator.generateAccountByUserId(defUser.getId());
         if (useGeneratedNick) {
-            defUser.setNickName("HuLa用户_" + account.substring(account.length() - 6));
+            defUser.setNickName("企业快书用户_" + account.substring(account.length() - 6));
         }
 
         defUser.setUsername(account);

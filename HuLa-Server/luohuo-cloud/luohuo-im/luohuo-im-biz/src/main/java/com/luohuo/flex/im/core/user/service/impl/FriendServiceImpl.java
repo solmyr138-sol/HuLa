@@ -51,7 +51,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -186,11 +185,10 @@ public class FriendServiceImpl implements FriendService, InitializingBean {
 		createFriend(roomFriend.getRoomId(), uid, DefValConstants.DEF_BOT_ID);
 		// 发送一条同意消息。。我们已经是好友了，开始聊天吧
 		chatService.sendMsg(MessageAdapter.buildAgreeMsg(roomFriend.getRoomId(), true), uid);
-		// 系统账号在群内发送一条欢迎消息
+		// 系统账号在官方频道群内发送欢迎消息（仅展示「欢迎{昵称}」）
 		SummeryInfoDTO user = userSummaryCache.get(uid);
-		Long total = cachePlusOps.inc("luohuo:user:total_count", 0, TimeUnit.DAYS); // 查询系统总注册人员
 		Long roomId = welcomeGroupRoomId != null ? welcomeGroupRoomId : DefValConstants.DEF_ROOM_ID;
-		chatService.sendMsg(MessageAdapter.buildAgreeMsg4Group(roomId, total, user.getName()), DefValConstants.DEF_BOT_ID);
+		chatService.sendMsg(MessageAdapter.buildAgreeMsg4Group(roomId, user.getName()), DefValConstants.DEF_BOT_ID);
 	}
 
     /**
