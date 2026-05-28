@@ -38,12 +38,13 @@
 
 <script setup lang="ts">
 import { h, onMounted, reactive, ref } from 'vue'
-import { NButton, NSpace, useMessage, type DataTableColumns } from 'naive-ui'
+import { NButton, NSpace, useDialog, useMessage, type DataTableColumns } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { api, type DefTenant } from '../api'
 
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const keyword = ref('')
 const loading = ref(false)
 const rows = ref<DefTenant[]>([])
@@ -87,7 +88,7 @@ const columns: DataTableColumns<DefTenant> = [
   {
     title: '操作',
     key: 'op',
-    width: 200,
+    width: 260,
     render: (row) =>
       h(NSpace, null, {
         default: () => [
@@ -112,11 +113,44 @@ const columns: DataTableColumns<DefTenant> = [
               }
             },
             { default: () => '重置邀请码' }
+          ),
+          h(
+            NButton,
+            {
+              text: true,
+              type: 'error',
+              onClick: () => removeTenant(row)
+            },
+            { default: () => '删除企业' }
           )
         ]
       })
   }
 ]
+
+function removeTenant(row: DefTenant) {
+  dialog.warning({
+    title: '确认删除企业',
+    content: `企业「${row.name}」将被删除，删除后不可恢复。是否继续？`,
+    positiveText: '确认删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await api<boolean>(`/base/platform/tenant/${row.id}`, { method: 'DELETE' })
+        message.success('企业已删除')
+        if (rows.value.length === 1 && pagination.page > 1) {
+          pagination.page -= 1
+        }
+        load()
+        return true
+      } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error('删除失败')
+        message.error(err.message || '删除企业失败')
+        return false
+      }
+    }
+  })
+}
 
 function openEdit(row: DefTenant) {
   editForm.value = {

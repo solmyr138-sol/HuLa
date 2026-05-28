@@ -50,4 +50,9 @@ public class DefUserApiFallback implements DefUserApi {
     public R<Boolean> updateState(Long id, Boolean state) {
         throw BizException.wrap("更新用户状态失败，base 服务不可用");
     }
+
+    @Override
+    public R<Boolean> updateMobile(Long id, String mobile) {
+        return R.fail("同步手机号失败，base 服务不可用");
+    }
 }

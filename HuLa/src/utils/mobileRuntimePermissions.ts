@@ -9,7 +9,7 @@ import { isAndroid, isMobile } from '@/utils/PlatformConstants'
 const PERMISSIONS_PLUGIN = 'plugin:hula-permissions'
 const SESSION_KEY = 'hula-mobile-runtime-permissions-v1'
 
-type RuntimePermissionAlias = 'camera' | 'microphone' | 'media' | 'storageLegacy'
+type RuntimePermissionAlias = 'camera' | 'microphone' | 'media' | 'mediaVideo' | 'storageLegacy'
 
 type RuntimePermissionMap = Partial<Record<RuntimePermissionAlias, PermissionState>>
 
@@ -41,11 +41,15 @@ async function requestCameraViaScanner() {
 }
 
 function resolvePermissionOrder(): RuntimePermissionAlias[] {
-  const order: RuntimePermissionAlias[] = ['camera', 'microphone', 'media']
+  const order: RuntimePermissionAlias[] = ['camera', 'microphone', 'media', 'mediaVideo']
   if (isAndroid()) {
     order.push('storageLegacy')
   }
   return order
+}
+
+function hasMediaAccess(map: RuntimePermissionMap): boolean {
+  return isGranted(map.media) || isGranted(map.storageLegacy)
 }
 
 /**
@@ -118,15 +122,13 @@ export async function ensureMediaPermission(): Promise<boolean> {
   if (!isMobile()) return true
   try {
     const map = await checkHulaPermissions()
-    if (isGranted(map.media) && (isGranted(map.storageLegacy) || !isAndroid())) {
-      return true
-    }
+    if (hasMediaAccess(map)) return true
     const toRequest: RuntimePermissionAlias[] = []
     if (needsPrompt(map.media)) toRequest.push('media')
     if (isAndroid() && needsPrompt(map.storageLegacy)) toRequest.push('storageLegacy')
-    if (!toRequest.length) return isGranted(map.media) || isGranted(map.storageLegacy)
+    if (!toRequest.length) return hasMediaAccess(map)
     const next = await requestHulaPermissions(toRequest)
-    return isGranted(next.media) || isGranted(next.storageLegacy)
+    return hasMediaAccess(next)
   } catch (error) {
     console.warn('[mobileRuntimePermissions] media request failed:', error)
   }

@@ -81,7 +81,7 @@ public class DefTenantApplicationRelManagerImpl extends SuperManagerImpl<DefTena
         if (CollUtil.isEmpty(ids)) {
             return;
         }
-        remove(Wraps.<DefTenantApplicationRel>lbQ().in(DefTenantApplicationRel::getTenantId, ids));
+        baseMapper.physicalDeleteByTenantIds(ids);
 
         cacheOps.del(ids.stream().map(TenantApplicationCacheKeyBuilder::builder).toList());
     }

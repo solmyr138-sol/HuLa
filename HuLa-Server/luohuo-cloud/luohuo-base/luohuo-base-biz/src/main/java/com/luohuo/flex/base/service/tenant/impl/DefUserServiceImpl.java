@@ -198,6 +198,20 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
         return plainPassword;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeUsersByTenantIds(List<Long> tenantIds) {
+        if (tenantIds == null || tenantIds.isEmpty()) {
+            return;
+        }
+        List<DefUser> users = superManager.list(Wraps.<DefUser>lbQ().in(DefUser::getTenantId, tenantIds));
+        if (users.isEmpty()) {
+            return;
+        }
+        List<Long> userIds = users.stream().map(DefUser::getId).toList();
+        superManager.removeByIds(userIds);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public DefUser registerImByMobile(DefUser defUser) {
@@ -318,6 +332,23 @@ public class DefUserServiceImpl extends SuperCacheServiceImpl<DefUserManager, Lo
             } catch (Exception ignored) {}
         }
         return superManager.updateById(DefUser.builder().state(state).id(id).build());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean updateMobile(Long id, String mobile) {
+        ArgumentAssert.notNull(id, "用户ID不能为空");
+        if (StrUtil.isBlank(mobile)) {
+            return true;
+        }
+        DefUser user = superManager.getById(id);
+        ArgumentAssert.notNull(user, "用户不存在");
+        DefUser update = new DefUser();
+        update.setId(id);
+        update.setMobile(mobile.trim());
+        superManager.updateById(update);
+        superManager.delUserCache(Collections.singletonList(id));
+        return true;
     }
 
     @Override

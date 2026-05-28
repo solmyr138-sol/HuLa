@@ -62,4 +62,7 @@ public interface DefUserApi {
 
     @PutMapping("/defUser/updateState")
     R<Boolean> updateState(@RequestParam("id") Long id, @RequestParam("state") Boolean state);
+
+    @PutMapping("/defUser/updateMobile")
+    R<Boolean> updateMobile(@RequestParam("id") Long id, @RequestParam(value = "mobile", required = false) String mobile);
 }

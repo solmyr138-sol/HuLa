@@ -1,7 +1,9 @@
 <template>
   <n-config-provider :locale="zhCN">
     <n-message-provider>
-      <router-view />
+      <n-dialog-provider>
+        <router-view />
+      </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
 </template>

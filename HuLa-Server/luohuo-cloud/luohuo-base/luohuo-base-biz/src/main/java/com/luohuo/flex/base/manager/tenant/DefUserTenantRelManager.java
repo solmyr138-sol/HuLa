@@ -23,4 +23,9 @@ public interface DefUserTenantRelManager extends SuperCacheManager<DefUserTenant
      * @return
      */
     List<DefUserTenantRelResultVO> listEmployeeByUserId(Long userId);
+
+    /**
+     * 按租户删除用户-企业关联
+     */
+    void deleteByTenantIds(List<Long> tenantIds);
 }

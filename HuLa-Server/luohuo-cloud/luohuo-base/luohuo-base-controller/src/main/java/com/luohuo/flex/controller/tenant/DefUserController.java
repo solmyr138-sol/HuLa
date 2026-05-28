@@ -137,6 +137,14 @@ public class DefUserController extends SuperExcelController<DefUserService, Long
 		return success(superService.updateState(id, state));
 	}
 
+	@Operation(summary = "更新手机号", description = "IM 修改资料时同步 def_user 手机号")
+	@PutMapping("/updateMobile")
+	public R<Boolean> updateMobile(
+			@NotNull(message = "请选择用户") @RequestParam Long id,
+			@RequestParam(required = false) String mobile) {
+		return success(superService.updateMobile(id, mobile));
+	}
+
 	@Operation(summary = "查询所有的用户id", description = "查询所有的用户id")
 	@PostMapping(value = "/findAllUserId")
 	@WebLog("查询所有的用户id")

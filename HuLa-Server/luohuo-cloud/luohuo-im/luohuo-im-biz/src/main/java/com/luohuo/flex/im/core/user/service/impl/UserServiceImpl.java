@@ -56,8 +56,8 @@ import com.luohuo.flex.im.core.policy.dao.TenantPolicyWhitelistDao;
 import com.luohuo.flex.im.core.user.service.FeedService;
 import com.luohuo.flex.im.core.user.service.adapter.UserAdapter;
 import com.luohuo.flex.im.core.user.service.cache.UserSummaryCache;
-import com.luohuo.flex.base.entity.tenant.DefUser;
-import com.luohuo.flex.base.service.tenant.DefUserService;
+import com.luohuo.basic.base.R;
+import com.luohuo.flex.im.api.DefUserApi;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
     private final UserSummaryCache userSummaryCache;
     private final SensitiveWordBs sensitiveWordBs;
     private final FeedService feedService;
-	private final DefUserService defUserService;
+	private final DefUserApi defUserApi;
 	private final EnterpriseOfficialChannelService enterpriseOfficialChannelService;
 	private final TenantPolicyWhitelistDao tenantPolicyWhitelistDao;
 
@@ -183,10 +183,11 @@ public class UserServiceImpl implements UserService {
 		userDao.updateById(update);
 
 		if (StrUtil.isNotBlank(req.getPhone()) && user.getUserId() != null) {
-			DefUser defUser = new DefUser();
-			defUser.setId(user.getUserId());
-			defUser.setMobile(StrUtil.trim(req.getPhone()));
-			defUserService.getSuperManager().updateById(defUser);
+			R<Boolean> syncR = defUserApi.updateMobile(user.getUserId(), StrUtil.trim(req.getPhone()));
+			if (syncR == null || !Boolean.TRUE.equals(syncR.getData())) {
+				log.warn("同步 def_user 手机号未成功 defUserId={} msg={}", user.getUserId(),
+						syncR != null ? syncR.getMsg() : "null");
+			}
 		}
 		// 删除缓存
 		userCache.delete(uid);

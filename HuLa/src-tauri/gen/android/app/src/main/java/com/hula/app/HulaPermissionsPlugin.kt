@@ -20,12 +20,14 @@ import app.tauri.plugin.Plugin
             strings = [Manifest.permission.RECORD_AUDIO],
             alias = "microphone"
         ),
+        // 仅图片：与「选图/换头像」一致；勿与 VIDEO 绑在同一 alias，否则只授相册图时整组被判 denied
         Permission(
-            strings = [
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.READ_MEDIA_VIDEO
-            ],
+            strings = [Manifest.permission.READ_MEDIA_IMAGES],
             alias = "media"
+        ),
+        Permission(
+            strings = [Manifest.permission.READ_MEDIA_VIDEO],
+            alias = "mediaVideo"
         ),
         Permission(
             strings = [Manifest.permission.READ_EXTERNAL_STORAGE],

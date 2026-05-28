@@ -1,6 +1,8 @@
 package com.luohuo.flex.base.manager.tenant.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.luohuo.basic.base.manager.impl.SuperCacheManagerImpl;
+import com.luohuo.basic.database.mybatis.conditions.Wraps;
 import com.luohuo.basic.model.cache.CacheKeyBuilder;
 import com.luohuo.flex.base.entity.tenant.DefUserTenantRel;
 import com.luohuo.flex.base.manager.tenant.DefUserTenantRelManager;
@@ -31,5 +33,13 @@ public class DefUserTenantRelManagerImpl extends SuperCacheManagerImpl<DefUserTe
     @Override
     public List<DefUserTenantRelResultVO> listEmployeeByUserId(Long userId) {
         return baseMapper.listEmployeeByUserId(userId);
+    }
+
+    @Override
+    public void deleteByTenantIds(List<Long> tenantIds) {
+        if (CollUtil.isEmpty(tenantIds)) {
+            return;
+        }
+        remove(Wraps.<DefUserTenantRel>lbQ().in(DefUserTenantRel::getTenantId, tenantIds));
     }
 }

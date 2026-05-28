@@ -162,6 +162,17 @@ public class PlatformTenantController {
         return R.success(code);
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除企业")
+    @WebLog("平台删除企业")
+    public R<Boolean> delete(@PathVariable Long id) {
+        ArgumentAssert.notNull(id, "企业ID不能为空");
+        ArgumentAssert.isTrue(id > 1L, "默认租户不可删除");
+        DefTenant tenant = defTenantService.getById(id);
+        ArgumentAssert.notNull(tenant, "企业不存在");
+        return R.success(defTenantService.delete(List.of(id)));
+    }
+
     @GetMapping("/stats")
     @Operation(summary = "平台概览统计")
     public R<PlatformStatsResp> stats() {

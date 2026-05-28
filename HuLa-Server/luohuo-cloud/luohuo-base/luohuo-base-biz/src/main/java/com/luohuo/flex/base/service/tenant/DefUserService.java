@@ -160,6 +160,11 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
     Boolean updateState(Long id, Boolean state);
 
     /**
+     * 更新手机号（IM 修改资料时同步 def_user）
+     */
+    Boolean updateMobile(Long id, String mobile);
+
+    /**
      * 修改头像
      *
      * @param data 头像信息
@@ -236,6 +241,13 @@ public interface DefUserService extends SuperCacheService<Long, DefUser> {
      * @return 明文初始密码（仅创建时展示一次）
      */
     String createEnterpriseAdminUser(Long tenantId, String inviteCode);
+
+    /**
+     * 删除指定租户下的全部用户（逻辑删除 def_user）
+     *
+     * @param tenantIds 租户 ID 列表
+     */
+    void removeUsersByTenantIds(List<Long> tenantIds);
 
     /**
      * 分页查询用户

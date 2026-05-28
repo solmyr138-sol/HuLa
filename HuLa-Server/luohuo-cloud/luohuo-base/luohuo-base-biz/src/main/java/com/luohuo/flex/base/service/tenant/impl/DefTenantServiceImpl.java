@@ -9,7 +9,9 @@ import com.luohuo.flex.base.entity.tenant.DefTenant;
 import com.luohuo.flex.base.enumeration.tenant.DefTenantRegisterTypeEnum;
 import com.luohuo.flex.base.manager.application.DefTenantApplicationRelManager;
 import com.luohuo.flex.base.manager.tenant.DefTenantManager;
+import com.luohuo.flex.base.manager.tenant.DefUserTenantRelManager;
 import com.luohuo.flex.base.service.tenant.DefTenantService;
+import com.luohuo.flex.base.service.tenant.DefUserService;
 import com.luohuo.flex.base.vo.result.user.DefTenantResultVO;
 import com.luohuo.flex.base.vo.save.tenant.DefTenantSaveVO;
 import com.luohuo.flex.common.constant.AppendixType;
@@ -37,6 +39,8 @@ import java.util.List;
 public class DefTenantServiceImpl extends SuperCacheServiceImpl<DefTenantManager, Long, DefTenant> implements DefTenantService {
     private final AppendixService appendixService;
     private final DefTenantApplicationRelManager defTenantApplicationRelManager;
+    private final DefUserService defUserService;
+    private final DefUserTenantRelManager defUserTenantRelManager;
 
     @Override
     public boolean check(String name) {
@@ -86,6 +90,8 @@ public class DefTenantServiceImpl extends SuperCacheServiceImpl<DefTenantManager
     @Transactional(rollbackFor = Exception.class)
     public Boolean delete(List<Long> ids) {
         appendixService.removeByBizId(ids, AppendixType.System.DEF__TENANT__LOGO);
+        defUserTenantRelManager.deleteByTenantIds(ids);
+        defUserService.removeUsersByTenantIds(ids);
 //        defTenantDatasourceConfigRelManager.remove(Wraps.<DefTenantDatasourceConfigRel>lbQ().in(DefTenantDatasourceConfigRel::getTenantId, ids));
         defTenantApplicationRelManager.deleteByTenantId(ids);
 //        defTenantResourceRelManager.deleteByTenantId(ids);
@@ -96,6 +102,8 @@ public class DefTenantServiceImpl extends SuperCacheServiceImpl<DefTenantManager
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteAll(List<Long> ids) {
         appendixService.removeByBizId(ids, AppendixType.System.DEF__TENANT__LOGO);
+        defUserTenantRelManager.deleteByTenantIds(ids);
+        defUserService.removeUsersByTenantIds(ids);
         removeByIds(ids);
 //        defTenantDatasourceConfigRelManager.remove(Wraps.<DefTenantDatasourceConfigRel>lbQ().in(DefTenantDatasourceConfigRel::getTenantId, ids));
         defTenantApplicationRelManager.deleteByTenantId(ids);
