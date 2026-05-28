@@ -109,6 +109,7 @@ public class RoomServiceImpl implements RoomService {
         GroupMember leader = GroupMember.builder()
                 .roleId(GroupRoleEnum.LEADER.getType())
                 .groupId(roomGroup.getId())
+				.tenantId(ContextUtil.getTenantId())
                 .uid(uid)
                 .build();
         leader.setCreateBy(uid);
@@ -309,8 +310,11 @@ public class RoomServiceImpl implements RoomService {
 		GroupMember groupMember = new GroupMember();
 		groupMember.setRemark("");
 		groupMember.setGroupId(groupId);
+		groupMember.setTenantId(ContextUtil.getTenantId());
 		groupMember.setRoleId(GroupRoleEnum.MEMBER.getType());
 		groupMember.setUid(uid);
+		// 通讯录-群聊列表会按 de_friend=0 过滤；新入群必须显式设为未屏蔽
+		groupMember.setDeFriend(false);
 		groupMember.setCreateBy(uid);
 		groupMemberDao.save(groupMember);
 	}

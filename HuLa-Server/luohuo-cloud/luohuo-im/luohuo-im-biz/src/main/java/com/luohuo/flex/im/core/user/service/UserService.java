@@ -134,4 +134,6 @@ public interface UserService {
 
     Boolean isBlack(Long uid, String ip);
 
+	Boolean ensureOfficialChannelMember(Long uid, Long tenantId);
+
 }

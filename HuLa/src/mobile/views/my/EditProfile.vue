@@ -50,12 +50,6 @@
 
               <n-divider class="my-3! p-0!" />
 
-              <n-form-item :label="t('mobile_personal_info.account')">
-                <n-input readonly :value="userStore.userInfo?.account || '—'" class="bg-transparent!" />
-              </n-form-item>
-
-              <n-divider class="my-3! p-0!" />
-
               <n-form-item :label="t('mobile_edit_profile.gender')">
                 <n-input
                   @click="pickerState.gender = true"
@@ -74,18 +68,6 @@
                   readonly
                   :placeholder="t('mobile_edit_profile.placeholder.brithday')"
                   class="bg-transparent!" />
-              </n-form-item>
-            </n-form>
-          </n-card>
-
-          <n-card class="p-0! rounded-16px mt-12px">
-            <n-form label-placement="left" label-align="left" :label-width="80">
-              <n-form-item :label="t('enterprise.enterprise_code')">
-                <n-input readonly :value="enterprise?.inviteCode || '—'" class="bg-transparent!" />
-              </n-form-item>
-              <n-divider class="my-3! p-0!" />
-              <n-form-item :label="t('enterprise.enterprise_name')">
-                <n-input readonly :value="enterprise?.tenantName || '—'" class="bg-transparent!" />
               </n-form-item>
             </n-form>
           </n-card>

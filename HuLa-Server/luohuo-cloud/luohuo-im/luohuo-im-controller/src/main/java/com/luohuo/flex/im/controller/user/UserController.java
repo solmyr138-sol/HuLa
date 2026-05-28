@@ -76,13 +76,11 @@ public class UserController {
 	}
 
     @PostMapping("/register")
-    @TenantIgnore
     public R<Boolean> register(@Valid @RequestBody UserRegisterVo userRegisterVo){
         return R.success(userService.register(userRegisterVo));
     }
 
     @PostMapping("/bindOAuth")
-    @TenantIgnore
     public R<Boolean> bindOAuth(@RequestBody UserRegisterVo userRegisterVo){
         return R.success(userService.bindOAuth(userRegisterVo));
     }
@@ -173,5 +171,12 @@ public class UserController {
                               @RequestParam(value = "ip", required = false) String ip) {
         return R.success(userService.isBlack(uid, ip));
     }
+
+	@PostMapping("/ensureOfficialChannelMember")
+	@TenantIgnore
+	@Operation(summary ="补齐用户企业官方频道成员关系")
+	public R<Boolean> ensureOfficialChannelMember(@RequestParam("uid") Long uid, @RequestParam("tenantId") Long tenantId) {
+		return R.success(userService.ensureOfficialChannelMember(uid, tenantId));
+	}
 
 }

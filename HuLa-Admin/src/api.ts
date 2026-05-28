@@ -53,10 +53,12 @@ export type LoginResult = {
   token: string
   refreshToken?: string
   uid?: number
+  tenantId?: number
 }
 
-/** 租户 IM 运营后台：与客户端相同，使用 IM 登录（systemType=2），账号为手机号 */
-export async function loginAdmin(account: string, password: string, tenantId = '1') {
+/** 租户 IM 运营后台：仅需账号+密码；企业管理员账号会自动解析企业ID */
+export async function loginAdmin(account: string, password: string) {
+  const tenantId = localStorage.getItem('tenantId') || '1'
   const basic = btoa(`${oauthClientId}:${oauthClientSecret}`)
   const res = await fetch(`${base}/oauth/anyTenant/login`, {
     method: 'POST',
@@ -78,7 +80,7 @@ export async function loginAdmin(account: string, password: string, tenantId = '
   if (!apiSuccess(json)) {
     const hint =
       json.code === -6
-        ? '账号或登录类型不正确：请用 IM 注册手机号登录，不要用 admin'
+        ? '账号或登录类型不正确：请使用 IM 账号或 admin_邀请码'
         : json.msg
     throw new Error(hint || '登录失败')
   }

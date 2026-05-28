@@ -54,4 +54,9 @@ public class ImUserApiFallback implements ImUserApi {
     public R<Boolean> isBlack(Long uid, String ip) {
         return R.success(false);
     }
+
+	@Override
+	public R<Boolean> ensureOfficialChannelMember(Long uid, Long tenantId) {
+		return R.success(false);
+	}
 }

@@ -107,10 +107,9 @@ public class PlatformTenantController {
         String adminUsername = "admin_" + inviteCode;
         String adminPassword = defUserService.createEnterpriseAdminUser(tenant.getId(), inviteCode);
         DefUser adminUser = defUserService.getUserByUsername(2, adminUsername);
-        if (imReachable) {
-            trySyncImUser(adminUser, warnings);
-        } else {
-            warnings.add("企业 IM 账号未同步（luohuo-im-server 未就绪），管理账号密码仍可用于企业后台登录");
+        trySyncImUser(adminUser, warnings);
+        if (!imReachable && warnings.stream().noneMatch(w -> w.contains("IM 账号"))) {
+            warnings.add("创建时 IM 服务探测未通过，已尝试同步企业管理员；若失败请启动 luohuo-im-server 后调用「补同步 IM 管理员」");
         }
 
         DefTenant saved = defTenantService.getById(tenant.getId());
@@ -160,6 +159,22 @@ public class PlatformTenantController {
         tenant.setInviteCode(code);
         defTenantService.updateById(tenant);
         return R.success(code);
+    }
+
+    @PostMapping("/{id}/sync-admin-im")
+    @Operation(summary = "补同步企业管理员 IM 账号")
+    @WebLog("平台补同步企业管理员IM")
+    public R<Boolean> syncAdminIm(@PathVariable Long id) {
+        DefTenant tenant = defTenantService.getById(id);
+        ArgumentAssert.notNull(tenant, "企业不存在");
+        ArgumentAssert.notEmpty(tenant.getInviteCode(), "企业邀请码为空");
+        String adminUsername = "admin_" + tenant.getInviteCode();
+        DefUser adminUser = defUserService.getUserByUsername(2, adminUsername);
+        ArgumentAssert.notNull(adminUser, "企业管理员 {} 不存在", adminUsername);
+        List<String> warnings = new ArrayList<>();
+        trySyncImUser(adminUser, warnings);
+        ArgumentAssert.isTrue(warnings.isEmpty(), warnings.isEmpty() ? "同步失败" : warnings.get(0));
+        return R.success(true);
     }
 
     @DeleteMapping("/{id}")

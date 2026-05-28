@@ -6,9 +6,9 @@
 
       <n-form>
 
-        <n-form-item label="手机号">
+        <n-form-item label="账号">
 
-          <n-input v-model:value="account" placeholder="如 13275346112（IM 注册手机号）" @keyup.enter="enter" />
+          <n-input v-model:value="account" placeholder="IM 手机号，或 admin_邀请码（企业管理员）" @keyup.enter="enter" />
 
         </n-form-item>
 
@@ -22,7 +22,7 @@
 
       </n-form>
 
-      <p class="hint">与 HuLa 客户端相同：填 IM 注册手机号 + 密码。不要填 admin / Nacos 账号。</p>
+      <p class="hint">仅需账号+密码。若账号是 admin_邀请码，系统会自动识别企业，无需手动输入企业 ID。</p>
 
     </n-card>
 
@@ -73,6 +73,8 @@ async function enter() {
     const result = await loginAdmin(account.value.trim(), password.value)
 
     localStorage.setItem('token', result.token)
+
+    localStorage.setItem('tenantId', String(result.tenantId ?? localStorage.getItem('tenantId') ?? '1'))
 
     if (result.uid) localStorage.setItem('adminUid', String(result.uid))
 

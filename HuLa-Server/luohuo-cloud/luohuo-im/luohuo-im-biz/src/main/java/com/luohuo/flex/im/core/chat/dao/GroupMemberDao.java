@@ -99,6 +99,9 @@ public class GroupMemberDao extends ServiceImpl<GroupMemberMapper, GroupMember> 
 		return lambdaQuery()
 				.eq(GroupMember::getGroupId, groupId)
 				.eq(GroupMember::getUid, uid)
+				// 数据异常场景下可能存在重复 (group_id, uid)，避免 selectOne 直接抛 TooManyResults
+				.orderByDesc(GroupMember::getId)
+				.last("limit 1")
 				.one();
 	}
 

@@ -30,6 +30,9 @@ public class LoginResultVO {
 	@Schema(description = "用户id")
 	private Long uid;
 
+	@Schema(description = "租户ID（IM 登录时用于管理后台请求头 tenant-id）")
+	private Long tenantId;
+
     @Schema(description = "随机数")
     private String uuid;
 

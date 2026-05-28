@@ -114,7 +114,8 @@ public class UserServiceImpl implements UserService {
 	public Long getUIdByUserId(Long defUserId, Long tenantId) {
 		try {
 			ContextUtil.setTenantId(tenantId);
-			return defUserCache.getUserInfo(defUserId).getId();
+			User user = defUserCache.getUserInfo(defUserId);
+			return user != null ? user.getId() : null;
 		} finally {
 			ContextUtil.setTenantId(null);
 		}
@@ -429,11 +430,10 @@ public class UserServiceImpl implements UserService {
 		Long officialRoomId = channel.getRoomId();
 		Long officialGroupId = channel.getGroupId();
 
-		// 注入企业官方频道（默认租户仍为全局 Room 1）
-		cachePlusOps.sAdd(PresenceCacheKeyBuilder.groupMembersKey(officialRoomId), newUser.getId());
-		cachePlusOps.sAdd(PresenceCacheKeyBuilder.userGroupsKey(newUser.getId()), officialRoomId);
+		// 注册后必须落库成员关系，否则后台成员数始终为 0
+		enterpriseOfficialChannelService.ensureUserInOfficialChannel(userRegisterVo.getTenantId(), newUser.getId());
 
-		// 加上系统机器人好友
+		// 加上系统机器人好友（依赖官方频道房间/群信息）
 		roomAppService.createSystemFriend(officialRoomId, officialGroupId, newUser.getId());
 
         // 发布用户注册消息
@@ -630,4 +630,14 @@ public class UserServiceImpl implements UserService {
         boolean ipHit = StrUtil.isNotBlank(ip) && ipSet != null && ipSet.contains(ip);
         return uidHit || ipHit;
     }
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public Boolean ensureOfficialChannelMember(Long uid, Long tenantId) {
+		if (uid == null || tenantId == null) {
+			return false;
+		}
+		enterpriseOfficialChannelService.ensureUserInOfficialChannel(tenantId, uid);
+		return true;
+	}
 }

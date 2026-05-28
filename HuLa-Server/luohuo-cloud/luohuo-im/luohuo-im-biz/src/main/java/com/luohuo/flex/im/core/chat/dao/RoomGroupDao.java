@@ -28,6 +28,9 @@ public class RoomGroupDao extends ServiceImpl<RoomGroupMapper, RoomGroup> {
     public RoomGroup getByRoomId(Long roomId) {
         return lambdaQuery()
                 .eq(RoomGroup::getRoomId, roomId)
+                // 数据异常场景下可能存在重复 room_id，避免 selectOne 直接抛 TooManyResults
+                .orderByDesc(RoomGroup::getId)
+                .last("limit 1")
                 .one();
     }
 

@@ -62,4 +62,7 @@ public interface ImUserApi {
 	@GetMapping("/user/black/isBlack")
 	R<Boolean> isBlack(@RequestParam(value = "uid", required = false) Long uid,
 	                   @RequestParam(value = "ip", required = false) String ip);
+
+	@PostMapping("/user/ensureOfficialChannelMember")
+	R<Boolean> ensureOfficialChannelMember(@RequestParam("uid") Long uid, @RequestParam("tenantId") Long tenantId);
 }

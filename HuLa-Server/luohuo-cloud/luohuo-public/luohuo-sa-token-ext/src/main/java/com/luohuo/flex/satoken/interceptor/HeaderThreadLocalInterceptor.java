@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import cn.dev33.satoken.session.SaSession;
+import cn.dev33.satoken.stp.StpUtil;
 import org.slf4j.MDC;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
@@ -50,6 +52,33 @@ public class HeaderThreadLocalInterceptor implements AsyncHandlerInterceptor {
 
         String userId = WebUtils.getHeader(request, ContextConstants.JWT_KEY_USER_ID);
         String uid = WebUtils.getHeader(request, ContextConstants.U_ID_HEADER);
+
+        // 兜底：如果网关未注入 uid 等请求头（例如客户端直连服务），尝试用 Token 解析 Sa-Token Session 补齐
+        if ((uid == null || uid.isBlank())) {
+            try {
+                String token = WebUtils.getHeader(request, ContextConstants.TOKEN_KEY);
+                if (token != null && !token.isBlank()) {
+                    SaSession tokenSession = StpUtil.getTokenSessionByToken(token);
+                    if (tokenSession != null) {
+                        Long sessionUid = tokenSession.getLong(ContextConstants.JWT_KEY_U_ID);
+                        if (sessionUid != null && sessionUid > 0) {
+                            uid = String.valueOf(sessionUid);
+                        }
+                        Long sessionUserId = tokenSession.getLong(ContextConstants.JWT_KEY_USER_ID);
+                        if ((userId == null || userId.isBlank()) && sessionUserId != null && sessionUserId > 0) {
+                            userId = String.valueOf(sessionUserId);
+                        }
+                        Long sessionTenantId = tokenSession.getLong(ContextConstants.HEADER_TENANT_ID);
+                        if (sessionTenantId != null && sessionTenantId > 0) {
+                            ContextUtil.setTenantId(sessionTenantId);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // best-effort fallback, never break request
+            }
+        }
+
         MDC.put(ContextConstants.USER_ID_HEADER, userId);
         MDC.put(ContextConstants.U_ID_HEADER, uid);
         ContextUtil.setUserId(userId);

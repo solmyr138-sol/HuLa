@@ -94,12 +94,12 @@
                               :size="44"
                               class="grayscale"
                               :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                              :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
+                              :src="AvatarUtils.getAvatarUrl(getContactUserInfo(item.uid)?.avatar || '')"
                               fallback-src="/logo.png" />
 
                             <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
                               <span class="text-14px leading-tight flex-1 truncate">
-                                {{ groupStore.getUserInfo(item.uid)?.name }}
+                                {{ getContactDisplayName(item.uid, item.remark) }}
                               </span>
 
                               <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
@@ -274,7 +274,23 @@ const sortedContacts = computed(() => {
 
 const { preloadChatRoom } = useMessage()
 
-const isBotUser = (uid: string) => groupStore.getUserInfo(uid)?.account === UserType.BOT
+const getContactUserInfo = (uid: string) => groupStore.getUserInfo(uid)
+
+const getContactDisplayName = (uid: string, remark?: string) => {
+  const trimmedRemark = remark?.trim()
+  if (trimmedRemark) {
+    return trimmedRemark
+  }
+
+  const profileName = getContactUserInfo(uid)?.name?.trim()
+  if (profileName) {
+    return profileName
+  }
+
+  return `用户${uid}`
+}
+
+const isBotUser = (uid: string) => getContactUserInfo(uid)?.account === UserType.BOT
 
 /**
  *
@@ -316,7 +332,10 @@ const handleSelect = (event: MouseEvent) => {
 
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
-  const userInfo = groupStore.getUserInfo(uid)!
+  const userInfo = getContactUserInfo(uid)
+  if (!userInfo) {
+    return null
+  }
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
@@ -331,6 +350,7 @@ onMounted(async () => {
   })
   try {
     await contactStore.getContactList(true)
+    await groupStore.setGroupDetails()
     await contactStore.getApplyPage('friend', false)
   } catch (error) {
     console.log('请求好友申请列表失败')

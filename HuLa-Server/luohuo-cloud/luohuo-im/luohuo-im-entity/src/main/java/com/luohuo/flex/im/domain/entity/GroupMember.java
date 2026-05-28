@@ -1,5 +1,6 @@
 package com.luohuo.flex.im.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.luohuo.basic.base.entity.Entity;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,12 @@ public class GroupMember extends Entity<Long> {
      * 群组id
      */
     private Long groupId;
+
+	/**
+	 * 租户ID（用于多租户隔离）
+	 */
+	@TableField("tenant_id")
+	private Long tenantId;
 
     /**
      * 成员uid

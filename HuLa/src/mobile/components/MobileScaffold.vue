@@ -18,7 +18,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import bgImg from '@/assets/mobile/chat-home/background.webp'
+import bgImg from '@/assets/mobile/chat-home/background-white.svg'
 
 const { background = false, safeArea = true } = defineProps<{
   showFooter?: boolean

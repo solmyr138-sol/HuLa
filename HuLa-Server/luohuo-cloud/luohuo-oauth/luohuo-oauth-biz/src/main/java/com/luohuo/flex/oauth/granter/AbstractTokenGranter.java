@@ -33,6 +33,8 @@ import com.luohuo.flex.oauth.biz.StpInterfaceBiz;
 import com.luohuo.flex.oauth.emuns.LoginEnum;
 import com.luohuo.flex.model.event.UserOnlineEvent;
 import com.luohuo.flex.im.api.ImUserApi;
+import com.luohuo.flex.im.api.vo.UserRegisterVo;
+import com.luohuo.flex.im.enums.UserTypeEnum;
 import com.luohuo.flex.oauth.event.TokenExpireEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -129,8 +131,22 @@ public abstract class AbstractTokenGranter implements TokenGranter {
 		// 7. 查询单位
 		Org org = findOrg(defUser);
 
-		// 8. 查询对应系统中的uid
-		Long uid = findUid(defUser.getId(), defUser.getTenantId(), defUser.getSystemType());
+		// 8. 查询对应系统中的 uid（IM 用户缺失时尝试补同步，避免 NPE 与「服务器异常」）
+		Long uid = findUid(defUser);
+		if (uid == null && LoginEnum.IM.getVal().equals(defUser.getSystemType())) {
+			String msg = "IM 账号未就绪，请确认 IM 服务已启动后重试；新创建的企业管理员首次登录会自动同步";
+			SpringUtils.publishEvent(new LoginEvent(LoginStatusDTO.fail(defUser.getId(), LoginStatusEnum.USER_ERROR, msg)));
+			return R.fail(msg);
+		}
+
+		// 8.0 IM 登录兜底：补齐企业官方频道成员关系（幂等）
+		if (uid != null && LoginEnum.IM.getVal().equals(defUser.getSystemType()) && defUser.getTenantId() != null) {
+			try {
+				imUserApi.ensureOfficialChannelMember(uid, defUser.getTenantId());
+			} catch (Exception e) {
+				log.warn("补齐企业官方频道成员失败 uid={} tenantId={}", uid, defUser.getTenantId(), e);
+			}
+		}
 
 		// 8.1 检查黑名单（UID 或 IP）
 		Boolean black = imUserApi.isBlack(uid, ContextUtil.getIP()).getData();
@@ -157,12 +173,41 @@ public abstract class AbstractTokenGranter implements TokenGranter {
 	 * @param systemType
 	 * @return
 	 */
-	private Long findUid(Long defUid, Long tenantId, Integer systemType) {
-		if(LoginEnum.MANAGER.getVal().equals(systemType)){
-			return baseEmployeeService.getEmployeeByUser(defUid).getId();
-		} else {
-			return imUserApi.findById(defUid, tenantId).getData();
+	private Long findUid(DefUser defUser) {
+		if (LoginEnum.MANAGER.getVal().equals(defUser.getSystemType())) {
+			return baseEmployeeService.getEmployeeByUser(defUser.getId()).getId();
 		}
+		Long uid = imUserApi.findById(defUser.getId(), defUser.getTenantId()).getData();
+		if (uid != null) {
+			return uid;
+		}
+		return ensureImUserOnLogin(defUser);
+	}
+
+	/**
+	 * 平台创建企业时若 IM 未就绪会跳过同步；登录时补建 im_user，避免 def_user 存在却无法登录。
+	 */
+	private Long ensureImUserOnLogin(DefUser defUser) {
+		try {
+			UserRegisterVo vo = new UserRegisterVo();
+			vo.setAccount(defUser.getUsername());
+			vo.setUserId(defUser.getId());
+			vo.setEmail(StrUtil.blankToDefault(defUser.getMobile(), defUser.getUsername()));
+			vo.setName(StrUtil.blankToDefault(defUser.getNickName(), defUser.getUsername()));
+			vo.setSex(defUser.getSex());
+			vo.setAvatar(defUser.getAvatar());
+			vo.setTenantId(defUser.getTenantId());
+			vo.setUserType(UserTypeEnum.NORMAL.getValue());
+			R<Boolean> registerR = imUserApi.register(vo);
+			if (Boolean.TRUE.equals(registerR != null ? registerR.getData() : null)) {
+				return imUserApi.findById(defUser.getId(), defUser.getTenantId()).getData();
+			}
+			log.warn("登录补同步 IM 用户失败 userId={} msg={}", defUser.getId(),
+					registerR != null ? registerR.getMsg() : "无响应");
+		} catch (Exception e) {
+			log.warn("登录补同步 IM 用户异常 userId={}", defUser.getId(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -415,7 +460,7 @@ public abstract class AbstractTokenGranter implements TokenGranter {
 		} else {
 			tokenSession.delete(JWT_KEY_DEPT_ID);
 		}
-		if (userInfo.getId() != null) {
+		if (uid != null) {
 			tokenSession.set(JWT_KEY_U_ID, uid);
 		} else {
 			tokenSession.delete(JWT_KEY_U_ID);
@@ -455,6 +500,7 @@ public abstract class AbstractTokenGranter implements TokenGranter {
 		}
 
 		resultVO.setUid(uid);
+		resultVO.setTenantId(userInfo.getTenantId());
 		obj.set(CLIENT_ID, clientId);
 		resultVO.setRefreshToken(SaTempUtil.createToken(obj.toString(), 2 * saTokenConfig.getTimeout()));
 

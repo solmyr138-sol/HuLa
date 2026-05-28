@@ -16,7 +16,8 @@ import { setDayjsLocale } from '@/utils/ComputedTime'
 
 const i18n = createI18n({
   legacy: false,
-  locale: ''
+  locale: 'zh-CN',
+  fallbackLocale: 'zh-CN'
 })
 
 /**
@@ -114,7 +115,7 @@ function findLocales(lang: string) {
 // 加载语言包并切换语言，确保 lang 被归一化后再加载
 export async function loadLanguage(lang: Locale) {
   const resolvedLang = normalizeLang(lang)
-  if (i18n.global.locale.value === resolvedLang) {
+  if (i18n.global.locale.value === resolvedLang && loadedLanguages.includes(resolvedLang)) {
     return setI18nLanguage(resolvedLang)
   }
 
@@ -152,9 +153,9 @@ export async function loadLanguage(lang: Locale) {
 /**
  * Ensure that pinia is initialized first.
  */
-export const setupI18n = (app: App) => {
+export const setupI18n = async (app: App) => {
   const settingStore = useSettingStore()
 
-  loadLanguage(settingStore.page.lang ?? 'en')
+  await loadLanguage((settingStore.page.lang ?? 'zh-CN') as Locale)
   app.use(i18n)
 }

@@ -55,13 +55,13 @@
                   <n-avatar
                     round
                     :size="44"
-                    :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
+                    :src="AvatarUtils.getAvatarUrl(getContactUserInfo(item.uid)?.avatar || '')"
                     fallback-src="/logo.png"
                     style="border: 1px solid var(--avatar-border-color)" />
                   <!-- 文字信息 -->
                   <div class="flex flex-col leading-tight truncate">
                     <span class="text-14px font-medium truncate">
-                      {{ groupStore.getUserInfo(item.uid)!.name }}
+                      {{ getContactDisplayName(item.uid, item.remark) }}
                     </span>
                     <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
                       <template v-if="getUserState(item.uid)">
@@ -107,9 +107,28 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 
+const getContactUserInfo = (uid: string) => groupStore.getUserInfo(uid)
+
+const getContactDisplayName = (uid: string, remark?: string) => {
+  const trimmedRemark = remark?.trim()
+  if (trimmedRemark) {
+    return trimmedRemark
+  }
+
+  const profileName = getContactUserInfo(uid)?.name?.trim()
+  if (profileName) {
+    return profileName
+  }
+
+  return `用户${uid}`
+}
+
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
-  const userInfo = groupStore.getUserInfo(uid)!
+  const userInfo = getContactUserInfo(uid)
+  if (!userInfo) {
+    return null
+  }
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
@@ -131,6 +150,7 @@ const selectedList = ref<string[]>([])
 const scrollHeight = ref(600)
 onMounted(() => {
   scrollHeight.value = window.innerHeight - 180
+  contactStore.getContactList(true)
 })
 
 // 搜索逻辑
@@ -149,12 +169,8 @@ const filteredContacts = computed(() => {
 
   if (!keyword.value) return contactsList
   return contactsList.filter((c) => {
-    const name = groupStore.getUserInfo(c.uid)!.name
-    if (name) {
-      name.includes(keyword.value)
-    } else {
-      false
-    }
+    const name = getContactDisplayName(c.uid, c.remark)
+    return name.includes(keyword.value)
   })
 })
 

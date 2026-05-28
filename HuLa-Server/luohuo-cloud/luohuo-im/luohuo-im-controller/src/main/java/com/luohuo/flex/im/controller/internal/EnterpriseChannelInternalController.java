@@ -5,6 +5,7 @@ import com.luohuo.basic.tenant.core.aop.TenantIgnore;
 import com.luohuo.flex.im.api.vo.OfficialChannelCreateVO;
 import com.luohuo.flex.im.api.vo.OfficialChannelResp;
 import com.luohuo.flex.im.core.tenant.service.EnterpriseOfficialChannelService;
+import com.luohuo.flex.im.core.tenant.service.OfficialChannelCleanupResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -40,5 +41,11 @@ public class EnterpriseChannelInternalController {
     @Operation(summary = "迁移所有非默认租户用户离开全局官方群")
     public R<Integer> migrateAllNonDefaultTenants() {
         return R.success(enterpriseOfficialChannelService.migrateAllNonDefaultTenants());
+    }
+
+    @PostMapping("/migrate-and-clean/{tenantId}")
+    @Operation(summary = "补齐租户用户到官方频道，并清理重复官方频道")
+    public R<OfficialChannelCleanupResult> migrateAndClean(@PathVariable Long tenantId) {
+        return R.success(enterpriseOfficialChannelService.migrateUsersAndCleanupDuplicates(tenantId));
     }
 }
