@@ -40,3 +40,4 @@ HuLa-Server/docs/install/nacos/extracted2/
 /HuLa-Platform-Admin/node_modules
 /web images
 /HuLa-Server/luohuo-cloud/luohuo-im/luohuo-im-server/logs
+*.log
